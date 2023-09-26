@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
+
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter
@@ -26,4 +30,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+		USpringArmComponent* SpringArm;
+
+	UPROPERTY(VisibleAnywhere , Category = Camera)
+		UCameraComponent* ViewCamera;
 };
