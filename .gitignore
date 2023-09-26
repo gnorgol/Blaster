@@ -73,5 +73,9 @@ Plugins/*/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
-# Metahuman content
-Content/MetaHumans/*
+
+Content
+**/Landscape
+**/Megascans
+**/StarterContent
+**/MetaHumans
