@@ -18,6 +18,7 @@ enum class EWeaponState : uint8
 
 
 class USphereComponent;
+class UWidgetComponent;
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -33,6 +34,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -42,6 +47,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UWidgetComponent* PickupWidget;
+
 
 
 
