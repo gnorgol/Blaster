@@ -14,6 +14,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class AWeapon;
+class UCombatComponent;
 
 
 UCLASS()
@@ -26,6 +27,7 @@ public:
 	ABlasterCharacter();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,6 +36,7 @@ protected:
 	void Move(const FInputActionValue& Value);
 	virtual void Jump() override;
 	void Look(const FInputActionValue& Value);
+	void Equip(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
@@ -46,6 +49,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* EquipAction;
 
 public:	
 	// Called every frame
@@ -68,4 +73,10 @@ private:
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+	UPROPERTY(VisibleAnywhere)
+	UCombatComponent* CombatComponent;
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
 };

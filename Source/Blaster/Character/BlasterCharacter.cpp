@@ -10,6 +10,7 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -34,6 +35,9 @@ ABlasterCharacter::ABlasterCharacter()
 
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(GetRootComponent());
+
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -85,6 +89,15 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
+void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->EquipWeapon(OverlappingWeapon);
+	}
+
+}
+
 // Called to bind functionality to input
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -95,8 +108,18 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 	}
 
+}
+void ABlasterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (CombatComponent)
+	{
+		CombatComponent->Character = this;
+	}
 }
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -104,6 +127,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
+
 void ABlasterCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D MovementVector = Value.Get<FVector2D>();
@@ -127,6 +151,21 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(LookVector.Y);
 	AddControllerYawInput(LookVector.X);
 
+}
+void ABlasterCharacter::Equip(const FInputActionValue& Value)
+{
+	if(CombatComponent)
+	{
+		if (HasAuthority())
+		{
+			CombatComponent->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquipButtonPressed();
+		}
+	}
+	
 }
 void ABlasterCharacter::Jump()
 {
