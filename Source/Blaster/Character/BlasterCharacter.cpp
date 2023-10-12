@@ -84,6 +84,11 @@ bool ABlasterCharacter::IsWeaponEquipped()
 	return (CombatComponent && CombatComponent->EquippedWeapon);
 }
 
+bool ABlasterCharacter::IsAiming()
+{
+	return (CombatComponent && CombatComponent->bAiming);
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
@@ -117,6 +122,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 	}
 
 }
@@ -177,15 +183,20 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
 }
 void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 {
-	
-	UE_LOG(LogTemp, Warning, TEXT("CrouchPressed: %f"), Value.Get<float>());
-	if (Value.Get<float>() < 0.0f)
+	if (Value.Get<float>() > 0.0f)
 	{
 		Crouch();
 	}
 	else
 	{
 		UnCrouch();
+	}
+}
+void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
 	}
 }
 void ABlasterCharacter::Jump()

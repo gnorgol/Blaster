@@ -38,6 +38,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Equip(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
+	void AimPressed(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
@@ -53,6 +54,10 @@ protected:
 		UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* EquipAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* FireAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* AimAction;
 
 public:	
 	// Called every frame
@@ -60,6 +65,7 @@ public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
+	bool IsAiming();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
