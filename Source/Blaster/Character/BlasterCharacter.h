@@ -57,6 +57,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
+	bool IsWeaponEquipped();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
