@@ -38,6 +38,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 // Called when the game starts or when spawned
@@ -114,6 +116,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
 	}
 
 }
@@ -171,6 +174,19 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
 		}
 	}
 	
+}
+void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
+{
+	
+	UE_LOG(LogTemp, Warning, TEXT("CrouchPressed: %f"), Value.Get<float>());
+	if (Value.Get<float>() < 0.0f)
+	{
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
+	}
 }
 void ABlasterCharacter::Jump()
 {
