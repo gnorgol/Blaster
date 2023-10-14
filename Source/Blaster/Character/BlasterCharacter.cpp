@@ -12,6 +12,7 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -65,6 +66,8 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AimOffset(DeltaTime);
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -201,6 +204,45 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
 	}
+}
+void ABlasterCharacter::AimOffset(float DeltaTime)
+{
+	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0f;
+	const float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir)
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetControlRotation().Yaw, 0.f);
+		FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation );
+		Ao_Yaw = DeltaRotation.Yaw;
+		bUseControllerRotationYaw = false;
+
+	}
+	if (Speed > 0.f || bIsInAir)
+	{
+		StartingAimRotation = FRotator(0.f, GetControlRotation().Yaw, 0.f);
+		Ao_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+
+	}
+	Ao_Pitch = GetBaseAimRotation().Pitch;
+	if (Ao_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch to the range [270, 360) to [-90, 0)
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		Ao_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, Ao_Pitch);
+
+	}
+
+
+
 }
 void ABlasterCharacter::Jump()
 {

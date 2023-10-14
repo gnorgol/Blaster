@@ -39,6 +39,7 @@ protected:
 	void Equip(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
+	void AimOffset(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
@@ -67,6 +68,9 @@ public:
 	bool IsWeaponEquipped();
 	bool IsAiming();
 
+	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 		USpringArmComponent* SpringArm;
@@ -88,4 +92,8 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	float Ao_Yaw;
+	float Ao_Pitch;
+	FRotator StartingAimRotation;
 };
