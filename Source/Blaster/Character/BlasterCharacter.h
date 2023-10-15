@@ -70,6 +70,7 @@ public:
 
 	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
+	AWeapon* GetEquippedWeapon();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

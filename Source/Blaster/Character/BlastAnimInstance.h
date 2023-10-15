@@ -9,6 +9,7 @@
 /**
  * 
  */
+class AWeapon;
 UCLASS()
 class BLASTER_API UBlastAnimInstance : public UAnimInstance
 {
@@ -36,6 +37,9 @@ private:
 		bool bWeaponEquipped;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+		AWeapon* EquippedWeapon;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 		bool bIsCrouching;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -53,8 +57,10 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 		float AO_Pitch;
 
-		FRotator CharacterRotationLastFrame;
-		FRotator CharacterRotation;
-		FRotator DeltaRotation;
+	FRotator CharacterRotationLastFrame;
+	FRotator CharacterRotation;
+	FRotator DeltaRotation;
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+		FTransform LeftHandTransform;
 
 };

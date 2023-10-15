@@ -34,6 +34,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
 
 protected:
 	// Called when the game starts or when spawned
