@@ -36,6 +36,7 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
 	bIsCrouching = BlasterCharacter->GetCharacterMovement()->IsCrouching();
 	bIsAiming = BlasterCharacter->IsAiming();
+	TurningInPlaceState = BlasterCharacter->GetTurningInPlace();
 
 	//Calculate Yaw Offset for Strafing
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();
@@ -49,7 +50,7 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	CharacterRotation = BlasterCharacter->GetActorRotation();
 	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
 	const float Target = Delta.Yaw / DeltaTime;
-	const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.0f);
+	const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.f);
 	Lean = FMath::Clamp(Interp, -90.0f, 90.0f);
 
 	AO_Yaw = BlasterCharacter->GetAO_Yaw();

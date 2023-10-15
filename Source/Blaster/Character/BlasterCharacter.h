@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
+#include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "BlasterCharacter.generated.h"
-
 
 
 class USpringArmComponent;
@@ -71,6 +71,7 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
 	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -95,6 +96,10 @@ private:
 	void ServerEquipButtonPressed();
 
 	float Ao_Yaw;
+	float InterpAO_Yaw;
 	float Ao_Pitch;
 	FRotator StartingAimRotation;
+
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 };
