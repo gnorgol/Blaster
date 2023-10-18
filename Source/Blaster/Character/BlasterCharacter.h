@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
+#include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "BlasterCharacter.generated.h"
-
 
 
 class USpringArmComponent;
@@ -37,6 +37,9 @@ protected:
 	virtual void Jump() override;
 	void Look(const FInputActionValue& Value);
 	void Equip(const FInputActionValue& Value);
+	void CrouchPressed(const FInputActionValue& Value);
+	void AimPressed(const FInputActionValue& Value);
+	void AimOffset(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
@@ -46,17 +49,29 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* LookAction;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* CrouchAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* EquipAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* FireAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* AimAction;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
+	bool IsWeaponEquipped();
+	bool IsAiming();
+
+	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
+	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -79,4 +94,12 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	float Ao_Yaw;
+	float InterpAO_Yaw;
+	float Ao_Pitch;
+	FRotator StartingAimRotation;
+
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 };
