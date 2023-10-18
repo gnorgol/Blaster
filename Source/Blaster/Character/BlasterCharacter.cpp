@@ -216,7 +216,7 @@ void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 }
 void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 {
-	if (CombatComponent)
+	if (CombatComponent && IsWeaponEquipped())
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
 	}
