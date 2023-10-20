@@ -61,6 +61,18 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
+void UCombatComponent::FireButtonPressed(bool bPressed)
+{
+	UE_LOG(LogTemp, Warning, TEXT("FireButtonPressed %d"), bPressed);
+	bFireButtonPressed = bPressed;
+	if (Character && bFireButtonPressed)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayFireMontage"));
+		Character->PlayFireMontage(bAiming);
+		
+	}
+}
+
 
 
 

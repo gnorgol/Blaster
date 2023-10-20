@@ -13,6 +13,7 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "BlastAnimInstance.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -146,6 +147,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
 	}
 
 }
@@ -157,6 +159,23 @@ void ABlasterCharacter::PostInitializeComponents()
 	{
 		CombatComponent->Character = this;
 	}
+}
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName = bAiming ? TEXT("RifleAim") : TEXT("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+		UE_LOG(LogTemp, Warning, TEXT("PlayFireMontage %s"), *SectionName.ToString());
+	}
+
+
 }
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -264,6 +283,23 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 
 	}
 
+
+
+}
+void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
+{
+	if (CombatComponent && IsWeaponEquipped())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FirePressed %f"), Value.Get<float>());
+		if (Value.Get<float>() > 0.0f)
+		{
+			CombatComponent->FireButtonPressed(true);
+		}
+		else
+		{
+			CombatComponent->FireButtonPressed(false);
+		}
+	}
 
 
 }
