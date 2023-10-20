@@ -19,6 +19,7 @@ enum class EWeaponState : uint8
 
 class USphereComponent;
 class UWidgetComponent;
+class UAnimationAsset;
 
 
 UCLASS()
@@ -35,6 +36,7 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
+	void Fire();
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,5 +66,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	UWidgetComponent* PickupWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UAnimationAsset* FireAnimation;
 
 };

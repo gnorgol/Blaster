@@ -63,14 +63,31 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FireButtonPressed %d"), bPressed);
 	bFireButtonPressed = bPressed;
-	if (Character && bFireButtonPressed)
+
+	if (bFireButtonPressed)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayFireMontage"));
-		Character->PlayFireMontage(bAiming);
-		
+		ServerFire();
 	}
+	
+}
+
+void UCombatComponent::MulticastFire_Implementation()
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	if (Character)
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire();
+	}
+}
+
+void UCombatComponent::ServerFire_Implementation()
+{
+	MulticastFire();
 }
 
 
