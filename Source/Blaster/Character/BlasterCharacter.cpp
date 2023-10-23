@@ -197,11 +197,11 @@ void ABlasterCharacter::Move(const FInputActionValue& Value)
 
 	AddMovementInput(ForwardDirection, MovementVector.X);
 	AddMovementInput(RightDirection, MovementVector.Y);
+
 }
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookVector = Value.Get<FVector2D>();
-	//UE_LOG(LogTemp, Warning, TEXT("LookVector: %s"), *LookVector.ToString());
 
 
 	AddControllerPitchInput(LookVector.Y);
