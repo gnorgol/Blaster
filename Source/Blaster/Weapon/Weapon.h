@@ -70,4 +70,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	UAnimationAsset* FireAnimation;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	TSubclassOf<class ABulletShells> BulletShellsClass;
+
 };
