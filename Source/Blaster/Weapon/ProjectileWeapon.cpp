@@ -9,7 +9,11 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 
 	Super::Fire(HitTarget);
-	UE_LOG(LogTemp, Warning, TEXT("ProjectileWeapon::Fire"));
+
+	if (!HasAuthority())
+	{
+		return;
+	}
 	APawn* InvestigatorPawn = Cast<APawn>(GetOwner());
 
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
