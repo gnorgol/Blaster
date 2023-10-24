@@ -36,7 +36,7 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
-	void Fire();
+	virtual void Fire(const FVector& HitTarget);
 
 protected:
 	// Called when the game starts or when spawned

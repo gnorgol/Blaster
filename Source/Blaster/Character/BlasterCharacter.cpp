@@ -172,7 +172,6 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName = bAiming ? TEXT("RifleAim") : TEXT("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
-		UE_LOG(LogTemp, Warning, TEXT("PlayFireMontage %s"), *SectionName.ToString());
 	}
 
 
@@ -290,7 +289,6 @@ void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 {
 	if (CombatComponent && IsWeaponEquipped())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FirePressed %f"), Value.Get<float>());
 		if (Value.Get<float>() > 0.0f)
 		{
 			CombatComponent->FireButtonPressed(true);
