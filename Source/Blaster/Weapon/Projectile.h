@@ -10,6 +10,7 @@ class UBoxComponent;
 class UProjectileMovementComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
+class USoundCue;
 UCLASS()
 class BLASTER_API AProjectile : public AActor
 {
@@ -20,9 +21,13 @@ public:
 	AProjectile();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void Destroyed() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 private:
 	UPROPERTY(EditAnywhere)
@@ -36,6 +41,10 @@ private:
 
 	UParticleSystemComponent* TracerComponent;
 
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
 
+	UPROPERTY(EditAnywhere)
+	USoundCue* ImpactSound;
 
 };
