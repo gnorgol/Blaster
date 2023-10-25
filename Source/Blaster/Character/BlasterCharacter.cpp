@@ -13,6 +13,7 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "BlastAnimInstance.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -20,7 +21,7 @@ ABlasterCharacter::ABlasterCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -146,6 +147,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
 	}
 
 }
@@ -157,6 +159,22 @@ void ABlasterCharacter::PostInitializeComponents()
 	{
 		CombatComponent->Character = this;
 	}
+}
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName = bAiming ? TEXT("RifleAim") : TEXT("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+
+
 }
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -178,11 +196,11 @@ void ABlasterCharacter::Move(const FInputActionValue& Value)
 
 	AddMovementInput(ForwardDirection, MovementVector.X);
 	AddMovementInput(RightDirection, MovementVector.Y);
+
 }
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookVector = Value.Get<FVector2D>();
-	//UE_LOG(LogTemp, Warning, TEXT("LookVector: %s"), *LookVector.ToString());
 
 
 	AddControllerPitchInput(LookVector.Y);
@@ -264,6 +282,22 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 
 	}
 
+
+
+}
+void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
+{
+	if (CombatComponent && IsWeaponEquipped())
+	{
+		if (Value.Get<float>() > 0.0f)
+		{
+			CombatComponent->FireButtonPressed(true);
+		}
+		else
+		{
+			CombatComponent->FireButtonPressed(false);
+		}
+	}
 
 
 }

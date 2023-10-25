@@ -15,6 +15,7 @@ class UInputMappingContext;
 class UInputAction;
 class AWeapon;
 class UCombatComponent;
+class UAnimMontage;
 
 
 UCLASS()
@@ -28,6 +29,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 
 protected:
 	// Called when the game starts or when spawned
@@ -40,6 +42,9 @@ protected:
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
+	void FirePressed(const FInputActionValue& Value);
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
@@ -102,4 +107,7 @@ private:
 
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere , Category = Combat)
+	UAnimMontage* FireWeaponMontage;
 };
