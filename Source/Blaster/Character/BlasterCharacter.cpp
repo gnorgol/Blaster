@@ -15,6 +15,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BlastAnimInstance.h"
 
+
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -69,6 +70,42 @@ void ABlasterCharacter::BeginPlay()
 		}
 	}
 }
+void ABlasterCharacter::HideCharacter(bool bHide)
+{
+	//Get all children of the mesh character
+	TArray<USceneComponent*> Childrens;
+	GetMesh()->GetChildrenComponents(true, Childrens);
+	for (USceneComponent* Child : Childrens)
+	{
+		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Child))
+		{
+			Prim->SetOwnerNoSee(bHide);
+		}
+	}
+}
+void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+	if ((ViewCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		HideCharacter(true);
+		if (CombatComponent && CombatComponent-> EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		HideCharacter(false);
+		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
+}
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -76,6 +113,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterCloseToWall();
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -335,6 +373,7 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 
 }
+
 void ABlasterCharacter::Jump()
 {
 	Super::Jump();

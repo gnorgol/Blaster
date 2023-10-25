@@ -66,6 +66,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* AimAction;
 
+	void HideCameraIfCharacterCloseToWall();
+
+	UPROPERTY(EditAnywhere, Category = Camera)
+	float CameraThreshold = 200.0f;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -113,4 +118,6 @@ private:
 
 	UPROPERTY(EditAnywhere , Category = Combat)
 	UAnimMontage* FireWeaponMontage;
+
+	void HideCharacter(bool bHide);
 };
