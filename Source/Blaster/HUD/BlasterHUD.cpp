@@ -18,38 +18,38 @@ void ABlasterHUD::DrawHUD()
 		if (HUDPackage.CrosshairsCenter)
 		{
 			FVector2D Spread(0, 0);
-			DrawCrosshairs(HUDPackage.CrosshairsCenter, ViewportCenter, Spread);
+			DrawCrosshairs(HUDPackage.CrosshairsCenter, ViewportCenter, Spread , HUDPackage.CrosshairsColor);
 		}
 		if (HUDPackage.CrosshairsLeft)
 		{
 			FVector2D Spread(-SpreadScaled, 0);
-			DrawCrosshairs(HUDPackage.CrosshairsLeft, ViewportCenter , Spread);
+			DrawCrosshairs(HUDPackage.CrosshairsLeft, ViewportCenter , Spread, HUDPackage.CrosshairsColor);
 		}
 		if (HUDPackage.CrosshairsRight)
 		{
 			FVector2D Spread(SpreadScaled, 0);
-			DrawCrosshairs(HUDPackage.CrosshairsRight, ViewportCenter, Spread);
+			DrawCrosshairs(HUDPackage.CrosshairsRight, ViewportCenter, Spread , HUDPackage.CrosshairsColor);
 		}
 		if (HUDPackage.CrosshairsTop)
 		{
 			FVector2D Spread(0, -SpreadScaled);
-			DrawCrosshairs(HUDPackage.CrosshairsTop, ViewportCenter, Spread);
+			DrawCrosshairs(HUDPackage.CrosshairsTop, ViewportCenter, Spread , HUDPackage.CrosshairsColor);
 		}
 		if (HUDPackage.CrosshairsBottom)
 		{
 			FVector2D Spread(0, SpreadScaled);
-			DrawCrosshairs(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
+			DrawCrosshairs(HUDPackage.CrosshairsBottom, ViewportCenter, Spread, HUDPackage.CrosshairsColor);
 		}
 	}
 
 
 }
 
-void ABlasterHUD::DrawCrosshairs(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
+void ABlasterHUD::DrawCrosshairs(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread,FLinearColor CrosshairColor)
 {
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
 	const FVector2D TextureDrawPoint(ViewportCenter.X - (TextureWidth / 2) + Spread.X, ViewportCenter.Y - (TextureHeight / 2) + Spread.Y);
 
-	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0, 0, 1, 1, FLinearColor::White);
+	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0, 0, 1, 1, CrosshairColor);
 }
