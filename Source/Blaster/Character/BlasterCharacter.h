@@ -77,6 +77,7 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FVector GetHitTarget() const;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
