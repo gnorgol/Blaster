@@ -43,8 +43,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* ImpactFleshParticles;
+
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* ImpactSound;
+
+	bool bHitCharacter = false;
 
 };
