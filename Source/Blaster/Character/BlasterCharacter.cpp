@@ -14,6 +14,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BlastAnimInstance.h"
+#include "Blaster/Blaster.h"
 
 
 // Sets default values
@@ -45,6 +46,7 @@ ABlasterCharacter::ABlasterCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
@@ -69,6 +71,16 @@ void ABlasterCharacter::BeginPlay()
 			Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
 		}
 	}
+}
+void ABlasterCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+float ABlasterCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	return Velocity.Size();
 }
 void ABlasterCharacter::HideCharacter(bool bHide)
 {
@@ -111,8 +123,19 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	AimOffset(DeltaTime);
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 	HideCameraIfCharacterCloseToWall();
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -224,6 +247,26 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 
 
 }
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName = TEXT("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -294,13 +337,12 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	{
 		return;
 	}
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.0f;
-	const float Speed = Velocity.Size();
+	const float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	if (Speed == 0.f && !bIsInAir)
 	{
+		bRotateRootBone = true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetControlRotation().Yaw, 0.f);
 		FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation );
 		Ao_Yaw = DeltaRotation.Yaw;
@@ -314,12 +356,18 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0.f || bIsInAir)
 	{
+		bRotateRootBone = false;
 		StartingAimRotation = FRotator(0.f, GetControlRotation().Yaw, 0.f);
 		Ao_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 
 	}
+	CalculateAO_Pitch();
+
+}
+void ABlasterCharacter::CalculateAO_Pitch()
+{
 	Ao_Pitch = GetBaseAimRotation().Pitch;
 	if (Ao_Pitch > 90.f && !IsLocallyControlled())
 	{
@@ -329,7 +377,46 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		Ao_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, Ao_Pitch);
 
 	}
+}
+void ABlasterCharacter::SimProxiesTurn()
+{
 
+	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	float Speed = CalculateSpeed();
+	bRotateRootBone = false;
+	if (Speed > 0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYawDelta: %f"), ProxyYawDelta);
+
+
+	if (FMath::Abs(ProxyYawDelta) > TurnThreshold)
+	{
+		if (ProxyYawDelta > TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (ProxyYawDelta < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+		return;
+	}
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 
 
 }

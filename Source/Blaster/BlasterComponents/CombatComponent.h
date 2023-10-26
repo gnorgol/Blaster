@@ -85,6 +85,15 @@ private:
 
 	float CurrentFOV;
 	void InterpFOV(float DeltaTime);
+
+	FTimerHandle FireTimerHandle;
+
+
+
+	bool bCanFire = true;
 		
+	void StartFireTimer();
+	void FireTimerFinished();
+	void Fire();
 };
   
