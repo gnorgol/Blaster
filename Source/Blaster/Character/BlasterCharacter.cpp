@@ -95,6 +95,14 @@ void ABlasterCharacter::HideCharacter(bool bHide)
 		}
 	}
 }
+void ABlasterCharacter::OnRep_Health()
+{
+	if (Health <= 0.f)
+	{
+		//Die
+	}
+
+}
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 {
 	if (!IsLocallyControlled())
@@ -272,6 +280,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
