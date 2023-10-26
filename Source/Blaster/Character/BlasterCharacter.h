@@ -6,6 +6,7 @@
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
 
@@ -19,7 +20,7 @@ class UAnimMontage;
 
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -30,6 +31,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	UFUNCTION(NetMulticast, Unreliable)
+		void MulticastHit();
+
+	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -42,7 +47,10 @@ protected:
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
+	void CalculateAO_Pitch();
+	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
+	void PlayHitReactMontage();
 
 
 
@@ -65,6 +73,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* AimAction;
 
+	void HideCameraIfCharacterCloseToWall();
+
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -77,6 +89,9 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetViewCamera() const { return ViewCamera; }
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -110,4 +125,20 @@ private:
 
 	UPROPERTY(EditAnywhere , Category = Combat)
 	UAnimMontage* FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = Camera)
+		float CameraThreshold = 200.0f;
+
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYawDelta;
+	float TimeSinceLastMovementReplication;
+	float CalculateSpeed();
+
+	void HideCharacter(bool bHide);
 };

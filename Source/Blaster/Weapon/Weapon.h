@@ -20,6 +20,7 @@ enum class EWeaponState : uint8
 class USphereComponent;
 class UWidgetComponent;
 class UAnimationAsset;
+class UTexture2D;
 
 
 UCLASS()
@@ -36,7 +37,27 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
+	FORCEINLINE float GetZoomedFOV() { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() { return ZoomInterpSpeed; }
+	FORCEINLINE float GetUnZoomedInterpSpeed() { return UnZoomedInterpSpeed; }
 	virtual void Fire(const FVector& HitTarget);
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+		UTexture2D* CrosshairsCenter;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+		UTexture2D* CrosshairsLeft;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+		UTexture2D* CrosshairsRight;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+		UTexture2D* CrosshairsTop;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+		UTexture2D* CrosshairsBottom;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		float FireDelay = .15f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		bool bAutomaticFire = true;
 
 protected:
 	// Called when the game starts or when spawned
@@ -72,5 +93,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ABulletShells> BulletShellsClass;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		float ZoomedFOV = 30.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		float ZoomInterpSpeed = 20.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		float UnZoomedInterpSpeed = 20.0f;
+
 
 };

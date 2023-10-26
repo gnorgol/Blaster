@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f
 
 class AWeapon;
 class ABlasterCharacter;
+class ABlasterPlayerController;
+class ABlasterHUD;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -45,9 +48,13 @@ protected:
 
 	void TraceUnderCrosshair(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshair(float DeltaTime);
+
 private:
 
 	ABlasterCharacter* Character;
+	ABlasterPlayerController* PlayerController;
+	ABlasterHUD* HUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
@@ -61,6 +68,32 @@ private:
 
 	bool bFireButtonPressed;
 
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootingFactor;
+
+	FVector HitTarget;
+
+	FHUDPackage HUDPackage;
+
+	// Field of View when not aiming
+	float DefaultFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		float ZoomedFOV = 30.0f;
+
+	float CurrentFOV;
+	void InterpFOV(float DeltaTime);
+
+	FTimerHandle FireTimerHandle;
+
+
+
+	bool bCanFire = true;
 		
+	void StartFireTimer();
+	void FireTimerFinished();
+	void Fire();
 };
   
