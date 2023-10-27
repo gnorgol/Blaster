@@ -15,6 +15,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BlastAnimInstance.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 
 // Sets default values
@@ -63,6 +64,11 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	Tags.Add(FName("Player"));
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{

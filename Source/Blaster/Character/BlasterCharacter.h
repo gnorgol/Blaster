@@ -17,6 +17,7 @@ class UInputAction;
 class AWeapon;
 class UCombatComponent;
 class UAnimMontage;
+class ABlasterPlayerController;
 
 
 UCLASS()
@@ -149,5 +150,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	ABlasterPlayerController* BlasterPlayerController;
 
 };
