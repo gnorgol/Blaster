@@ -6,6 +6,9 @@
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 
 
 
@@ -28,4 +31,24 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 
 	}
 
+}
+
+void ABlasterPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn);
+	if (BlasterCharacter)
+	{
+		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		//enable Input
+		APlayerController* PlayerController = Cast<APlayerController>(InPawn->GetController());
+		if (PlayerController)
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(BlasterCharacter->GetBlastCharacterMappingContext(), 0);
+			}
+		}
+	}
 }

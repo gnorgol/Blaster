@@ -94,7 +94,7 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 
 	if (BlasterPlayerController)
 	{
-		//disable Fire action
+		//disable Input
 		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))

@@ -105,6 +105,10 @@ public:
 	FORCEINLINE UCameraComponent* GetViewCamera() const { return ViewCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsDead() const { return bIsDead; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
+
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
