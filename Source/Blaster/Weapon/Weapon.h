@@ -41,6 +41,7 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() { return ZoomInterpSpeed; }
 	FORCEINLINE float GetUnZoomedInterpSpeed() { return UnZoomedInterpSpeed; }
 	virtual void Fire(const FVector& HitTarget);
+	void DropWeapon();
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 		UTexture2D* CrosshairsCenter;

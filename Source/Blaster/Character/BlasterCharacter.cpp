@@ -73,6 +73,10 @@ void ABlasterCharacter::DeathTimerFinished()
 
 void ABlasterCharacter::RagdollDeath()
 {
+	if (CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		CombatComponent->EquippedWeapon->DropWeapon();
+	}
 	MulticastRagdollDeath();
 	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
 }
@@ -87,6 +91,18 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 	GetMesh()->SetConstraintMode(EDOFMode::Default);
 
 	GetCharacterMovement()->DisableMovement();
+
+	if (BlasterPlayerController)
+	{
+		//disable Fire action
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				Subsystem->RemoveMappingContext(BlastCharacterMappingContext);
+			}
+		}
+	}
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
