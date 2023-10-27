@@ -18,6 +18,7 @@
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "TimerManager.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 
 
 // Sets default values
@@ -186,6 +187,18 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 	}
 }
 
+void ABlasterCharacter::PollInit()
+{
+	if (BlasterPlayerState == nullptr)
+	{
+		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+		if (BlasterPlayerState)
+		{
+			BlasterPlayerState->AddToScore(0.f);
+		}
+	}
+}
+
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
 {
@@ -203,7 +216,9 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+
 	HideCameraIfCharacterCloseToWall();
+	PollInit();
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {

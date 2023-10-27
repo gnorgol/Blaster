@@ -18,7 +18,7 @@ class AWeapon;
 class UCombatComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
-
+class ABlasterPlayerState;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -85,8 +85,8 @@ protected:
 		UInputAction* AimAction;
 
 	void HideCameraIfCharacterCloseToWall();
-
-
+	// Poll for any classes and initialize HUD
+	void PollInit();
 
 public:	
 	// Called every frame
@@ -180,5 +180,7 @@ private:
 
 
 	void DeathTimerFinished();
+
+	ABlasterPlayerState* BlasterPlayerState;
 
 };
