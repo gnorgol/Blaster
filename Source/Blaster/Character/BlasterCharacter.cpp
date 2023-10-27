@@ -59,6 +59,22 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.0f;
 }
 
+void ABlasterCharacter::RagdollDeath_Implementation()
+{
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
+	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
+	GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName("pelvis"), 1.0f, true);
+	GetMesh()->bBlendPhysics = true;
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetConstraintMode(EDOFMode::Default);
+
+	GetCharacterMovement()->DisableMovement();
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -110,10 +126,6 @@ void ABlasterCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayHitReactMontage();
-	if (Health <= 0.f)
-	{
-		//Die
-	}
 
 }
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
@@ -274,9 +286,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
 }
-void ABlasterCharacter::Eliminated()
+void ABlasterCharacter::Eliminated_Implementation()
 {
-
+	bIsDead = true;
+	PlayDeathMontage();
 }
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -289,6 +302,17 @@ void ABlasterCharacter::PlayHitReactMontage()
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName = TEXT("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+void ABlasterCharacter::PlayDeathMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+		int RandomSection = FMath::RandRange(1, 3);
+		FName SectionName = FName(*FString::Printf(TEXT("Death%d"), RandomSection));
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }

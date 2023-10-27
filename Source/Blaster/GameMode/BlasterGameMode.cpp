@@ -7,5 +7,8 @@
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer)
 {
-
+	if (EliminatedPlayer)
+	{
+		EliminatedPlayer->RagdollDeath();
+	}
 }

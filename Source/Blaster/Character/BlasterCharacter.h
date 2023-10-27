@@ -33,7 +33,12 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	virtual void OnRep_ReplicatedMovement() override;
+
+	UFUNCTION(NetMulticast, Reliable)
 	void Eliminated();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void RagdollDeath();
 
 protected:
 	// Called when the game starts or when spawned
@@ -52,6 +57,7 @@ protected:
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
 	void PlayHitReactMontage();
+	void PlayDeathMontage();
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 	void UpdateHUDHealth();
@@ -96,6 +102,7 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetViewCamera() const { return ViewCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsDead() const { return bIsDead; }
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -128,10 +135,12 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere , Category = Combat)
-	UAnimMontage* FireWeaponMontage;
+		UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* HitReactMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* DeathMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;
@@ -150,6 +159,8 @@ private:
 	float MaxHealth = 100.0f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.0f;
+
+	bool bIsDead = false;
 
 	UFUNCTION()
 	void OnRep_Health();
