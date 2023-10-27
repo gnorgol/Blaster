@@ -17,6 +17,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "TimerManager.h"
 
 
 // Sets default values
@@ -24,6 +25,7 @@ ABlasterCharacter::ABlasterCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationPitch = false;
@@ -59,7 +61,22 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.0f;
 }
 
-void ABlasterCharacter::RagdollDeath_Implementation()
+void ABlasterCharacter::DeathTimerFinished()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if (BlasterGameMode)
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
+	}
+
+}
+
+void ABlasterCharacter::RagdollDeath()
+{
+	MulticastRagdollDeath();
+	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
+}
+void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 {
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
@@ -128,6 +145,7 @@ void ABlasterCharacter::OnRep_Health()
 	PlayHitReactMontage();
 
 }
+
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 {
 	if (!IsLocallyControlled())
@@ -286,7 +304,8 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
 }
-void ABlasterCharacter::Eliminated_Implementation()
+
+void ABlasterCharacter::MulticastEliminated_Implementation()
 {
 	bIsDead = true;
 	PlayDeathMontage();

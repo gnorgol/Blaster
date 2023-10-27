@@ -49,9 +49,22 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-
+	MulticastIsHitCharacter(OtherActor);
 	Destroy();
 
+}
+
+void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
+{
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if (BlasterCharacter)
+	{
+		bHitCharacter = true;
+	}
+	else
+	{
+		bHitCharacter = false;
+	}
 }
 
 // Called every frame

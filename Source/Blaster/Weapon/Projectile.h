@@ -55,6 +55,7 @@ private:
 
 	bool bHitCharacter = false;
 
-
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastIsHitCharacter(AActor* OtherActor);
 
 };

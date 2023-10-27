@@ -35,10 +35,11 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Eliminated();
+	void MulticastEliminated();
 
-	UFUNCTION(NetMulticast, Reliable)
 	void RagdollDeath();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRagdollDeath();
 
 protected:
 	// Called when the game starts or when spawned
@@ -94,6 +95,7 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool bHitCharacter = false;
 
 	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
@@ -166,5 +168,13 @@ private:
 	void OnRep_Health();
 
 	ABlasterPlayerController* BlasterPlayerController;
+
+	FTimerHandle DeathTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DeathDelay = 5.0f;
+
+
+	void DeathTimerFinished();
 
 };
