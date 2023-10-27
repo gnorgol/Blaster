@@ -42,10 +42,11 @@ private:
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;
 
-	UParticleSystemComponent* TracerComponent;
+	UPROPERTY()
+		UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles;
+		UParticleSystem* ImpactParticles;
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactFleshParticles;
 

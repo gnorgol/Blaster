@@ -19,6 +19,7 @@ class UCombatComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
+class UWidgetComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -118,7 +119,7 @@ private:
 		UCameraComponent* ViewCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UWidgetComponent* OverheadWidget;
+		 UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 		AWeapon* OverlappingWeapon;
@@ -170,7 +171,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
-
+	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
 
 	FTimerHandle DeathTimerHandle;
@@ -181,6 +182,7 @@ private:
 
 	void DeathTimerFinished();
 
+	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
 
 };
