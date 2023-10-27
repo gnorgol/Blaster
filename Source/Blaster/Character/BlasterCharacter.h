@@ -32,14 +32,14 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	UFUNCTION(NetMulticast, Unreliable)
-		void MulticastHit();
 
 	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	
 
 	void Move(const FInputActionValue& Value);
 	virtual void Jump() override;
@@ -52,6 +52,9 @@ protected:
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	void UpdateHUDHealth();
 
 
 

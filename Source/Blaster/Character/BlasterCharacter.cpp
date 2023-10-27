@@ -64,10 +64,10 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	Tags.Add(FName("Player"));
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if (BlasterPlayerController)
+	UpdateHUDHealth();
+	if (HasAuthority())
 	{
-		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
@@ -78,9 +78,13 @@ void ABlasterCharacter::BeginPlay()
 		}
 	}
 }
-void ABlasterCharacter::MulticastHit_Implementation()
+void ABlasterCharacter::UpdateHUDHealth()
 {
-	PlayHitReactMontage();
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 float ABlasterCharacter::CalculateSpeed()
 {
@@ -103,6 +107,8 @@ void ABlasterCharacter::HideCharacter(bool bHide)
 }
 void ABlasterCharacter::OnRep_Health()
 {
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 	if (Health <= 0.f)
 	{
 		//Die
@@ -280,6 +286,12 @@ void ABlasterCharacter::PlayHitReactMontage()
 		FName SectionName = TEXT("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - DamageAmount, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 }
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
