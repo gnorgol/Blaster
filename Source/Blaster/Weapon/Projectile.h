@@ -29,6 +29,9 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere)
+		float Damage = 20.0f;
+
 private:
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* CollisionBox;
@@ -39,10 +42,11 @@ private:
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;
 
-	UParticleSystemComponent* TracerComponent;
+	UPROPERTY()
+		UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles;
+		UParticleSystem* ImpactParticles;
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactFleshParticles;
 
@@ -51,5 +55,8 @@ private:
 	USoundCue* ImpactSound;
 
 	bool bHitCharacter = false;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastIsHitCharacter(AActor* OtherActor);
 
 };

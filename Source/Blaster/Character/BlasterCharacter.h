@@ -17,7 +17,9 @@ class UInputAction;
 class AWeapon;
 class UCombatComponent;
 class UAnimMontage;
-
+class ABlasterPlayerController;
+class ABlasterPlayerState;
+class UWidgetComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -31,14 +33,20 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	UFUNCTION(NetMulticast, Unreliable)
-		void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEliminated();
+
+	void RagdollDeath();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRagdollDeath();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	
 
 	void Move(const FInputActionValue& Value);
 	virtual void Jump() override;
@@ -51,6 +59,10 @@ protected:
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
 	void PlayHitReactMontage();
+	void PlayDeathMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	void UpdateHUDHealth();
 
 
 
@@ -74,8 +86,8 @@ protected:
 		UInputAction* AimAction;
 
 	void HideCameraIfCharacterCloseToWall();
-
-
+	// Poll for any classes and initialize HUD
+	void PollInit();
 
 public:	
 	// Called every frame
@@ -84,6 +96,11 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool bHitCharacter = false;
+	UFUNCTION()
+	virtual void OnRep_Killer();
+
+	void SetKiller(ABlasterCharacter* Character);
 
 	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
@@ -92,6 +109,12 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetViewCamera() const { return ViewCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsDead() const { return bIsDead; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
+
+
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -101,7 +124,7 @@ private:
 		UCameraComponent* ViewCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UWidgetComponent* OverheadWidget;
+		 UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 		AWeapon* OverlappingWeapon;
@@ -124,10 +147,12 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere , Category = Combat)
-	UAnimMontage* FireWeaponMontage;
+		UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* HitReactMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* DeathMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;
@@ -141,4 +166,39 @@ private:
 	float CalculateSpeed();
 
 	void HideCharacter(bool bHide);
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.0f;
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.0f;
+
+	bool bIsDead = false;
+
+
+	UFUNCTION()
+	void OnRep_Health();
+	UPROPERTY()
+	ABlasterPlayerController* BlasterPlayerController;
+
+	FTimerHandle DeathTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DeathDelay = 5.0f;
+
+
+	void DeathTimerFinished();
+
+	UPROPERTY()
+	ABlasterPlayerState* BlasterPlayerState;
+
+
+	void KillCam(float DeltaTime);
+
+	UPROPERTY(ReplicatedUsing = OnRep_Killer)
+	ABlasterCharacter* Killer;
+
+
+
+
+
 };
