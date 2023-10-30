@@ -22,19 +22,15 @@ void ABlasterPlayerState::OnRep_Score()
 	
 }
 
-void ABlasterPlayerState::OnRep_Defeats()
+void ABlasterPlayerState::OnRep_KillName()
 {
+	UpdateKillNameMessageHUD();
+}
 
-	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
-	if (Character)
-	{
-		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
-		if (Controller)
-		{
-			Controller->SetHUDDefeats(Defeats);
-		}
-	}
-
+void ABlasterPlayerState::OnRep_KilledBy()
+{
+	UpdateKilledByMessageHUD();
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_KilledBy"));
 }
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -42,7 +38,16 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
+	DOREPLIFETIME(ABlasterPlayerState, KillName);
+	DOREPLIFETIME(ABlasterPlayerState, KilledBy);
 
+}
+
+void ABlasterPlayerState::UpdateKillFieldHUD(FString KillerName, FString VictimName)
+{
+	KilledBy = KillerName;
+	KillName = VictimName;
+	MulticastUpdateKillFieldHUD();
 }
 
 void ABlasterPlayerState::AddToScore(float ScoreAmount)
@@ -72,3 +77,71 @@ void ABlasterPlayerState::AddToDefeats(int32 DefeatsAmount)
 		}
 	}
 }
+void ABlasterPlayerState::SetKillName(FString Name)
+{
+	KillName = Name;	
+	UpdateKillNameMessageHUD();
+}
+void ABlasterPlayerState::SetKilledBy(FString Name)
+{
+	KilledBy = Name;
+	UpdateKilledByMessageHUD();
+}
+void ABlasterPlayerState::UpdateKillNameMessageHUD()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDKillFieldPlayerInfo(KillName,false);
+		}
+	}
+
+}
+void ABlasterPlayerState::UpdateKilledByMessageHUD()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDKillFieldPlayerInfo(KilledBy,true);
+		}
+	}
+}
+
+void ABlasterPlayerState::clearKillName()
+{
+	KillName = "";
+	KilledBy = "";
+}
+
+void ABlasterPlayerState::OnRep_Defeats()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDDefeats(Defeats);
+		}
+	}
+}
+
+void ABlasterPlayerState::MulticastUpdateKillFieldHUD_Implementation()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDKillFieldInfo(KillName, KilledBy);
+		}
+	}
+}
+

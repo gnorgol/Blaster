@@ -11,6 +11,7 @@
  */
 class UProgressBar;
 class UTextBlock;
+class UMultiLineEditableTextBox;
 UCLASS()
 class BLASTER_API UCharacterOverlay : public UUserWidget
 {
@@ -25,6 +26,9 @@ public:
 		UTextBlock* ScoreAmountText;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* DefeatsAmountText;
-
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* KillFieldPlayerText;
+	UPROPERTY(meta = (BindWidget))
+		UMultiLineEditableTextBox* KillFieldTextBox;
 
 };

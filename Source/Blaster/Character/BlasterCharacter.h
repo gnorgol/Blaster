@@ -97,6 +97,10 @@ public:
 	bool IsWeaponEquipped();
 	bool IsAiming();
 	bool bHitCharacter = false;
+	UFUNCTION()
+	virtual void OnRep_Killer();
+
+	void SetKiller(ABlasterCharacter* Character);
 
 	FORCEINLINE float GetAO_Yaw() const { return Ao_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return Ao_Pitch; }
@@ -109,6 +113,7 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
+
 
 
 private:
@@ -169,6 +174,7 @@ private:
 
 	bool bIsDead = false;
 
+
 	UFUNCTION()
 	void OnRep_Health();
 	UPROPERTY()
@@ -184,5 +190,15 @@ private:
 
 	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
+
+
+	void KillCam(float DeltaTime);
+
+	UPROPERTY(ReplicatedUsing = OnRep_Killer)
+	ABlasterCharacter* Killer;
+
+
+
+
 
 };

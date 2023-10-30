@@ -13,19 +13,31 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 	ABlasterPlayerState* KillerPlayerState = Killer ? Cast<ABlasterPlayerState>(Killer->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
-	{
-		KillerPlayerState->AddToScore(1.f);
-	}
+
 	if (VictimPlayerState)
 	{
 		VictimPlayerState->AddToDefeats(1);
+		VictimPlayerState->SetKilledBy(KillerPlayerState->GetPlayerName());
+		//clear killed by after 5 seconds
+		FTimerHandle KilledByTimer;
+		GetWorldTimerManager().SetTimer(KilledByTimer, [VictimPlayerState]() {VictimPlayerState->SetKilledBy(""); }, 5.f, false);
+		//VictimPlayerState->UpdateKilledByFieldHUD(VictimPlayerState->GetPlayerName(), KillerPlayerState->GetPlayerName());
 	}
-
+	if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
+	{
+		KillerPlayerState->AddToScore(1.f);
+		KillerPlayerState->SetKillName(VictimPlayerState->GetPlayerName());
+		//clear kill after 5 seconds
+		FTimerHandle KillTimer;
+		GetWorldTimerManager().SetTimer(KillTimer, [KillerPlayerState]() {KillerPlayerState->SetKillName(""); }, 5.f, false);
+		//KillerPlayerState->UpdateKillFieldHUD(KillerPlayerState->GetPlayerName(), VictimPlayerState->GetPlayerName());
+	}
+	ABlasterCharacter* KillerCharacter = Killer ? Cast<ABlasterCharacter>(Killer->GetPawn()) : nullptr;
 
 	if (EliminatedPlayer)
 	{
 		EliminatedPlayer->RagdollDeath();
+		EliminatedPlayer->SetKiller(KillerCharacter);		
 	}
 }
 

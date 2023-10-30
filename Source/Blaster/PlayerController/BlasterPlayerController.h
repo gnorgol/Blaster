@@ -19,6 +19,8 @@ public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
+	void SetHUDKillFieldInfo(const FString& KillerName, const FString& VictimName);
+	void SetHUDKillFieldPlayerInfo(const FString& PlayerName,bool bIsDead);
 	void OnPossess(APawn* InPawn) override;
 
 protected:
@@ -26,5 +28,4 @@ protected:
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
-
 };

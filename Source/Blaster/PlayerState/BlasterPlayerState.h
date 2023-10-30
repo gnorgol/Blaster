@@ -18,12 +18,27 @@ class BLASTER_API ABlasterPlayerState : public APlayerState
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Score() override;
+	UFUNCTION()
+	virtual void OnRep_KillName();
+	UFUNCTION()
+	virtual void OnRep_KilledBy();
 	
 	UFUNCTION()
 	virtual void OnRep_Defeats();	
 
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastUpdateKillFieldHUD();
+
+	void UpdateKillFieldHUD(FString KillerName, FString VictimName);
+
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
+	void SetKillName(FString Name);
+	void SetKilledBy(FString Name);
+	void UpdateKillNameMessageHUD();
+	void UpdateKilledByMessageHUD();
+	void clearKillName();
+
 private:
 	UPROPERTY()
 	ABlasterPlayerController* Controller;
@@ -32,6 +47,17 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
+
+	UPROPERTY(ReplicatedUsing = OnRep_KillName)
+		FString KillName;
+
+	UPROPERTY(ReplicatedUsing = OnRep_KilledBy)
+		FString KilledBy;
+
+	UPROPERTY(Replicated)
+		FText ListOfKills;
+
+
 
 	
 };

@@ -72,6 +72,21 @@ void ABlasterCharacter::DeathTimerFinished()
 
 }
 
+void ABlasterCharacter::KillCam(float DeltaTime)
+{
+	if (ViewCamera)
+	{
+		FVector KillerLocation = Killer->GetActorLocation();
+		FVector KillerDirection = KillerLocation - ViewCamera->GetComponentLocation();
+		FRotator KillerRotation = UKismetMathLibrary::MakeRotFromX(KillerDirection);
+		ViewCamera->SetWorldRotation(KillerRotation);
+	}
+}
+
+
+
+
+
 void ABlasterCharacter::RagdollDeath()
 {
 	if (CombatComponent && CombatComponent->EquippedWeapon)
@@ -79,10 +94,13 @@ void ABlasterCharacter::RagdollDeath()
 		CombatComponent->EquippedWeapon->DropWeapon();
 	}
 	MulticastRagdollDeath();
+	bIsDead = true;
 	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
 }
+
 void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 {
+
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
@@ -160,7 +178,6 @@ void ABlasterCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayHitReactMontage();
-
 }
 
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
@@ -196,6 +213,7 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			
 		}
 	}
 }
@@ -216,6 +234,10 @@ void ABlasterCharacter::Tick(float DeltaTime)
 			OnRep_ReplicatedMovement();
 		}
 		CalculateAO_Pitch();
+	}
+	if (Killer)
+	{
+		KillCam(DeltaTime);
 	}
 
 	HideCameraIfCharacterCloseToWall();
@@ -245,6 +267,16 @@ bool ABlasterCharacter::IsWeaponEquipped()
 bool ABlasterCharacter::IsAiming()
 {
 	return (CombatComponent && CombatComponent->bAiming);
+}
+
+void ABlasterCharacter::OnRep_Killer()
+{
+}
+
+
+void ABlasterCharacter::SetKiller(ABlasterCharacter* Character)
+{
+	Killer = Character;
 }
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
@@ -372,6 +404,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	Health = FMath::Clamp(Health - DamageAmount, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+
 	if (Health <= 0.f)
 	{
 		//Die
@@ -381,7 +414,9 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
 			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+
 		}
+
 	}
 
 	
@@ -392,6 +427,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, Killer, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -517,7 +553,6 @@ void ABlasterCharacter::SimProxiesTurn()
 	ProxyRotation = GetActorRotation();
 	ProxyYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
 
-	UE_LOG(LogTemp, Warning, TEXT("ProxyYawDelta: %f"), ProxyYawDelta);
 
 
 	if (FMath::Abs(ProxyYawDelta) > TurnThreshold)

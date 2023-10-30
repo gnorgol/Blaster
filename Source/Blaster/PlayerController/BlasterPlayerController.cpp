@@ -9,6 +9,8 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Components/MultiLineEditableTextBox.h"
+#include "TimerManager.h"
 
 
 
@@ -18,6 +20,7 @@ void ABlasterPlayerController::BeginPlay()
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 }
+
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -54,6 +57,58 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 		BlasterHUD->CharacterOverlay->DefeatsAmountText->SetText(FText::FromString(DefeatsText));
 	}
 }
+
+void ABlasterPlayerController::SetHUDKillFieldInfo(const FString& KillerName, const FString& VictimName)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->DefeatsAmountText;
+	FString KillFieldText;
+	if (bHUDValid)
+	{
+		if (KillerName == VictimName)
+		{
+			KillFieldText = FString::Printf(TEXT("%s killed himself"), *KillerName);
+		}
+		else
+		{
+			KillFieldText = FString::Printf(TEXT("%s killed %s"), *KillerName, *VictimName);
+		}
+		FText KillFieldTextBox = BlasterHUD->CharacterOverlay->KillFieldTextBox->GetText();
+
+		FString NewKillFieldText = FString::Printf(TEXT("%s\n%s"), *KillFieldTextBox.ToString(), *KillFieldText);
+		BlasterHUD->CharacterOverlay->KillFieldTextBox->SetText(FText::FromString(NewKillFieldText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDKillFieldPlayerInfo(const FString& PlayerName, bool bIsDead)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->DefeatsAmountText;
+	FString KillFieldText;
+	if (bHUDValid)
+	{
+		if (PlayerName == "")
+		{
+			KillFieldText = "";
+		}
+		else
+		{
+			if (bIsDead)
+			{
+				KillFieldText = FString::Printf(TEXT("Killed by %s"), *PlayerName);
+			}
+			else
+			{
+				KillFieldText = FString::Printf(TEXT("Killed %s"), *PlayerName);
+			}
+		}
+			BlasterHUD->CharacterOverlay->KillFieldPlayerText->SetText(FText::FromString(KillFieldText));
+
+
+	}
+}
+
+
 
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
