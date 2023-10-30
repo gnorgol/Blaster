@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -21,6 +22,9 @@ class USphereComponent;
 class UWidgetComponent;
 class UAnimationAsset;
 class UTexture2D;
+class ABlasterCharacter;
+class ABlasterPlayerController;
+class USoundCue;
 
 
 UCLASS()
@@ -33,15 +37,20 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
-	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
-	FORCEINLINE float GetZoomedFOV() { return ZoomedFOV; }
-	FORCEINLINE float GetZoomInterpSpeed() { return ZoomInterpSpeed; }
-	FORCEINLINE float GetUnZoomedInterpSpeed() { return UnZoomedInterpSpeed; }
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE float GetUnZoomedInterpSpeed() const { return UnZoomedInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetCurrentAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	virtual void Fire(const FVector& HitTarget);
 	void DropWeapon();
+	void AddAmmo(int32 AmmoToAdd);
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 		UTexture2D* CrosshairsCenter;
@@ -59,6 +68,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		bool bAutomaticFire = true;
+	void SetHUDAmmo();
+	bool IsEmpty();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		USoundCue* EquipSound;
 
 protected:
 	// Called when the game starts or when spawned
@@ -104,5 +118,24 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		float UnZoomedInterpSpeed = 20.0f;
 
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon Properties")
+	int32 Ammo;
 
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+
+
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		int32 MagCapacity;
+
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	EWeaponType WeaponType;
 };

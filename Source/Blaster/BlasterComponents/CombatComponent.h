@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/Weapon/WeaponTypes.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f
@@ -26,6 +28,9 @@ public:
 	friend class ABlasterCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 protected:
 	// Called when the game starts
@@ -49,6 +54,12 @@ protected:
 	void TraceUnderCrosshair(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshair(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	void HandleReload();
+	int32 AmountNeededToReload();
 
 private:
 	UPROPERTY()
@@ -97,5 +108,28 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 	void Fire();
+
+	bool CanFire();
+
+	// Carried Ammo for the current weapon equipped
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		int32 StartingARAmmo = 30;
+	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+		ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+		void OnRep_CombatState();
+
+	void UpdateAmmoValues();
 };
   
