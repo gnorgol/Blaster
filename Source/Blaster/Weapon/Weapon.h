@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -38,11 +39,12 @@ public:
 	virtual void OnRep_Owner() override;
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
-	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
-	FORCEINLINE float GetZoomedFOV() { return ZoomedFOV; }
-	FORCEINLINE float GetZoomInterpSpeed() { return ZoomInterpSpeed; }
-	FORCEINLINE float GetUnZoomedInterpSpeed() { return UnZoomedInterpSpeed; }
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE float GetUnZoomedInterpSpeed() const { return UnZoomedInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	virtual void Fire(const FVector& HitTarget);
 	void DropWeapon();
 
@@ -126,4 +128,7 @@ private:
 	ABlasterCharacter* BlasterOwnerCharacter;
 	UPROPERTY()
 	ABlasterPlayerController* BlasterOwnerController;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	EWeaponType WeaponType;
 };
