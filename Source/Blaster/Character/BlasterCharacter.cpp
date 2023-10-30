@@ -19,6 +19,7 @@
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "TimerManager.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 
 
 // Sets default values
@@ -334,6 +335,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadPressed);
 	}
 
 }
@@ -400,6 +402,26 @@ void ABlasterCharacter::PlayDeathMontage()
 		AnimInstance->Montage_Play(DeathMontage);
 		int RandomSection = FMath::RandRange(1, 3);
 		FName SectionName = FName(*FString::Printf(TEXT("Death%d"), RandomSection));
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (CombatComponent->EquippedWeapon->GetWeaponType())
+		{
+			case EWeaponType::EWT_AssaultRifle:
+				SectionName = TEXT("Rifle");
+				break;
+		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -489,6 +511,13 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 	if (CombatComponent && IsWeaponEquipped())
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
+	}
+}
+void ABlasterCharacter::ReloadPressed(const FInputActionValue& Value)
+{
+	if (CombatComponent && IsWeaponEquipped())
+	{
+		CombatComponent->Reload();
 	}
 }
 void ABlasterCharacter::AimOffset(float DeltaTime)

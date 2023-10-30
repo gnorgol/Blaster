@@ -42,6 +42,10 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRagdollDeath();
 
+	void PlayHitReactMontage();
+	void PlayDeathMontage();
+	void PlayReloadMontage();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -54,12 +58,12 @@ protected:
 	void Equip(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
+	void ReloadPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
-	void PlayHitReactMontage();
-	void PlayDeathMontage();
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 	void UpdateHUDHealth();
@@ -84,6 +88,8 @@ protected:
 		UInputAction* FireAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* AimAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* ReloadAction;
 
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
@@ -153,6 +159,8 @@ private:
 		UAnimMontage* HitReactMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* DeathMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;
