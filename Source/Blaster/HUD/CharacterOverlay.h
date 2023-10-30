@@ -30,5 +30,7 @@ public:
 		UTextBlock* KillFieldPlayerText;
 	UPROPERTY(meta = (BindWidget))
 		UMultiLineEditableTextBox* KillFieldTextBox;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* WeaponAmmoAmountText;
 
 };

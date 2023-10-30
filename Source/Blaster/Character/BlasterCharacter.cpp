@@ -371,6 +371,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::MulticastEliminated_Implementation()
 {
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bIsDead = true;
 	PlayDeathMontage();
 }

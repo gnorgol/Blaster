@@ -21,6 +21,8 @@ class USphereComponent;
 class UWidgetComponent;
 class UAnimationAsset;
 class UTexture2D;
+class ABlasterCharacter;
+class ABlasterPlayerController;
 
 
 UCLASS()
@@ -33,6 +35,7 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere; }
@@ -59,6 +62,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		bool bAutomaticFire = true;
+	void SetHUDAmmo();
+	bool IsEmpty();
 
 protected:
 	// Called when the game starts or when spawned
@@ -104,5 +109,21 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		float UnZoomedInterpSpeed = 20.0f;
 
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon Properties")
+	int32 Ammo;
 
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+
+
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		int32 MagCapacity;
+
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
 };

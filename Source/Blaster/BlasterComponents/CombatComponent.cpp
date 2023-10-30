@@ -213,7 +213,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 }
 void UCombatComponent::Fire()
 {
-	if (bCanFire)
+	if (CanFire())
 	{
 		bCanFire = false;
 		ServerFire(HitTarget);
@@ -224,6 +224,15 @@ void UCombatComponent::Fire()
 		StartFireTimer();
 	}
 
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return false;
+	}
+	return !EquippedWeapon->IsEmpty() || !bCanFire;
 }
 
 void UCombatComponent::TraceUnderCrosshair(FHitResult& TraceHitResult)
@@ -316,6 +325,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		return;
 	}
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->DropWeapon();
+	}
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* RightHandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
@@ -324,7 +337,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		RightHandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
-	EquippedWeapon->SetOwner(Character);	
+	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
