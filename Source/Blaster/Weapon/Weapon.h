@@ -24,6 +24,7 @@ class UAnimationAsset;
 class UTexture2D;
 class ABlasterCharacter;
 class ABlasterPlayerController;
+class USoundCue;
 
 
 UCLASS()
@@ -69,6 +70,9 @@ public:
 		bool bAutomaticFire = true;
 	void SetHUDAmmo();
 	bool IsEmpty();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		USoundCue* EquipSound;
 
 protected:
 	// Called when the game starts or when spawned
