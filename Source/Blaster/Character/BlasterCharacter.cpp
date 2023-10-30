@@ -298,6 +298,15 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return CombatComponent->HitTarget;
 }
 
+ECombatState ABlasterCharacter::GetCombatState() const
+{
+	if (CombatComponent == nullptr)
+	{
+		return ECombatState::ECS_Max;
+	}
+	return CombatComponent->CombatState;
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
