@@ -27,6 +27,27 @@ public:
 	void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTimes) override;
 
+	virtual float GetServerTime(); // Sync time between server and client
+	virtual void ReceivedPlayer() override; 
+
+	// Sync time between server and client
+
+	UFUNCTION(Server, Reliable)
+		void ServerRequestServerTime(float TimeOfClientRequest);
+
+	UFUNCTION(Client, Reliable)
+	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedRequest);
+
+	float ClientServerDelta = 0.0f; // Difference between client and server time
+
+	UPROPERTY(EditAnywhere, Category = "Time")
+	float TimeSyncFrequency = 5.0f; // How often to sync time between client and server
+
+	UPROPERTY(EditAnywhere, Category = "Time")
+		float TimeSyncRunningTime = 0.0f;
+	void CheckTimeSync(float deltaTime);
+
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
