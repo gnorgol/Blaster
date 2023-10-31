@@ -33,6 +33,8 @@ public:
 	virtual void ReceivedPlayer() override; 
 	void OnMatchStateSet(FName State);
 
+	
+
 	// Sync time between server and client
 
 	UFUNCTION(Server, Reliable)
@@ -55,6 +57,7 @@ protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
 	void PollInit();
+	void HandleMatchHasStarted();
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
