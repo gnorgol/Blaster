@@ -24,6 +24,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Time")
 		float WarmupTime = 5.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Time")
+		float MatchTime = 120.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Time")
 		float LevelStartingTime = 0.f;

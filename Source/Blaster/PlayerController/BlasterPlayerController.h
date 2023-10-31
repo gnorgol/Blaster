@@ -25,6 +25,7 @@ public:
 	void SetHUDKillFieldInfo(const FString& KillerName, const FString& VictimName);
 	void SetHUDKillFieldPlayerInfo(const FString& PlayerName,bool bIsDead);
 	void SetHUDMatchCountdown(float Countdown);
+	void SetHUDWarmupCountdown(float Countdown);
 	void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTimes) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -33,36 +34,40 @@ public:
 	virtual void ReceivedPlayer() override; 
 	void OnMatchStateSet(FName State);
 
-	
-
+protected:
+	virtual void BeginPlay() override;
+	void SetHUDMatchTime();
+	void PollInit();
 	// Sync time between server and client
 
 	UFUNCTION(Server, Reliable)
 		void ServerRequestServerTime(float TimeOfClientRequest);
 
 	UFUNCTION(Client, Reliable)
-	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedRequest);
+		void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedRequest);
 
 	float ClientServerDelta = 0.0f; // Difference between client and server time
 
 	UPROPERTY(EditAnywhere, Category = "Time")
-	float TimeSyncFrequency = 5.0f; // How often to sync time between client and server
+		float TimeSyncFrequency = 5.0f; // How often to sync time between client and server
 
 	UPROPERTY(EditAnywhere, Category = "Time")
 		float TimeSyncRunningTime = 0.0f;
 	void CheckTimeSync(float deltaTime);
-
-
-protected:
-	virtual void BeginPlay() override;
-	void SetHUDMatchTime();
-	void PollInit();
 	void HandleMatchHasStarted();
+	UFUNCTION(Server , Reliable)
+		void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+	
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
 
-	float MatchTime = 120.0f;
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
 	uint32 CountdownInt = 0;
 
 
