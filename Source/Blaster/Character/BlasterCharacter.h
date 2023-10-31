@@ -35,6 +35,7 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	virtual void OnRep_ReplicatedMovement() override;
+	virtual void Destroyed() override;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEliminated();
@@ -46,6 +47,9 @@ public:
 	void PlayHitReactMontage();
 	void PlayDeathMontage();
 	void PlayReloadMontage();
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplayInput = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,6 +68,7 @@ protected:
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
+	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -121,6 +126,8 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 
 
 

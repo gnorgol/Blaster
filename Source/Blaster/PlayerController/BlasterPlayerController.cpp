@@ -15,6 +15,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 
 
@@ -342,6 +343,12 @@ void ABlasterPlayerController::HandleCooldown()
 			FString AnnounceText = FString::Printf(TEXT("New Match Starts In : "));
 			BlasterHUD->AnnouncementOverlay->AnnouncementText->SetText(FText::FromString(AnnounceText));
 		}
+	}
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->bDisableGameplayInput = true;
+		BlasterCharacter->GetCombatComponent()->FireButtonPressed(false);
 	}
 }
 void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
