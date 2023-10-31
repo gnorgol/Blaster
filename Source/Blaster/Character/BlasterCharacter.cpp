@@ -20,6 +20,7 @@
 #include "TimerManager.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
+#include <Kismet/GameplayStatics.h>
 
 
 // Sets default values
@@ -115,6 +116,11 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 	if (BlasterPlayerController)
 	{
 		//disable Input
+		bDisableGameplayInput = true;
+		if (CombatComponent)
+		{
+			CombatComponent->FireButtonPressed(false);
+		}
 		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -393,7 +399,11 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
-	if (CombatComponent && CombatComponent->EquippedWeapon)
+
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+
+	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
 	{
 		CombatComponent->EquippedWeapon->Destroy();
 	}

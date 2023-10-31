@@ -21,4 +21,6 @@ public:
 		UTextBlock* AnnouncementText;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* WarmupTimeText;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* InfoText;
 };

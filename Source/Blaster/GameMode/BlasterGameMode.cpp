@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/GameState/BlasterGameState.h"
 
 
 namespace MatchState
@@ -76,7 +77,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 {
 	ABlasterPlayerState* KillerPlayerState = Killer ? Cast<ABlasterPlayerState>(Killer->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
-
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 
 	if (VictimPlayerState)
 	{
@@ -87,9 +88,10 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 		GetWorldTimerManager().SetTimer(KilledByTimer, [VictimPlayerState]() {VictimPlayerState->SetKilledBy(""); }, 5.f, false);
 		//VictimPlayerState->UpdateKilledByFieldHUD(VictimPlayerState->GetPlayerName(), KillerPlayerState->GetPlayerName());
 	}
-	if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
+	if (KillerPlayerState && KillerPlayerState != VictimPlayerState && BlasterGameState)
 	{
 		KillerPlayerState->AddToScore(1.f);
+		BlasterGameState->UpdateTopScoringPlayers(KillerPlayerState);
 		KillerPlayerState->SetKillName(VictimPlayerState->GetPlayerName());
 		//clear kill after 5 seconds
 		FTimerHandle KillTimer;

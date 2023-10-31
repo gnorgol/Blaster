@@ -16,6 +16,8 @@
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
+#include <Blaster/GameState/BlasterGameState.h>
 
 
 
@@ -337,10 +339,44 @@ void ABlasterPlayerController::HandleCooldown()
 	if (BlasterHUD)
 	{
 		BlasterHUD->CharacterOverlay->RemoveFromParent();
-		if (BlasterHUD->AnnouncementOverlay && BlasterHUD->AnnouncementOverlay)
+		bool bHUDValid = BlasterHUD->AnnouncementOverlay &&
+			BlasterHUD->AnnouncementOverlay->AnnouncementText &&
+			BlasterHUD->AnnouncementOverlay->InfoText;
+
+		if (bHUDValid)
 		{
 			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Visible);
 			FString AnnounceText = FString::Printf(TEXT("New Match Starts In : "));
+			BlasterHUD->AnnouncementOverlay->InfoText->SetText(FText());
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+			if (BlasterGameState && BlasterPlayerState)
+			{
+				TArray<ABlasterPlayerState*> TopScoringPlayers = BlasterGameState->TopScoringPlayers;
+				FString InfoTextString = "";
+				if (TopScoringPlayers.Num() == 0)
+				{
+					InfoTextString = FString::Printf(TEXT("There is no winner."));
+				}
+				else if (TopScoringPlayers.Num() == 1 && TopScoringPlayers[0] == BlasterPlayerState)
+				{
+					InfoTextString = FString::Printf(TEXT("You are the winner!"));
+				}
+				else if (TopScoringPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("%s is the winner!"), *TopScoringPlayers[0]->GetPlayerName());
+				}
+				else if (TopScoringPlayers.Num() > 1)
+				{
+					InfoTextString = FString::Printf(TEXT("There is a tie between: \n"));
+					for (auto TiedPlayer : TopScoringPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s \n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+				BlasterHUD->AnnouncementOverlay->InfoText->SetText(FText::FromString(InfoTextString));
+			}
+
 			BlasterHUD->AnnouncementOverlay->AnnouncementText->SetText(FText::FromString(AnnounceText));
 		}
 	}
