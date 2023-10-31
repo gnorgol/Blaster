@@ -23,11 +23,17 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDKillFieldInfo(const FString& KillerName, const FString& VictimName);
 	void SetHUDKillFieldPlayerInfo(const FString& PlayerName,bool bIsDead);
+	void SetHUDMatchCountdown(float Countdown);
 	void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaTimes) override;
 
 protected:
 	virtual void BeginPlay() override;
+	void SetHUDMatchTime();
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
+
+	float MatchTime = 120.0f;
+	uint32 CountdownInt = 0;
 };
