@@ -55,6 +55,7 @@ protected:
 		float TimeSyncRunningTime = 0.0f;
 	void CheckTimeSync(float deltaTime);
 	void HandleMatchHasStarted();
+	void HandleCooldown();
 	UFUNCTION(Server , Reliable)
 		void ServerCheckMatchState();
 
