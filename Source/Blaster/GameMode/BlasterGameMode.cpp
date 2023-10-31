@@ -17,6 +17,21 @@ void ABlasterGameMode::BeginPlay()
 	Super::BeginPlay();
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 }
+void ABlasterGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	{
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(*It);
+		if (PlayerController)
+		{
+			PlayerController->OnMatchStateSet(MatchState);
+		}
+
+	}
+
+}
 void ABlasterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

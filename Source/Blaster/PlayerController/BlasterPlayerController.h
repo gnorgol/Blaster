@@ -10,6 +10,7 @@
  * 
  */
 class ABlasterHUD;
+class UCharacterOverlay;
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
 {
@@ -26,9 +27,11 @@ public:
 	void SetHUDMatchCountdown(float Countdown);
 	void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTimes) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual float GetServerTime(); // Sync time between server and client
 	virtual void ReceivedPlayer() override; 
+	void OnMatchStateSet(FName State);
 
 	// Sync time between server and client
 
@@ -51,10 +54,29 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
+	void PollInit();
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
 
 	float MatchTime = 120.0f;
 	uint32 CountdownInt = 0;
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializedCharacterOverlay = false;
+
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDefeats;
+	
 };
