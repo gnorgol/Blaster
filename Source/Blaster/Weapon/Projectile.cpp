@@ -57,6 +57,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
 {
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	CreateFieldsExplosionEffect(GetActorLocation());
 	if (BlasterCharacter)
 	{
 		bHitCharacter = true;

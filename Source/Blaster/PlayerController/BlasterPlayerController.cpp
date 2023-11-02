@@ -54,6 +54,7 @@ void ABlasterPlayerController::SetHUDMatchTime()
 		if (BlasterGameMode)
 		{
 			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime());
+			LevelStartingTime = BlasterGameMode->LevelStartingTime;
 		}
 	}
 	if (CountdownInt != SecondsLeft)
@@ -325,7 +326,10 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 		if (BlasterHUD)
 		{
-			BlasterHUD->AddCharacterOverlay();
+			if (BlasterHUD->CharacterOverlay == nullptr) 
+			{
+				BlasterHUD->AddCharacterOverlay();
+			}
 			if (BlasterHUD->AnnouncementOverlay)
 			{
 				BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Hidden);
