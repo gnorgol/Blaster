@@ -20,6 +20,7 @@
 #include "TimerManager.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
+#include <Kismet/GameplayStatics.h>
 
 
 // Sets default values
@@ -115,6 +116,11 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 	if (BlasterPlayerController)
 	{
 		//disable Input
+		bDisableGameplayInput = true;
+		if (CombatComponent)
+		{
+			CombatComponent->FireButtonPressed(false);
+		}
 		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -223,6 +229,23 @@ void ABlasterCharacter::PollInit()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	RotateInPlace(DeltaTime);
+	if (Killer)
+	{
+		KillCam(DeltaTime);
+	}
+
+	HideCameraIfCharacterCloseToWall();
+	PollInit();
+}
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplayInput)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -236,13 +259,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	if (Killer)
-	{
-		KillCam(DeltaTime);
-	}
-
-	HideCameraIfCharacterCloseToWall();
-	PollInit();
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -380,6 +396,19 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+
+	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
+	{
+		CombatComponent->EquippedWeapon->Destroy();
+	}
+}
+
 void ABlasterCharacter::MulticastEliminated_Implementation()
 {
 	if (BlasterPlayerController)
@@ -463,10 +492,15 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, Killer, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, bDisableGameplayInput, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
 	const FRotator ControlRotation = Controller->GetControlRotation();
@@ -491,6 +525,10 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 }
 void ABlasterCharacter::Equip(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	if(CombatComponent)
 	{
 		if (HasAuthority())
@@ -506,6 +544,10 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
 }
 void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	if (Value.Get<float>() > 0.0f)
 	{
 		Crouch();
@@ -517,6 +559,10 @@ void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 }
 void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	if (CombatComponent && IsWeaponEquipped())
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
@@ -524,6 +570,10 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 }
 void ABlasterCharacter::ReloadPressed(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	if (CombatComponent && IsWeaponEquipped())
 	{
 		CombatComponent->Reload();
@@ -619,6 +669,10 @@ void ABlasterCharacter::SimProxiesTurn()
 }
 void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	if (CombatComponent && IsWeaponEquipped())
 	{
 		if (Value.Get<float>() > 0.0f)
@@ -633,6 +687,9 @@ void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 
 
 }
+
+
+
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
 {
 	if (Ao_Yaw > 90.f)
@@ -660,6 +717,10 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 
 void ABlasterCharacter::Jump()
 {
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
 	Super::Jump();
 }
 

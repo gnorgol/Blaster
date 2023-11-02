@@ -31,7 +31,7 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
-
+	void FireButtonPressed(bool bPressed);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -42,9 +42,6 @@ protected:
 
 	UFUNCTION()
 		void OnRep_EquippedWeapon();
-
-	void FireButtonPressed(bool bPressed);
-
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTraget);
 
@@ -122,6 +119,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		int32 StartingARAmmo = 30;
+	UPROPERTY(EditAnywhere)
+		int32 StartingRocketAmmo = 0;
 	void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)

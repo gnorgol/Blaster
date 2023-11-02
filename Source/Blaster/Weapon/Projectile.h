@@ -31,7 +31,16 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 		float Damage = 20.0f;
-
+	UFUNCTION(BlueprintImplementableEvent)
+		void CreateFieldsExplosionEffect(const FVector& Location);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float MinDamage = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float DamageInnerRadius = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float DamageOuterRadius = 1000.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float DamageFalloff = 1.0f;
 private:
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* CollisionBox;
