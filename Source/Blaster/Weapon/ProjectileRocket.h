@@ -10,7 +10,8 @@
 /**
  * 
  */
-class UFieldSystemComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 UCLASS()
 class BLASTER_API AProjectileRocket : public AProjectile
 {
@@ -19,12 +20,35 @@ class BLASTER_API AProjectileRocket : public AProjectile
 public:
 	AProjectileRocket();
 
+
 protected:
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	                   FVector NormalImpulse, const FHitResult& Hit) override;
+	virtual void BeginPlay() override;
+	void DestroyTimerFinished();
+	virtual void Destroyed() override;
 
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UNiagaraSystem* TrailSystem;
+
+	UPROPERTY()
+	UNiagaraComponent* TrailSystemComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	USoundCue* ProjectileLoop;
+
+	UPROPERTY()
+	UAudioComponent* ProjectileLoopComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	USoundAttenuation* LoopingSoundAttenuation;
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RocketMesh;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyDelay = 3.0f;
 	
 };
