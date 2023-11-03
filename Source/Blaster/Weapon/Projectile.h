@@ -49,7 +49,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* CollisionBox;
 	UPROPERTY(EditAnywhere)
-		USoundCue* ImpactSound;
+		USoundCue* ImpactSurfaceSound;
+	UPROPERTY(EditAnywhere)
+		USoundCue* ImpactFleshSound;
 	bool bHitCharacter = false;
 
 	UPROPERTY(VisibleAnywhere)

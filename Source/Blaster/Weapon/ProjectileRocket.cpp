@@ -26,6 +26,7 @@ AProjectileRocket::AProjectileRocket()
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	
 	if (OtherActor == GetOwner())
 	{
 		return;
@@ -42,23 +43,24 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 
 	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileRocket::DestroyTimerFinished, DestroyDelay);
 
-	if (bHitCharacter)
+	if (FiringPawn)
 	{
+		CreateFieldsExplosionEffect(GetActorLocation());
+		
 		if (ImpactFleshParticles)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFleshParticles, GetActorTransform());
 		}
+
 	}
-	else
+
+	if (ImpactParticles)
 	{
-		if (ImpactParticles)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
-		}
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
 	}
-	if (ImpactSound)
+	if (ImpactSurfaceSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, GetActorLocation());
 	}
 	if (RocketMesh)
 	{

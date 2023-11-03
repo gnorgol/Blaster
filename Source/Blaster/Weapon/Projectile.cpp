@@ -53,7 +53,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
 {
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	CreateFieldsExplosionEffect(GetActorLocation());
+	UE_LOG(LogTemp, Warning, TEXT("MulticastIsHitCharacter_Implementation"));
+	
 	if (BlasterCharacter)
 	{
 		bHitCharacter = true;
@@ -79,6 +80,14 @@ void AProjectile::Destroyed()
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFleshParticles, GetActorTransform());
 		}
+		if (ImpactFleshSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactFleshSound, GetActorLocation());
+		}
+		else if(ImpactSurfaceSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, GetActorLocation());
+		}
 	}
 	else
 	{
@@ -86,10 +95,11 @@ void AProjectile::Destroyed()
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
 		}
+		if (ImpactSurfaceSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, GetActorLocation());
+		}
 	}
-	if (ImpactSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-	}
+
 }
 
