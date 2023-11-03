@@ -26,4 +26,6 @@ private:
 		UParticleSystem* ImpactParticle;
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactFleshParticles;
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticle;
 };

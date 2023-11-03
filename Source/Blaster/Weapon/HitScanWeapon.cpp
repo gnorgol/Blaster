@@ -5,6 +5,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -18,7 +20,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	}
 	AController* InstigatorController = OwnerPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
-	if (MuzzleFlashSocket && InstigatorController)
+	if (MuzzleFlashSocket)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
@@ -29,15 +31,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		if (World)
 		{
 			World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+			FVector BeamEnd = HitResult.bBlockingHit ? HitResult.ImpactPoint : End;
 				if (HitResult.bBlockingHit)
 				{
+					BeamEnd = HitResult.ImpactPoint;
 					ABlasterCharacter* Character = Cast<ABlasterCharacter>(HitResult.GetActor());
-					if (Character)
+					if (Character && HasAuthority() && InstigatorController)
 					{
-						if (HasAuthority())
-						{
-							UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController, this, UDamageType::StaticClass());
-						}
+						UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController, this, UDamageType::StaticClass());
 						if (ImpactFleshParticles)
 						{
 							UGameplayStatics::SpawnEmitterAtLocation(World, ImpactFleshParticles, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
@@ -50,6 +51,15 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 							UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticle, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
 						}
 					}
+				}
+				if (BeamParticle)
+				{
+					UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticle, SocketTransform);
+					if (Beam)
+					{
+						Beam->SetVectorParameter(FName("Target"), BeamEnd);
+					}
+
 				}
 		}
 
