@@ -51,10 +51,13 @@ protected:
 	UPROPERTY(EditAnywhere)
 		USoundCue* ImpactSound;
 	bool bHitCharacter = false;
-private:
 
 	UPROPERTY(VisibleAnywhere)
 		UProjectileMovementComponent* ProjectileMovementComponent;
+
+
+private:
+
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;
