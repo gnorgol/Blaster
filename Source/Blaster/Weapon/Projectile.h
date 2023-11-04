@@ -41,12 +41,25 @@ protected:
 		float DamageOuterRadius = 1000.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float DamageFalloff = 1.0f;
-private:
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* ImpactParticles;
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* ImpactFleshParticles;
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* CollisionBox;
+	UPROPERTY(EditAnywhere)
+		USoundCue* ImpactSurfaceSound;
+	UPROPERTY(EditAnywhere)
+		USoundCue* ImpactFleshSound;
+	bool bHitCharacter = false;
 
 	UPROPERTY(VisibleAnywhere)
 		UProjectileMovementComponent* ProjectileMovementComponent;
+
+
+private:
+
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;
@@ -54,16 +67,8 @@ private:
 	UPROPERTY()
 		UParticleSystemComponent* TracerComponent;
 
-	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactParticles;
-	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactFleshParticles;
 
-
-	UPROPERTY(EditAnywhere)
-	USoundCue* ImpactSound;
-
-	bool bHitCharacter = false;
+	
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastIsHitCharacter(AActor* OtherActor);

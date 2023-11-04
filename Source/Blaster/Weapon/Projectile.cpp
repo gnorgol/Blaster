@@ -3,7 +3,6 @@
 
 #include "Projectile.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
@@ -26,9 +25,6 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 
 }
 
@@ -57,7 +53,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
 {
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	CreateFieldsExplosionEffect(GetActorLocation());
+	UE_LOG(LogTemp, Warning, TEXT("MulticastIsHitCharacter_Implementation"));
+	
 	if (BlasterCharacter)
 	{
 		bHitCharacter = true;
@@ -83,6 +80,14 @@ void AProjectile::Destroyed()
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFleshParticles, GetActorTransform());
 		}
+		if (ImpactFleshSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactFleshSound, GetActorLocation());
+		}
+		else if(ImpactSurfaceSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, GetActorLocation());
+		}
 	}
 	else
 	{
@@ -90,10 +95,11 @@ void AProjectile::Destroyed()
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
 		}
+		if (ImpactSurfaceSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, GetActorLocation());
+		}
 	}
-	if (ImpactSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-	}
+
 }
 

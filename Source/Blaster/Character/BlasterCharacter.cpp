@@ -417,6 +417,11 @@ void ABlasterCharacter::MulticastEliminated_Implementation()
 	}
 	bIsDead = true;
 	PlayDeathMontage();
+	bool bHideSniperScope = IsLocallyControlled() && CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -457,6 +462,21 @@ void ABlasterCharacter::PlayReloadMontage()
 		switch (CombatComponent->EquippedWeapon->GetWeaponType())
 		{
 			case EWeaponType::EWT_AssaultRifle:
+				SectionName = TEXT("Rifle");
+				break;
+			case EWeaponType::EWT_RocketLauncher:
+				SectionName = TEXT("Rifle");
+				break;
+			case EWeaponType::EWT_Pistol:
+				SectionName = TEXT("Rifle");
+				break;
+			case EWeaponType::EWT_SubmachineGun:
+				SectionName = TEXT("Rifle");
+				break;
+			case EWeaponType::EWT_Shotgun:
+				SectionName = TEXT("Rifle");
+				break;
+			case EWeaponType::EWT_SniperRifle:
 				SectionName = TEXT("Rifle");
 				break;
 		}
