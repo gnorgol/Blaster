@@ -417,6 +417,11 @@ void ABlasterCharacter::MulticastEliminated_Implementation()
 	}
 	bIsDead = true;
 	PlayDeathMontage();
+	bool bHideSniperScope = IsLocallyControlled() && CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 void ABlasterCharacter::PlayHitReactMontage()
 {

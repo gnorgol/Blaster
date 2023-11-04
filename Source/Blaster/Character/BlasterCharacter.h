@@ -51,6 +51,9 @@ public:
 	UPROPERTY(Replicated)
 	bool bDisableGameplayInput = false;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShow);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
