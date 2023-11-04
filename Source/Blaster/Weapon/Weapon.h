@@ -70,6 +70,7 @@ public:
 		bool bAutomaticFire = true;
 	void SetHUDAmmo();
 	bool IsEmpty();
+	bool IsFull();
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		USoundCue* EquipSound;

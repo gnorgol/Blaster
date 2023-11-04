@@ -11,6 +11,7 @@
 #include "BulletShells.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -224,9 +225,18 @@ bool AWeapon::IsEmpty()
 	return Ammo <= 0;
 }
 
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
+}
+
 void AWeapon::OnRep_Ammo()
 {
 	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEndReload();
+	}
 	SetHUDAmmo();
 }
 void AWeapon::ShowPickupWidget(bool bShowWidget)

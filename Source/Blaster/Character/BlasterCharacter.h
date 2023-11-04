@@ -131,6 +131,7 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 
 
 
