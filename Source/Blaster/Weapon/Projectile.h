@@ -11,6 +11,8 @@ class UProjectileMovementComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class USoundCue;
+class UNiagaraComponent;
+class UNiagaraSystem;
 UCLASS()
 class BLASTER_API AProjectile : public AActor
 {
@@ -25,6 +27,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void StartDestroyTimer();
+	void DestroyTimerFinished();
+	void ExplodeDamage();
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -57,6 +62,16 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 		UProjectileMovementComponent* ProjectileMovementComponent;
 
+	UPROPERTY(EditAnywhere, Category = "Effects")
+		UNiagaraSystem* TrailSystem;
+
+	UPROPERTY()
+		UNiagaraComponent* TrailSystemComponent;
+
+	void SpawnTrailSystem();
+
+	UPROPERTY(VisibleAnywhere)
+		UStaticMeshComponent* ProjectileMesh;
 
 private:
 
@@ -72,5 +87,10 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastIsHitCharacter(AActor* OtherActor);
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+		float DestroyDelay = 3.0f;
 
 };
