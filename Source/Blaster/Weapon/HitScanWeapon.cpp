@@ -8,6 +8,9 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "WeaponTypes.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -44,12 +47,20 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						{
 							UGameplayStatics::SpawnEmitterAtLocation(World, ImpactFleshParticles, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
 						}
+						if (ImpactFleshSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(this, ImpactFleshSound, HitResult.ImpactPoint);
+						}
 					}
 					else
 					{
 						if (ImpactParticle)
 						{
 							UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticle, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
+						}
+						if (ImpactSurfaceSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(this, ImpactSurfaceSound, HitResult.ImpactPoint);
 						}
 					}
 				}
@@ -62,10 +73,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					}
 
 				}
-				if (HitSound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitResult.ImpactPoint);
-				}
+
 
 		}
 		if (MuzzleFlash)
@@ -79,4 +87,20 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 
 	}
+}
+
+FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& TraceEnd) const
+{
+	FVector ToTarget = (TraceEnd - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTarget * DistanceToSphere;
+	FVector RandimVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0, SphereRadius);
+	FVector EndLocation = SphereCenter + RandimVector;
+	FVector ToEndLocation = EndLocation - TraceStart;
+
+	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Green, true);
+	DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()), FColor::Blue, true);
+
+
+	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
 }
