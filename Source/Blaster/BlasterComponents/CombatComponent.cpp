@@ -15,6 +15,7 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/Character/BlastAnimInstance.h"
+#include "Blaster/Weapon/Projectile.h"
 
 
 
@@ -672,5 +673,30 @@ void UCombatComponent::ThrowGrenadeFinished()
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false);
+	if (Character && Character->IsLocallyControlled())
+	{
+		ServerLaunchGrenade(HitTarget);
+	}
+
+}
+
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if (Character && GrenadeClass && Character->GetAttachedGrenade())
+	{
+		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
+
+		FVector ToTarget = Target - SpawnLocation;
+		const FRotator SpawnRotation = ToTarget.Rotation();
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = Character;
+		SpawnParameters.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, SpawnRotation, SpawnParameters);
+		}
+
+	}
 }
 
