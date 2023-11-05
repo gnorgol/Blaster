@@ -75,6 +75,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		USoundCue* EquipSound;
 
+	void EnableCustomDepth(bool bEnable);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
