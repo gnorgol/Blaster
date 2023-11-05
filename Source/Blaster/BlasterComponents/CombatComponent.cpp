@@ -493,7 +493,8 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && EquippedWeapon->IsFull())
+
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		ServerReload();
 	}
@@ -685,7 +686,6 @@ void UCombatComponent::JumpToShotgunEndReload()
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
 	if (AnimInstance && Character->GetReloadMontage())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Jump to ShotgunEnd Section"));
 		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"), Character->GetReloadMontage());
 	}
 

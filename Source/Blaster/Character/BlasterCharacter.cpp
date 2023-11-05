@@ -148,10 +148,6 @@ void ABlasterCharacter::BeginPlay()
 
 	//console log all sockets in the mesh
 	TArray<FName> SocketNames = GetMesh()->GetAllSocketNames();
-	for (FName SocketName : SocketNames)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Socket Name: %s"), *SocketName.ToString());
-	}
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -520,6 +516,10 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+	if (bIsDead)
+	{
+		return;
+	}
 	Health = FMath::Clamp(Health - DamageAmount, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
