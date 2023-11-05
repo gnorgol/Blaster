@@ -37,6 +37,9 @@ public:
 	void ShotGunShellReloaded();
 
 	void JumpToShotgunEndReload();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -62,6 +65,11 @@ protected:
 
 	void HandleReload();
 	int32 AmountNeededToReload();
+
+	void ThrowGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
 
 private:
 	UPROPERTY()
@@ -146,5 +154,7 @@ private:
 
 	void UpdateAmmoValues();
 	void UpdateShotgunAmmoValues();
+
+
 };
   

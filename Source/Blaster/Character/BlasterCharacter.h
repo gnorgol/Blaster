@@ -47,6 +47,7 @@ public:
 	void PlayHitReactMontage();
 	void PlayDeathMontage();
 	void PlayReloadMontage();
+	void PlayThrowGrenadeMontage();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplayInput = false;
@@ -71,6 +72,7 @@ protected:
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
+	void ThrowGrenadePressed(const FInputActionValue& Value);
 	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION()
@@ -99,6 +101,8 @@ protected:
 		UInputAction* AimAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* ReloadAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* ThrowGrenadeAction;
 
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
@@ -174,6 +178,8 @@ private:
 		UAnimMontage* DeathMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* ReloadMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;
