@@ -51,6 +51,8 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
 
+
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -62,6 +64,11 @@ ABlasterCharacter::ABlasterCharacter()
 
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 void ABlasterCharacter::DeathTimerFinished()
@@ -138,6 +145,14 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//console log all sockets in the mesh
+	TArray<FName> SocketNames = GetMesh()->GetAllSocketNames();
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
+		AttachedGrenade->SetVisibility(false);
+	}
 	
 	Tags.Add(FName("Player"));
 	UpdateHUDHealth();
@@ -361,6 +376,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ThrowGrenadePressed);
 	}
 
 }
@@ -468,23 +484,42 @@ void ABlasterCharacter::PlayReloadMontage()
 				SectionName = TEXT("Rifle");
 				break;
 			case EWeaponType::EWT_Pistol:
-				SectionName = TEXT("Rifle");
+				SectionName = TEXT("Pistol");
 				break;
 			case EWeaponType::EWT_SubmachineGun:
-				SectionName = TEXT("Rifle");
+				SectionName = TEXT("Pistol");
 				break;
 			case EWeaponType::EWT_Shotgun:
-				SectionName = TEXT("Rifle");
+				SectionName = TEXT("Shotgun");
 				break;
 			case EWeaponType::EWT_SniperRifle:
-				SectionName = TEXT("Rifle");
+				SectionName = TEXT("Sniper");
+				break;
+			case EWeaponType::EWT_GrenadeLauncher:
+				SectionName = TEXT("GrenadeLauncher");
 				break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+void ABlasterCharacter::PlayThrowGrenadeMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+	if (bIsDead)
+	{
+		return;
+	}
 	Health = FMath::Clamp(Health - DamageAmount, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
@@ -705,6 +740,19 @@ void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 		}
 	}
 
+
+}
+
+void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
+{
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
+	if (CombatComponent && IsWeaponEquipped())
+	{
+		CombatComponent->ThrowGrenade();
+	}
 
 }
 

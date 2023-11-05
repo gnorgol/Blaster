@@ -27,6 +27,7 @@ public:
 	void SetHUDKillFieldPlayerInfo(const FString& PlayerName,bool bIsDead);
 	void SetHUDMatchCountdown(float Countdown);
 	void SetHUDWarmupCountdown(float Countdown);
+	void SetHUDGrenadeAmount(int32 Amount);
 	void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTimes) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -92,5 +93,6 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;
+	int32 HUDGrenadeAmount;
 	
 };

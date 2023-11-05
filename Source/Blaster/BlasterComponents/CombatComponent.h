@@ -15,6 +15,7 @@ class AWeapon;
 class ABlasterCharacter;
 class ABlasterPlayerController;
 class ABlasterHUD;
+class AProjectile;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -28,10 +29,26 @@ public:
 	friend class ABlasterCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+
+
+	
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(BlueprintCallable)
+	void ShotGunShellReloaded();
+
+	void JumpToShotgunEndReload();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
+	UFUNCTION(BlueprintCallable)
+		void LaunchGrenade();
+	UFUNCTION(Server, Reliable)
+		void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -57,6 +74,24 @@ protected:
 
 	void HandleReload();
 	int32 AmountNeededToReload();
+
+	void ThrowGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> GrenadeClass;
+
+	void DropEquippedWeapon();
+	void AttacheActorToRightHand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void ReloadEmptyWeapon();
+
+	void PlayEquipWeaponSound();
+
+	void UpdateCarriedAmmo();
+	void ShowAttachedGrenade(bool bShow);
 
 private:
 	UPROPERTY()
@@ -129,6 +164,8 @@ private:
 		int32 StartingShotgunAmmo = 0;
 	UPROPERTY(EditAnywhere)
 		int32 StartingSniperAmmo = 0;
+	UPROPERTY(EditAnywhere)
+		int32 StartingGrenadeLauncherAmmo = 0;
 	void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
@@ -138,5 +175,20 @@ private:
 		void OnRep_CombatState();
 
 	void UpdateAmmoValues();
+	void UpdateShotgunAmmoValues();
+
+	
+
+	UPROPERTY(ReplicatedUsing = OnRep_GrenadeAmount)
+	int32 GrenadeAmount = 3;
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenadeAmount = 3;
+	UFUNCTION()
+	void OnRep_GrenadeAmount();
+	void UpdateHUDGrenadeAmount();
+
+public:
+	FORCEINLINE int32 GetGrenades() const { return GrenadeAmount; }
+
 };
   
