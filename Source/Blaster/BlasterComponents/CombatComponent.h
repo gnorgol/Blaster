@@ -28,6 +28,13 @@ public:
 	friend class ABlasterCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+
+	void ReloadEmptyWeapon();
+
+	void PlayEquipWeaponSound();
+
+	void UpdateCarriedAmmo();
+	
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
@@ -70,6 +77,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
+
+	void DropEquippedWeapon();
+	void AttacheActorToRightHand(AActor* ActorToAttach);
 
 private:
 	UPROPERTY()
