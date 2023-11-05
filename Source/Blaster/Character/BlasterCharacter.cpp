@@ -152,7 +152,12 @@ void ABlasterCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Socket Name: %s"), *SocketName.ToString());
 	}
-	AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
+		AttachedGrenade->SetVisibility(false);
+	}
+	
 	Tags.Add(FName("Player"));
 	UpdateHUDHealth();
 	if (HasAuthority())

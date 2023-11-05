@@ -29,11 +29,7 @@ public:
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 
-	void ReloadEmptyWeapon();
 
-	void PlayEquipWeaponSound();
-
-	void UpdateCarriedAmmo();
 	
 	void Reload();
 	UFUNCTION(BlueprintCallable)
@@ -47,6 +43,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
+
+	UFUNCTION(BlueprintCallable)
+		void LaunchGrenade();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -81,6 +80,12 @@ protected:
 	void DropEquippedWeapon();
 	void AttacheActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void ReloadEmptyWeapon();
+
+	void PlayEquipWeaponSound();
+
+	void UpdateCarriedAmmo();
+	void ShowAttachedGrenade(bool bShow);
 
 private:
 	UPROPERTY()
