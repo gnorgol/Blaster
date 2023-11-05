@@ -80,6 +80,7 @@ protected:
 
 	void DropEquippedWeapon();
 	void AttacheActorToRightHand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
 
 private:
 	UPROPERTY()
