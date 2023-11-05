@@ -225,6 +225,9 @@ private:
 	ABlasterCharacter* Killer;
 
 
+	UPROPERTY(VisibleAnywhere)
+		UStaticMeshComponent* AttachedGrenade;
+
 
 
 

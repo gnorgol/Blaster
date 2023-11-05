@@ -51,6 +51,8 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
 
+
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -62,6 +64,11 @@ ABlasterCharacter::ABlasterCharacter()
 
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 void ABlasterCharacter::DeathTimerFinished()
@@ -138,7 +145,14 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	//console log all sockets in the mesh
+	TArray<FName> SocketNames = GetMesh()->GetAllSocketNames();
+	for (FName SocketName : SocketNames)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Socket Name: %s"), *SocketName.ToString());
+	}
+	AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
 	Tags.Add(FName("Player"));
 	UpdateHUDHealth();
 	if (HasAuthority())
