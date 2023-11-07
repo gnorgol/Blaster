@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Components/SphereComponent.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 // Sets default values
 APickup::APickup()
 {
@@ -23,8 +24,10 @@ APickup::APickup()
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(RootComponent);
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PickupMesh->SetRelativeScale3D(FVector(2.f,2.f,2.f));
+	PickupMesh->SetRenderCustomDepth(true);
+	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
 }
-
 // Called when the game starts or when spawned
 void APickup::BeginPlay()
 {
@@ -41,7 +44,10 @@ void APickup::BeginPlay()
 void APickup::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	if (PickupMesh)
+	{
+		PickupMesh->AddWorldRotation(FRotator(0.0f, RotationRate * DeltaTime, 0.0f));
+	}
 }
 
 void APickup::Destroyed()

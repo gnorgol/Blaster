@@ -36,6 +36,10 @@ protected:
 
 	virtual void BeginPlay() override;
 
+
+	UPROPERTY(EditAnywhere)
+	float RotationRate = 50.0f;
+
 	
 
 };
