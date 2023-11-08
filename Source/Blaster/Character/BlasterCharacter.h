@@ -115,6 +115,8 @@ protected:
 	// Poll for any classes and initialize HUD
 	void PollInit();
 
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

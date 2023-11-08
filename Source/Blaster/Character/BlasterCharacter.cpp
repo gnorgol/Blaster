@@ -96,22 +96,35 @@ void ABlasterCharacter::KillCam(float DeltaTime)
 }
 
 
-
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr)
+	{
+		return;
+	}
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->DropWeapon();
+	}
+}
 
 
 void ABlasterCharacter::RagdollDeath()
 {
-	if (CombatComponent && CombatComponent->EquippedWeapon)
+	if (CombatComponent)
 	{
-		if (CombatComponent->EquippedWeapon->bDestroyWeapon)
+		if (CombatComponent->EquippedWeapon)
 		{
-			CombatComponent->EquippedWeapon->Destroy();
+			DropOrDestroyWeapon(CombatComponent->EquippedWeapon);
 		}
-		else
+		if (CombatComponent->SecondaryWeapon)
 		{
-			CombatComponent->EquippedWeapon->DropWeapon();
+			DropOrDestroyWeapon(CombatComponent->SecondaryWeapon);
 		}
-
 	}
 	MulticastRagdollDeath();
 	bIsDead = true;
@@ -294,6 +307,8 @@ void ABlasterCharacter::PollInit()
 		}
 	}
 }
+
+
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
