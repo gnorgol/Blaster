@@ -427,6 +427,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
+		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwitchWeapon);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
@@ -659,11 +660,25 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
 	{
 		return;
 	}
-	if(CombatComponent)
+	if(CombatComponent && OverlappingWeapon)
 	{
 		ServerEquipButtonPressed();
 	}
 	
+}
+void ABlasterCharacter::SwitchWeapon(const FInputActionValue& Value)
+{
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
+	if (CombatComponent)
+	{
+		if (CombatComponent->ShouldSwapWeapon())
+		{
+			CombatComponent->SwapWeapon();
+		}
+	}
 }
 void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 {

@@ -73,6 +73,7 @@ protected:
 	virtual void Jump() override;
 	void Look(const FInputActionValue& Value);
 	void Equip(const FInputActionValue& Value);
+	void SwitchWeapon(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void ReloadPressed(const FInputActionValue& Value);
@@ -87,14 +88,10 @@ protected:
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* MoveAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -111,6 +108,8 @@ protected:
 		UInputAction* ReloadAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* ThrowGrenadeAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* SwitchWeaponAction;
 
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD

@@ -20,8 +20,10 @@ void UBuffComponent::Heal(float HealAmount, float HealTime)
 	}
 	if (HealTime == 0)
 	{
-		Character->SetHealth(Character->GetHealth() + HealAmount);
+		AmountToHeal = FMath::Clamp(Character->GetHealth() + HealAmount, 0.f, Character->GetMaxHealth());
+		Character->SetHealth(AmountToHeal);
 		Character->UpdateHUDHealth();
+		AmountToHeal = 0.f;
 		return;
 	}
 	bHealing = true;
@@ -38,7 +40,6 @@ void UBuffComponent::Shield(float ShieldAmount, float ShieldTime)
 	bShielding = true;
 	if (ShieldTime == 0)
 	{
-
 		Character->SetShield(Character->GetShield() + ShieldAmount);
 		Character->UpdateHUDShield();
 		return;
