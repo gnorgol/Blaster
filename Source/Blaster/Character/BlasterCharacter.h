@@ -56,6 +56,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShow);
 
+	void UpdateHUDHealth();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,7 +80,7 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
-	void UpdateHUDHealth();
+
 
 
 
@@ -132,9 +134,11 @@ public:
 	FORCEINLINE bool IsDead() const { return bIsDead; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
 	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
@@ -208,7 +212,7 @@ private:
 
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float OldHealth);
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
 

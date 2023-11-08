@@ -199,10 +199,13 @@ void ABlasterCharacter::HideCharacter(bool bHide)
 		}
 	}
 }
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float OldHealth)
 {
 	UpdateHUDHealth();
-	PlayHitReactMontage();
+	if (Health < OldHealth)
+	{
+		PlayHitReactMontage();
+	}	
 }
 
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
@@ -393,7 +396,7 @@ void ABlasterCharacter::PostInitializeComponents()
 	}
 	if (BuffComponent)
 	{
-		BuffComponent->BlasterCharacter = this;
+		BuffComponent->Character = this;
 	}
 }
 void ABlasterCharacter::PlayFireMontage(bool bAiming)
