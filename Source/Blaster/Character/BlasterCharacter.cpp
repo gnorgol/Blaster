@@ -103,7 +103,15 @@ void ABlasterCharacter::RagdollDeath()
 {
 	if (CombatComponent && CombatComponent->EquippedWeapon)
 	{
-		CombatComponent->EquippedWeapon->DropWeapon();
+		if (CombatComponent->EquippedWeapon->bDestroyWeapon)
+		{
+			CombatComponent->EquippedWeapon->Destroy();
+		}
+		else
+		{
+			CombatComponent->EquippedWeapon->DropWeapon();
+		}
+
 	}
 	MulticastRagdollDeath();
 	bIsDead = true;
@@ -149,8 +157,6 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//console log all sockets in the mesh
-	TArray<FName> SocketNames = GetMesh()->GetAllSocketNames();
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -158,6 +164,8 @@ void ABlasterCharacter::BeginPlay()
 	}
 	
 	Tags.Add(FName("Player"));
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
 	if (HasAuthority())
@@ -187,6 +195,29 @@ void ABlasterCharacter::UpdateHUDShield()
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+void ABlasterCharacter::UpdateHUDAmmo()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->CarriedAmmo);
+		BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->EquippedWeapon->GetCurrentAmmo());	
+	}
+}
+void ABlasterCharacter::SpawnDefaultWeapon()
+{
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (BlasterGameMode && World && !bIsDead && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if (StartingWeapon && CombatComponent)
+		{
+			CombatComponent->EquipWeapon(StartingWeapon);
+		}
 	}
 }
 float ABlasterCharacter::CalculateSpeed()
