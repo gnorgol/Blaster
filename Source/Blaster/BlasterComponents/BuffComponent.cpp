@@ -18,9 +18,34 @@ void UBuffComponent::Heal(float HealAmount, float HealTime)
 	{
 		return;
 	}
+	if (HealTime == 0)
+	{
+		Character->SetHealth(Character->GetHealth() + HealAmount);
+		Character->UpdateHUDHealth();
+		return;
+	}
 	bHealing = true;
 	HealRate = HealAmount / HealTime;
 	AmountToHeal = HealAmount;
+}
+
+void UBuffComponent::Shield(float ShieldAmount, float ShieldTime)
+{
+	if (Character == nullptr || Character->IsDead())
+	{
+		return;
+	}
+	bShielding = true;
+	if (ShieldTime == 0)
+	{
+
+		Character->SetShield(Character->GetShield() + ShieldAmount);
+		Character->UpdateHUDShield();
+		return;
+
+	}
+	ShieldRate = ShieldAmount / ShieldTime;
+	AmountToShield = ShieldAmount - 1.f;
 }
 
 
@@ -28,8 +53,6 @@ void UBuffComponent::Heal(float HealAmount, float HealTime)
 void UBuffComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
 void UBuffComponent::HealRampUp(float DeltaTime)
@@ -43,7 +66,7 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 	Character->UpdateHUDHealth();
 	AmountToHeal -= HealThisFrame;
 
-	if (AmountToHeal <= 0.f)
+	if (AmountToHeal <= 0.f || Character->GetHealth() >= Character->GetMaxHealth())
 	{
 		bHealing = false;
 		AmountToHeal = 0.f;
@@ -51,11 +74,34 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 
 }
 
+void UBuffComponent::ShieldRampUp(float DeltaTime)
+{
+	if (!bShielding || Character == nullptr || Character->IsDead())
+	{
+		return;
+	}
+	const float ShieldThisFrame = ShieldRate * DeltaTime;
+	Character->SetShield(FMath::Clamp(Character->GetShield() + ShieldThisFrame, 0.f, Character->GetMaxShield()));
+	Character->UpdateHUDShield();
+	AmountToShield -= ShieldThisFrame;
+	if (AmountToShield <= 0.f || Character->GetShield() >= Character->GetMaxShield())
+	{
+		bShielding = false;
+		AmountToShield = 0.f;
+	}
+}
+
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	HealRampUp(DeltaTime);
-
+	if (bHealing)
+	{
+		HealRampUp(DeltaTime);
+	}
+	if (bShielding)
+	{
+		ShieldRampUp(DeltaTime);
+	}
 }
 

@@ -16,10 +16,12 @@ public:
 	UBuffComponent();
 	friend class ABlasterCharacter;
 	void Heal(float HealAmount,float HealTime);
+	void Shield(float ShieldAmount, float ShieldTime);
 
 protected:
 	virtual void BeginPlay() override;
 	void HealRampUp(float DeltaTime);
+	void ShieldRampUp(float DeltaTime);
 
 private:
 	UPROPERTY()
@@ -28,6 +30,10 @@ private:
 	bool bHealing = false;
 	float HealRate = 0.f;
 	float AmountToHeal = 0.f;
+
+	bool bShielding = false;
+	float ShieldRate = 0.f;
+	float AmountToShield = 0.f;
 
 
 public:	
