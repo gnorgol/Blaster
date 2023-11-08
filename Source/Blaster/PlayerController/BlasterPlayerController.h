@@ -88,14 +88,17 @@ private:
 	UPROPERTY()
 	ABlasterGameMode* BlasterGameMode;
 
-	bool bInitializedCharacterOverlay = false;
-
+	bool bInitializeHealth = false;
 	float HUDHealth;
 	float HUDMaxHealth;
+	bool bInitializeShield = false;
 	float HUDShield;
 	float HUDMaxShield;
+	bool bInitializeScore = false;
 	float HUDScore;
+	bool bInitializeDefeats = false;
 	int32 HUDDefeats;
+	bool bInitializeGrenadeAmount = false;
 	int32 HUDGrenadeAmount;
 	
 };

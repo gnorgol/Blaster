@@ -89,7 +89,7 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 	else
 	{
-		bInitializedCharacterOverlay = true;
+		bInitializeHealth = true;
 		HUDHealth = Health;
 		HUDMaxHealth = MaxHealth;
 	}
@@ -109,7 +109,7 @@ BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	}
 	else
 	{
-		bInitializedCharacterOverlay = true;
+		bInitializeShield = true;
 		HUDShield = Shield;
 		HUDMaxShield = MaxShield;
 	}
@@ -126,7 +126,7 @@ void ABlasterPlayerController::SetHUDScore(float Score)
 	}
 	else
 	{
-		bInitializedCharacterOverlay = true;
+		bInitializeScore = true;
 		HUDScore = Score;
 	}
 }
@@ -142,7 +142,7 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 	else
 	{
-		bInitializedCharacterOverlay = true;
+		bInitializeDefeats = true;
 		HUDDefeats = Defeats;
 	}
 }
@@ -269,6 +269,7 @@ void ABlasterPlayerController::SetHUDGrenadeAmount(int32 Amount)
 	}
 	else
 	{
+		bInitializeGrenadeAmount = true;
 		HUDGrenadeAmount = Amount;
 	}
 }
@@ -475,14 +476,30 @@ void ABlasterPlayerController::PollInit()
 			CharacterOverlay = BlasterHUD->CharacterOverlay;
 			if (CharacterOverlay)
 			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDShield(HUDShield, HUDMaxShield);
-				SetHUDScore(HUDScore);
-				SetHUDDefeats(HUDDefeats);
+				if (bInitializeHealth)
+				{
+					SetHUDHealth(HUDHealth, HUDMaxHealth);
+				}
+				if (bInitializeShield)
+				{
+					SetHUDShield(HUDShield, HUDMaxShield);
+				}
+				if (bInitializeScore)
+				{
+					SetHUDScore(HUDScore);
+				}
+				if (bInitializeDefeats)
+				{
+					SetHUDDefeats(HUDDefeats);
+				}
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 				if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
 				{
-					SetHUDGrenadeAmount(BlasterCharacter->GetCombatComponent()->GetGrenades());
+					if (bInitializeGrenadeAmount)
+					{
+						SetHUDGrenadeAmount(BlasterCharacter->GetCombatComponent()->GetGrenades());
+					}
+					
 				}
 			}
 		}

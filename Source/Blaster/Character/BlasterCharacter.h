@@ -211,7 +211,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 		float MaxShield = 100.0f;
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
-	float Shield = 20.0f;
+	float Shield = 40.0f;
 
 	bool bIsDead = false;
 
