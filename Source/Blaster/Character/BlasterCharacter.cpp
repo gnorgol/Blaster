@@ -180,6 +180,14 @@ void ABlasterCharacter::UpdateHUDHealth()
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 }
+void ABlasterCharacter::UpdateHUDShield()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
 float ABlasterCharacter::CalculateSpeed()
 {
 	FVector Velocity = GetVelocity();
@@ -206,6 +214,15 @@ void ABlasterCharacter::OnRep_Health(float OldHealth)
 	{
 		PlayHitReactMontage();
 	}	
+}
+
+void ABlasterCharacter::OnRep_Shield(float OldShield)
+{
+	UpdateHUDShield();
+	if (Shield < OldShield)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
@@ -556,6 +573,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, Shield, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, Killer, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, bDisableGameplayInput, COND_OwnerOnly);
 }

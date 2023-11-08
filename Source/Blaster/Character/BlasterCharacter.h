@@ -57,6 +57,7 @@ public:
 	void ShowSniperScopeWidget(bool bShow);
 
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
 
 protected:
 	// Called when the game starts or when spawned
@@ -207,12 +208,19 @@ private:
 	float MaxHealth = 100.0f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.0f;
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+		float MaxShield = 100.0f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 20.0f;
 
 	bool bIsDead = false;
 
 
 	UFUNCTION()
-	void OnRep_Health(float OldHealth);
+		void OnRep_Health(float OldHealth);
+	UFUNCTION()
+		void OnRep_Shield(float OldShield);
+
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
 
