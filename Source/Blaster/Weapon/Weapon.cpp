@@ -94,7 +94,15 @@ void AWeapon::OnRep_Owner()
 		BlasterOwnerCharacter = nullptr;
 		BlasterOwnerController = nullptr;
 	}
-	SetHUDAmmo();
+	else
+	{
+		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+		if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetEquippedWeapon() && BlasterOwnerCharacter->GetEquippedWeapon() == this)
+		{
+			SetHUDAmmo();
+		}		
+	}
+	
 
 }
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
