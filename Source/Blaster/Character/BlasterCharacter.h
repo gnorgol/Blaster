@@ -17,6 +17,7 @@ class UInputMappingContext;
 class UInputAction;
 class AWeapon;
 class UCombatComponent;
+class UBuffComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
@@ -158,6 +159,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+		UBuffComponent* BuffComponent;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
