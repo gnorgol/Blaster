@@ -17,6 +17,7 @@ class UInputMappingContext;
 class UInputAction;
 class AWeapon;
 class UCombatComponent;
+class UBuffComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
@@ -55,6 +56,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShow);
 
+	void UpdateHUDHealth();
+	void UpdateHUDShield();
+
+	void UpdateHUDAmmo();
+
+	void SpawnDefaultWeapon();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -65,6 +73,7 @@ protected:
 	virtual void Jump() override;
 	void Look(const FInputActionValue& Value);
 	void Equip(const FInputActionValue& Value);
+	void SwitchWeapon(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void ReloadPressed(const FInputActionValue& Value);
@@ -77,16 +86,12 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
-	void UpdateHUDHealth();
-
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputMappingContext* BlastCharacterMappingContext;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* MoveAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -103,10 +108,14 @@ protected:
 		UInputAction* ReloadAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* ThrowGrenadeAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* SwitchWeaponAction;
 
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
 	void PollInit();
+
+	void DropOrDestroyWeapon(AWeapon* Weapon);
 
 public:	
 	// Called every frame
@@ -131,9 +140,14 @@ public:
 	FORCEINLINE bool IsDead() const { return bIsDead; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	FORCEINLINE void SetShield(float NewShield) { Shield = NewShield; }
 	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
@@ -158,6 +172,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+		UBuffComponent* BuffComponent;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -199,12 +216,19 @@ private:
 	float MaxHealth = 100.0f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.0f;
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+		float MaxShield = 100.0f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield = 0.0f;
 
 	bool bIsDead = false;
 
 
 	UFUNCTION()
-	void OnRep_Health();
+		void OnRep_Health(float OldHealth);
+	UFUNCTION()
+		void OnRep_Shield(float OldShield);
+
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
 
@@ -228,6 +252,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* AttachedGrenade;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AWeapon> DefaultWeaponClass;
 
 
 

@@ -95,7 +95,6 @@ void AProjectile::ExplodeDamage()
 void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
 {
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	UE_LOG(LogTemp, Warning, TEXT("MulticastIsHitCharacter_Implementation"));
 	
 	if (BlasterCharacter)
 	{

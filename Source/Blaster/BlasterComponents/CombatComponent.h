@@ -29,7 +29,7 @@ public:
 	friend class ABlasterCharacter;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
-
+	void SwapWeapon();
 
 	
 	void Reload();
@@ -49,6 +49,8 @@ public:
 		void LaunchGrenade();
 	UFUNCTION(Server, Reliable)
 		void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
+	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -59,6 +61,9 @@ protected:
 
 	UFUNCTION()
 		void OnRep_EquippedWeapon();
+	UFUNCTION()
+		void OnRep_SecondaryWeapon();
+
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTraget);
 
@@ -86,12 +91,15 @@ protected:
 	void DropEquippedWeapon();
 	void AttacheActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void AttachActorToBack(AActor* ActorToAttach);
 	void ReloadEmptyWeapon();
 
-	void PlayEquipWeaponSound();
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 
 	void UpdateCarriedAmmo();
 	void ShowAttachedGrenade(bool bShow);
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 private:
 	UPROPERTY()
@@ -102,6 +110,9 @@ private:
 	ABlasterHUD* HUD;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -153,6 +164,9 @@ private:
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
+		int32 MaxCarriedAmmo = 300;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
 		int32 StartingARAmmo = 30;
 	UPROPERTY(EditAnywhere)
 		int32 StartingRocketAmmo = 0;
@@ -189,6 +203,7 @@ private:
 
 public:
 	FORCEINLINE int32 GetGrenades() const { return GrenadeAmount; }
+	bool ShouldSwapWeapon();
 
 };
   
