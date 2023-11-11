@@ -45,7 +45,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRagdollDeath();
 
-	void PlayHitReactMontage();
+	
 	void PlayDeathMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
@@ -79,6 +79,7 @@ protected:
 	void ReloadPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
+	void PlayHitReactMontage();
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
 	void ThrowGrenadePressed(const FInputActionValue& Value);
@@ -177,6 +178,8 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+	UFUNCTION(Server, Reliable)
+		void ServerSwitchWeaponButtonPressed();
 
 	float Ao_Yaw;
 	float InterpAO_Yaw;

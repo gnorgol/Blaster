@@ -11,7 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
-#include "Camera/CameraComponent.h"
+#include "Camera/CameraComponent.h" 
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/Character/BlastAnimInstance.h"
@@ -269,6 +269,7 @@ void UCombatComponent::Fire()
 	{
 		bCanFire = false;
 		ServerFire(HitTarget);
+		LocalFire(HitTarget);
 		if (EquippedWeapon)
 		{
 			CrosshairShootingFactor = 0.75f;
@@ -277,6 +278,8 @@ void UCombatComponent::Fire()
 	}
 
 }
+
+
 
 bool UCombatComponent::CanFire()
 {
@@ -375,6 +378,18 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	{
 		return;
 	}
+	if (Character && Character->IsLocallyControlled() )
+	{
+		return;
+	}
+	LocalFire(TraceHitTarget);
+}
+void UCombatComponent::LocalFire(FVector_NetQuantize TraceHitTarget)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
 	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 	{
 		Character->PlayFireMontage(bAiming);
@@ -432,6 +447,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 }
 void UCombatComponent::SwapWeapon()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (Character == nullptr || !Character->HasAuthority()) return;
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;

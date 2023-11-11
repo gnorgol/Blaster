@@ -255,9 +255,11 @@ void ABlasterCharacter::HideCharacter(bool bHide)
 }
 void ABlasterCharacter::OnRep_Health(float OldHealth)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Health: %f"), Health);
 	UpdateHUDHealth();
 	if (Health < OldHealth)
 	{
+		
 		PlayHitReactMontage();
 	}	
 }
@@ -615,7 +617,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	UpdateHUDShield();
 	PlayHitReactMontage();
 
-	if (Health <= 0.f)
+	if (Health == 0.f)
 	{
 		//Die
 		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
@@ -690,10 +692,7 @@ void ABlasterCharacter::SwitchWeapon(const FInputActionValue& Value)
 	}
 	if (CombatComponent)
 	{
-		if (CombatComponent->ShouldSwapWeapon())
-		{
-			CombatComponent->SwapWeapon();
-		}
+		ServerSwitchWeaponButtonPressed();
 	}
 }
 void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
@@ -855,6 +854,15 @@ void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
 
 }
 
+
+
+void ABlasterCharacter::ServerSwitchWeaponButtonPressed_Implementation()
+{
+	if (CombatComponent->ShouldSwapWeapon())
+	{
+		CombatComponent->SwapWeapon();
+	}
+}
 
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)

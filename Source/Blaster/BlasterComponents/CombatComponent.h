@@ -151,6 +151,7 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 	void Fire();
+	void LocalFire(FVector_NetQuantize TraceHitTarget);
 
 	bool CanFire();
 
