@@ -17,6 +17,15 @@ enum class EWeaponState : uint8
 
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
 
 
 class USphereComponent;
@@ -79,6 +88,13 @@ public:
 	void EnableCustomDepth(bool bEnable);
 
 	bool bDestroyWeapon = false;
+	UPROPERTY(EditAnywhere)
+		EFireType FireType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+		bool bUseScatter = false;
+
+	FVector TraceEndWithScatter(const FVector& TraceEnd) const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -148,4 +164,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+		float DistanceToSphere = 800.0f;
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+		float SphereRadius = 75.f;
 };
