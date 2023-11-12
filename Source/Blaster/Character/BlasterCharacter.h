@@ -22,6 +22,7 @@ class UAnimMontage;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
 class UWidgetComponent;
+class UBoxComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -62,6 +63,45 @@ public:
 	void UpdateHUDAmmo();
 
 	void SpawnDefaultWeapon();
+
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* head;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* pelvis;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_02;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_03;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_04;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_05;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* upperarm_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* upperarm_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* lowerarm_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* lowerarm_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* hand_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* hand_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* thigh_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* thigh_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* calf_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* calf_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* foot_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* foot_r;
+
+
 
 protected:
 	// Called when the game starts or when spawned
