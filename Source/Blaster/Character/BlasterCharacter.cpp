@@ -23,6 +23,7 @@
 #include "Blaster/Weapon/WeaponTypes.h"
 #include <Kismet/GameplayStatics.h>
 #include "Components/BoxComponent.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 
 
 // Sets default values
@@ -55,6 +56,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
 	BuffComponent->SetIsReplicated(true);
+
+	LagCompensationComponent = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensationComponent"));
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -533,6 +536,14 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (BuffComponent)
 	{
 		BuffComponent->Character = this;
+	}
+	if (LagCompensationComponent)
+	{
+		LagCompensationComponent->Character = this;
+		if (Controller)
+		{
+			LagCompensationComponent->Controller = Cast<ABlasterPlayerController>(Controller);
+		}
 	}
 }
 void ABlasterCharacter::PlayFireMontage(bool bAiming)

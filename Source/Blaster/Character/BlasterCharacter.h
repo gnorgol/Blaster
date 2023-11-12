@@ -17,6 +17,7 @@ class UInputMappingContext;
 class UInputAction;
 class AWeapon;
 class UCombatComponent;
+class ULagCompensationComponent;
 class UBuffComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
@@ -212,6 +213,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	ULagCompensationComponent* LagCompensationComponent;
 
 	UPROPERTY(VisibleAnywhere)
 		UBuffComponent* BuffComponent;
