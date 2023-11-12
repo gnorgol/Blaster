@@ -147,14 +147,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		float UnZoomedInterpSpeed = 20.0f;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere,  Category = "Weapon Properties")
 	int32 Ammo;
-
-	UFUNCTION()
-	void OnRep_Ammo();
 
 	void SpendRound();
 
+	UFUNCTION(Client, Reliable)
+		void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+		void ClientAddAmmo(int32 AmmoToAdd);
+
+	// Numeber of Unprossed server request 
+	int32 Sequence = 0;
 
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")

@@ -85,7 +85,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 void AWeapon::OnRep_Owner()
 {
@@ -213,10 +212,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-	if (HasAuthority())
-	{
-		SpendRound();
-	}
+	SpendRound();
+
 	
 }
 void AWeapon::DropWeapon()
@@ -228,9 +225,20 @@ void AWeapon::DropWeapon()
 	BlasterOwnerCharacter = nullptr;
 	BlasterOwnerController = nullptr;
 }
-void AWeapon::AddAmmo(int32 AmmoToAdd)
+
+
+
+
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity);
+	if (HasAuthority())
+	{
+		return;
+	}
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
 	SetHUDAmmo();
 }
 
@@ -241,9 +249,36 @@ void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
 	SetHUDAmmo();
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
+}
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority())
+	{
+		return;
+	}
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEndReload();
+	}
+	SetHUDAmmo();
 
 }
-
 void AWeapon::SetHUDAmmo()
 {
 	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
@@ -267,15 +302,7 @@ bool AWeapon::IsFull()
 	return Ammo == MagCapacity;
 }
 
-void AWeapon::OnRep_Ammo()
-{
-	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
-	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
-	{
-		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEndReload();
-	}
-	SetHUDAmmo();
-}
+
 void AWeapon::ShowPickupWidget(bool bShowWidget)
 {
 	if (PickupWidget)
@@ -301,9 +328,9 @@ FVector AWeapon::TraceEndWithScatter(const FVector& TraceEnd) const
 	const FVector EndLocation = SphereCenter + RandimVector;
 	const FVector ToEndLocation = EndLocation - TraceStart;
 
-	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Green, true);
-	DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()), FColor::Blue, true);
+	//DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	//DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Green, true);
+	//DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()), FColor::Blue, true);
 
 
 	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
