@@ -205,7 +205,10 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
-
+	}
+	if (Character->IsLocallyControlled())
+	{
+		bAimingButtonPressed = bIsAiming;
 	}
 
 
@@ -574,6 +577,14 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetOwner(Character);
 
 	PlayEquipWeaponSound(WeaponToEquip);
+}
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimingButtonPressed;
+
+	}
 }
 void UCombatComponent::ReloadEmptyWeapon()
 {
