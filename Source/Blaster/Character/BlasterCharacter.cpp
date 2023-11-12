@@ -411,6 +411,15 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	return CombatComponent->CombatState;
 }
 
+bool ABlasterCharacter::IsLocallyReloading()
+{
+	if (CombatComponent == nullptr)
+	{
+		return false;
+	}
+	return CombatComponent->bLocallyReloading;
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)

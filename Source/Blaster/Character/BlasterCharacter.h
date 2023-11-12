@@ -151,7 +151,7 @@ public:
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
-
+	bool IsLocallyReloading();
 
 
 private:
