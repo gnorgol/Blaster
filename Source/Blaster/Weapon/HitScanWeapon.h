@@ -36,8 +36,7 @@ protected:
 		USoundCue* ImpactSurfaceSound;
 	UPROPERTY(EditAnywhere)
 		USoundCue* ImpactFleshSound;
-	UPROPERTY(EditAnywhere)
-		float Damage = 20.0f;
+
 
 
 };

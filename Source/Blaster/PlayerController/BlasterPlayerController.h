@@ -37,6 +37,7 @@ public:
 	virtual void ReceivedPlayer() override; 
 	void OnMatchStateSet(FName State);
 
+	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();

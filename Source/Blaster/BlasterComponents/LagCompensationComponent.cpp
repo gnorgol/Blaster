@@ -2,7 +2,8 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
-
+#include "Kismet/GameplayStatics.h"	
+#include "Blaster/Weapon/Weapon.h"
 
 
 
@@ -109,16 +110,12 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 				return FServerSideRewindResult(true, false);
 			}
-			else
-			{
-				//missed
-				ResetHitBoxes(HitCharacter, CurrentFrame);
-				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
-				return FServerSideRewindResult(false, false);
-			}
 		}
 	}
-
+	//missed hit
+	ResetHitBoxes(HitCharacter, CurrentFrame);
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+	return FServerSideRewindResult(false, false);
 
 
 }
@@ -188,12 +185,12 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(ABlasterCharacter* 
 	
 }
 
-
-
-void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void ULagCompensationComponent::SaveFramePackage()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	if (Character == nullptr || !Character->HasAuthority())
+	{
+		return;
+	}
 	if (FrameHistory.Num() <= 1)
 	{
 		FFramePackage ThisFrame;
@@ -212,8 +209,16 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
 
-		ShowFramePackage(FrameHistory.GetHead()->GetValue(), FColor::Red);
+		//ShowFramePackage(FrameHistory.GetHead()->GetValue(), FColor::Red);
 	}
+}
+
+
+
+void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	SaveFramePackage();
 
 }
 
@@ -277,6 +282,16 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterChar
 	}
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
 
+}
+
+void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)
+{
+	FServerSideRewindResult Result = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
+
+	if (HitCharacter && DamageCauser && Result.bHitConfirmed)
+	{
+		UGameplayStatics::ApplyDamage(HitCharacter, DamageCauser->GetDamage(), Character->Controller, DamageCauser, UDamageType::StaticClass());
+	}
 }
 
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, const FColor& Color)

@@ -58,6 +58,7 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetCurrentAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 	virtual void Fire(const FVector& HitTarget);
 	void DropWeapon();
 	void AddAmmo(int32 AmmoToAdd);
@@ -116,6 +117,14 @@ protected:
 		float DistanceToSphere = 800.0f;
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 		float SphereRadius = 75.f;
+	UPROPERTY(EditAnywhere)
+		float Damage = 20.0f;
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false;
+	UPROPERTY()
+		ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+		ABlasterPlayerController* BlasterOwnerController;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -164,13 +173,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		int32 MagCapacity;
-
-	UPROPERTY()
-	ABlasterCharacter* BlasterOwnerCharacter;
-	UPROPERTY()
-	ABlasterPlayerController* BlasterOwnerController;
-
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	EWeaponType WeaponType;
+
+
 
 };
