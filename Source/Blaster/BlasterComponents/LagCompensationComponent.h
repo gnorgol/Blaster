@@ -15,7 +15,7 @@ struct FBoxInformation
 		UPROPERTY()
 		FVector Location;
 	UPROPERTY()
-		FVector Rotation;
+		FRotator Rotation;
 	UPROPERTY()
 		FVector Extent;
 };
@@ -41,8 +41,10 @@ public:
 	ULagCompensationComponent();
 	friend ABlasterCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void ShowFramePackage(FFramePackage& FramePackage,FColor Color);
 protected:
 	virtual void BeginPlay() override;
+	void SaveFramePackage(FFramePackage& FramePackage);
 
 private:
 	UPROPERTY()

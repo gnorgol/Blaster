@@ -102,6 +102,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* foot_r;
 
+	UPROPERTY()
+		TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
 
 
 protected:
