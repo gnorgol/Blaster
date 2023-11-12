@@ -2,7 +2,6 @@
 
 
 #include "Weapon.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
@@ -14,6 +13,7 @@
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "DrawDebugHelpers.h"
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
 AWeapon::AWeapon()
@@ -286,21 +286,20 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 
 FVector AWeapon::TraceEndWithScatter(const FVector& TraceEnd) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("TraceEndWithScatter"));
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket == nullptr)
 	{
 		return FVector();
 	}
 
-	FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-	FVector TraceStart = SocketTransform.GetLocation();
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
 
-	FVector ToTarget = (TraceEnd - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTarget * DistanceToSphere;
-	FVector RandimVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0, SphereRadius);
-	FVector EndLocation = SphereCenter + RandimVector;
-	FVector ToEndLocation = EndLocation - TraceStart;
+	const FVector ToTarget = (TraceEnd - TraceStart).GetSafeNormal();
+	const FVector SphereCenter = TraceStart + ToTarget * DistanceToSphere;
+	const FVector RandimVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0, SphereRadius);
+	const FVector EndLocation = SphereCenter + RandimVector;
+	const FVector ToEndLocation = EndLocation - TraceStart;
 
 	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
 	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Green, true);

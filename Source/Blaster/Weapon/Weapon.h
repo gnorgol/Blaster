@@ -112,7 +112,10 @@ protected:
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+		float DistanceToSphere = 800.0f;
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+		float SphereRadius = 75.f;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -165,8 +168,4 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	EWeaponType WeaponType;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-		float DistanceToSphere = 800.0f;
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-		float SphereRadius = 75.f;
 };
