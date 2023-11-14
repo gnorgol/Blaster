@@ -53,7 +53,7 @@ void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
 	//Predict Projectile Path
-	FPredictProjectilePathParams PathParams;
+	/*FPredictProjectilePathParams PathParams;
 	PathParams.bTraceWithChannel = true;
 	PathParams.bTraceWithCollision = true;
 	PathParams.DrawDebugTime = 5.f;
@@ -70,6 +70,6 @@ void AProjectileBullet::BeginPlay()
 	FPredictProjectilePathResult PathResult;
 
 
-	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);*/
 
 }
