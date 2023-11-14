@@ -31,6 +31,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float InitialSpeed = 15000.f;
+
+		float Damage = 20.0f;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -41,8 +43,7 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	UPROPERTY(EditAnywhere)
-		float Damage = 20.0f;
+
 	UFUNCTION(BlueprintImplementableEvent)
 		void CreateFieldsExplosionEffect(const FVector& Location);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

@@ -6,9 +6,7 @@
 #include "Weapon.h"
 #include "ProjectileWeapon.generated.h"
 
-/**
- * 
- */
+class AProjectile;
 UCLASS()
 class BLASTER_API AProjectileWeapon : public AWeapon
 {
@@ -20,5 +18,8 @@ public:
 private:
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> ProjectileClass;
+	TSubclassOf<AProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 };
