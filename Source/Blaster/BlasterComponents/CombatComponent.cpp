@@ -327,7 +327,6 @@ void UCombatComponent::FireShotgunWeapon()
 	{
 		TArray<FVector_NetQuantize> HitTargets;
 		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
-		UE_LOG(LogTemp, Warning, TEXT("HitTargets: %s"), *FString::FromInt(HitTargets.Num()));
 		LocalShotgunFire(HitTargets);
 		
 		ServerShotgunFire(HitTargets);
@@ -449,7 +448,6 @@ void UCombatComponent::LocalFire(FVector_NetQuantize TraceHitTarget)
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Combat State: %s"), *UEnum::GetValueAsString(CombatState));
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);

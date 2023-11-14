@@ -335,7 +335,6 @@ void ABlasterCharacter::HideCharacter(bool bHide)
 }
 void ABlasterCharacter::OnRep_Health(float OldHealth)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Health: %f"), Health);
 	UpdateHUDHealth();
 	if (Health < OldHealth)
 	{
