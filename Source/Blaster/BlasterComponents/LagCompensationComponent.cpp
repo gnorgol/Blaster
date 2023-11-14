@@ -106,13 +106,16 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 }
 FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize TraceStart, const TArray<FVector_NetQuantize>& HitLocations)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Confirming Shotgun Hit"));
 	for (auto& Frame : FramePackages)
 	{
 		if (Frame.Character == nullptr)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Character is null"));
 			return FShotgunServerSideRewindResult();
 		}
 	}
+
 	FShotgunServerSideRewindResult ShotgunResult;
 	TArray<FFramePackage> CurrentFrames;
 	for (auto& Frame : FramePackages)
@@ -128,6 +131,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 	for (auto& Frame : FramePackages)
 	{
 		// Enable collision for the head box
+		UE_LOG(LogTemp, Warning, TEXT("Enabling Head Box"));
 		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
@@ -138,28 +142,36 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 	{
 		FHitResult ConfirmHitResult;
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
-
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, true);
+		UE_LOG(LogTemp, Warning, TEXT("Checking Head Shot"));
 		if (World)
 		{
-			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility);
-			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
-
-			if (HitCharacter)
+			UE_LOG(LogTemp, Warning, TEXT("World Exists"));
+			World->LineTraceSingleByChannel(
+				ConfirmHitResult,
+				TraceStart,
+				TraceEnd,
+				ECollisionChannel::ECC_Visibility
+			);
+			UE_LOG(LogTemp, Warning, TEXT("Line Trace Complete"));
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
+			//UE_LOG(LogTemp, Warning, TEXT("Hit Character: %s"), *HitCharacter->GetName());
+			if (BlasterCharacter)
 			{
-				if (ShotgunResult.HeadShots.Contains(HitCharacter))
+				UE_LOG(LogTemp, Warning, TEXT("Hit Character"));
+				if (ShotgunResult.HeadShots.Contains(BlasterCharacter))
 				{
-					ShotgunResult.HeadShots[HitCharacter]++;
+					ShotgunResult.HeadShots[BlasterCharacter]++;
+					UE_LOG(LogTemp, Warning, TEXT("Head Shot"));
 				}
 				else
 				{
-					ShotgunResult.HeadShots.Emplace(HitCharacter, 1);
+					ShotgunResult.HeadShots.Emplace(BlasterCharacter, 1);
+					UE_LOG(LogTemp, Warning, TEXT("First Head Shot"));
 				}
 			}
 
 		}
-
-
-		return FShotgunServerSideRewindResult();
 	}
 
 	// Enable collision for all boxes except the head
@@ -193,10 +205,12 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 				if (ShotgunResult.BodyShots.Contains(HitCharacter))
 				{
 					ShotgunResult.BodyShots[HitCharacter]++;
+					UE_LOG(LogTemp, Warning, TEXT("Body Shot"));
 				}
 				else
 				{
 					ShotgunResult.BodyShots.Emplace(HitCharacter, 1);
+					UE_LOG(LogTemp, Warning, TEXT("First Body Shot"));		
 				}
 			}
 
@@ -204,10 +218,11 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 
 	}
 	// Reset all boxes
-	for (int32 i = 0; i < FramePackages.Num(); i++)
+	UE_LOG(LogTemp, Warning, TEXT("Resetting Boxes"));
+	for (auto& Frame : CurrentFrames)
 	{
-		ResetHitBoxes(FramePackages[i].Character, CurrentFrames[i]);
-		EnableCharacterMeshCollision(FramePackages[i].Character, ECollisionEnabled::QueryAndPhysics);
+		ResetHitBoxes(Frame.Character, Frame);
+		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::QueryAndPhysics);
 	}
 	return ShotgunResult;
 }
@@ -407,6 +422,7 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABlasterCharacter* HitC
 
 
 	}
+	FrameToCheck.Character = HitCharacter;
 	return FrameToCheck;
 }
 
@@ -441,7 +457,8 @@ void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(const T
 			float BodyShotDamage = Result.BodyShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage();
 			TotalDamage += BodyShotDamage;
 		}
-		UGameplayStatics::ApplyDamage(HitCharacter, TotalDamage, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		UE_LOG(LogTemp, Warning, TEXT("Total Damage: %f"), TotalDamage);
+		UGameplayStatics::ApplyDamage(HitCharacter, TotalDamage, Character->Controller, HitCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
 		
 	}
 }
