@@ -9,7 +9,6 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 
 	Super::Fire(HitTarget);
-
 	APawn* InvestigatorPawn = Cast<APawn>(GetOwner());
 	UWorld* World = GetWorld();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
@@ -37,10 +36,10 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 					SpawnedProjectile->bUseServerSideRewind = false;
 					SpawnedProjectile->Damage = Damage;
 				}
-				else // Is Server and not host - Use non-replicated Projectile no server side rewind
+				else // Is Server and not host - Use non-replicated Projectile use server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = false;
+					SpawnedProjectile->bUseServerSideRewind = true;
 				}
 			}
 			else // On the client - Use replicated Projectile
@@ -51,7 +50,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 					SpawnedProjectile->bUseServerSideRewind = true;
 					SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
 					SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
-					SpawnedProjectile->Damage = Damage;
+					//SpawnedProjectile->Damage = Damage;
 
 				}
 				else // Client - Not Locally Controlled - Use non-replicated Projectile no server side rewind

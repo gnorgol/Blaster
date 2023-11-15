@@ -17,7 +17,6 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	Super::Fire(HitTarget);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	bool bHitCharacter = false;
 	if (Owner == nullptr)
 	{
 		return;
@@ -32,12 +31,13 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FHitResult HitResult;
 		WeaponTraceHit(HitResult, Start, HitTarget);
 
-		ABlasterCharacter* Character = Cast<ABlasterCharacter>(HitResult.GetActor());
-		if (Character && InstigatorController)
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
+		if (BlasterCharacter && InstigatorController)
 		{
-			if (HasAuthority() && !bUseServerSideRewind)
+			bool bCauseAuthorityDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthorityDamage)
 			{
-				UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController, this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
 			}
 			if (bUseServerSideRewind && !HasAuthority())
 			{
@@ -45,12 +45,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
 				if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensationComponent()&& BlasterOwnerCharacter->IsLocallyControlled())
 				{
-					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(Character, Start, HitTarget, BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime, this);
+					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime, this);
 				}
 			}
 			
 		}
-		if (Character)
+		if (BlasterCharacter)
 		{
 			if (ImpactFleshParticles)
 			{
