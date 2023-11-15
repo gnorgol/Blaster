@@ -685,6 +685,18 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}
 }
+void ABlasterCharacter::PlaySwapMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && SwapMontage)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
+	}
+}
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (bIsDead)
@@ -785,7 +797,22 @@ void ABlasterCharacter::SwitchWeapon(const FInputActionValue& Value)
 	}
 	if (CombatComponent)
 	{
-		ServerSwitchWeaponButtonPressed();
+		if (CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
+		{
+			ServerSwitchWeaponButtonPressed();
+		}
+		
+		bool bSwap = CombatComponent->ShouldSwapWeapon() && 
+			!HasAuthority() && 
+			CombatComponent->CombatState == ECombatState::ECS_Unoccupied && 
+			OverlappingWeapon == nullptr;
+		if (bSwap)
+		{
+			PlaySwapMontage();
+			CombatComponent->CombatState = ECombatState::ECS_SwappingWeapon;
+			bFinishedSwapping = false;
+
+		}
 	}
 }
 void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)

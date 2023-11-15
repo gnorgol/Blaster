@@ -51,6 +51,7 @@ public:
 	void PlayDeathMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplayInput = false;
@@ -104,6 +105,8 @@ public:
 
 	UPROPERTY()
 		TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+	bool bFinishedSwapping = false;
 
 
 
@@ -248,6 +251,8 @@ private:
 		UAnimMontage* ReloadMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* ThrowGrenadeMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* SwapMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;
