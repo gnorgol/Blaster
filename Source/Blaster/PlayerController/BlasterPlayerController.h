@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+
 /**
  * 
  */
@@ -38,6 +40,8 @@ public:
 	void OnMatchStateSet(FName State);
 
 	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
@@ -69,6 +73,9 @@ protected:
 	void HighPingWarning();
 	void StopHighPingWarning();
 	void CheckPing(float DeltaTime);
+	UFUNCTION(Server, Reliable)
+		void ServerReportPingStatus(bool bHighPing);
+
 	
 private:
 	UPROPERTY()
@@ -120,6 +127,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Ping")
 	float CheckPingFrequency = 20.f;
+
+
 	UPROPERTY(EditAnywhere, Category = "Ping")
 	float HighPingThreshold = 50.f;
 	
