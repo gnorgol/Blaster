@@ -20,7 +20,8 @@
 #include <Blaster/GameState/BlasterGameState.h>
 #include "Components/Image.h"
 #include "GameFramework/PlayerState.h"
-
+#include "Blaster/HUD/ReturnToMainMenu.h"
+#include "EnhancedInputComponent.h"
 
 
 
@@ -75,6 +76,7 @@ void ABlasterPlayerController::SetHUDMatchTime()
 	CountdownInt = SecondsLeft;
 
 }
+
 
 
 
@@ -356,6 +358,30 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 
 	}
 }
+void ABlasterPlayerController::ShowRetunToMainMenu()
+{
+
+	if (ReturnToMainMenuWidgetClass == nullptr)
+	{
+		return;
+	}
+	if (ReturnToMainMenuWidget == nullptr)
+	{
+		ReturnToMainMenuWidget = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidgetClass);
+	}
+	if (ReturnToMainMenuWidget)
+	{
+		bReturnToMainMenuWidgetVisible = !bReturnToMainMenuWidgetVisible;
+		if (bReturnToMainMenuWidgetVisible)
+		{
+			ReturnToMainMenuWidget->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenuWidget->MenuTeardown();
+		}
+	}
+}
 void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
 {
 	HighPingDelegate.Broadcast(bHighPing);
@@ -594,6 +620,16 @@ void ABlasterPlayerController::PollInit()
 				}
 			}
 		}
+	}
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if (InputComponent == nullptr) return;
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Completed, this, &ABlasterPlayerController::ShowRetunToMainMenu);
 	}
 }
 

@@ -26,17 +26,18 @@ void UReturnToMainMenu::MenuSetup()
 			PlayerController->bShowMouseCursor = true;
 		}
 	}
-	if (ReturnButton)
+	if (ReturnButton && !ReturnButton->OnClicked.IsBound())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Return Button Bound"));
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
 	}
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
 	{
 		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-		if (MultiplayerSessionsSubsystem)
+		if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UReturnToMainMenu::OnDestroySession))
 		{
-			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UReturnToMainMenu::OnDestroySessionComplete);
+			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UReturnToMainMenu::OnDestroySession);
 		}
 	}
 
@@ -56,6 +57,14 @@ void UReturnToMainMenu::MenuTeardown()
 			PlayerController->bShowMouseCursor = false;
 		}
 	}
+	if (ReturnButton && ReturnButton->OnClicked.IsBound())
+	{
+		ReturnButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+	}
+	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UReturnToMainMenu::OnDestroySession))
+	{
+		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.RemoveDynamic(this, &UReturnToMainMenu::OnDestroySession);
+	}
 
 }
 
@@ -70,7 +79,7 @@ bool UReturnToMainMenu::Initialize()
 	return true;
 }
 
-void UReturnToMainMenu::OnDestroySessionComplete(bool bWasSuccessful)
+void UReturnToMainMenu::OnDestroySession(bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{
@@ -90,7 +99,7 @@ void UReturnToMainMenu::OnDestroySessionComplete(bool bWasSuccessful)
 			PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
 			if (PlayerController)
 			{
-				PlayerController->ClientReturnToMainMenuWithTextReason(FText::FromString("Session Destroyed"));
+				PlayerController->ClientReturnToMainMenuWithTextReason(FText());
 			}
 		}
 	}
@@ -99,9 +108,10 @@ void UReturnToMainMenu::OnDestroySessionComplete(bool bWasSuccessful)
 void UReturnToMainMenu::ReturnButtonClicked()
 {
 	ReturnButton->SetIsEnabled(false);
+
 	if (MultiplayerSessionsSubsystem)
 	{
+		
 		MultiplayerSessionsSubsystem->DestroySession();
-
 	}
 }

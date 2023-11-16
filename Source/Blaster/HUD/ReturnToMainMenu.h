@@ -23,7 +23,7 @@ protected:
 	virtual bool Initialize() override;
 
 	UFUNCTION()
-		void OnDestroySessionComplete(bool bWasSuccessful);
+		void OnDestroySession(bool bWasSuccessful);
 
 private:
 	UPROPERTY(meta = (BindWidget))
