@@ -17,11 +17,13 @@ class UInputMappingContext;
 class UInputAction;
 class AWeapon;
 class UCombatComponent;
+class ULagCompensationComponent;
 class UBuffComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
 class UWidgetComponent;
+class UBoxComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -45,10 +47,11 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRagdollDeath();
 
-	void PlayHitReactMontage();
+	
 	void PlayDeathMontage();
 	void PlayReloadMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplayInput = false;
@@ -62,6 +65,50 @@ public:
 	void UpdateHUDAmmo();
 
 	void SpawnDefaultWeapon();
+
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* head;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* pelvis;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_02;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_03;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_04;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* spine_05;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* upperarm_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* upperarm_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* lowerarm_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* lowerarm_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* hand_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* hand_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* thigh_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* thigh_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* calf_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* calf_r;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* foot_l;
+	UPROPERTY(EditAnywhere)
+		UBoxComponent* foot_r;
+
+	UPROPERTY()
+		TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+	bool bFinishedSwapping = false;
+
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -79,6 +126,7 @@ protected:
 	void ReloadPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
+	void PlayHitReactMontage();
 	void SimProxiesTurn();
 	void FirePressed(const FInputActionValue& Value);
 	void ThrowGrenadePressed(const FInputActionValue& Value);
@@ -116,7 +164,6 @@ protected:
 	void PollInit();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -151,7 +198,8 @@ public:
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
-
+	bool IsLocallyReloading();
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
 
 
 private:
@@ -174,10 +222,15 @@ private:
 	UCombatComponent* CombatComponent;
 
 	UPROPERTY(VisibleAnywhere)
+	ULagCompensationComponent* LagCompensationComponent;
+
+	UPROPERTY(VisibleAnywhere)
 		UBuffComponent* BuffComponent;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+	UFUNCTION(Server, Reliable)
+		void ServerSwitchWeaponButtonPressed();
 
 	float Ao_Yaw;
 	float InterpAO_Yaw;
@@ -198,6 +251,8 @@ private:
 		UAnimMontage* ReloadMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
 		UAnimMontage* ThrowGrenadeMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+		UAnimMontage* SwapMontage;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 		float CameraThreshold = 200.0f;

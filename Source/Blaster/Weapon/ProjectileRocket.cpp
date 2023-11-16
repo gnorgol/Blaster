@@ -3,7 +3,6 @@
 
 #include "ProjectileRocket.h"
 #include "Kismet/GameplayStatics.h"
-#include "Field/FieldSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"

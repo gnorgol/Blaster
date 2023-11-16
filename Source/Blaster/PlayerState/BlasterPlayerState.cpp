@@ -30,7 +30,6 @@ void ABlasterPlayerState::OnRep_KillName()
 void ABlasterPlayerState::OnRep_KilledBy()
 {
 	UpdateKilledByMessageHUD();
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_KilledBy"));
 }
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

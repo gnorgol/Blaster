@@ -8,16 +8,15 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "WeaponTypes.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	bool bHitCharacter = false;
 	if (Owner == nullptr)
 	{
 		return;
@@ -32,12 +31,26 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FHitResult HitResult;
 		WeaponTraceHit(HitResult, Start, HitTarget);
 
-		ABlasterCharacter* Character = Cast<ABlasterCharacter>(HitResult.GetActor());
-		if (Character && HasAuthority() && InstigatorController)
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
+		if (BlasterCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(Character, Damage, InstigatorController, this, UDamageType::StaticClass());
+			bool bCauseAuthorityDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthorityDamage)
+			{
+				UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			}
+			if (bUseServerSideRewind && !HasAuthority())
+			{
+				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+				if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensationComponent()&& BlasterOwnerCharacter->IsLocallyControlled())
+				{
+					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime, this);
+				}
+			}
+			
 		}
-		if (Character)
+		if (BlasterCharacter)
 		{
 			if (ImpactFleshParticles)
 			{
@@ -70,28 +83,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& TraceEnd) const
-{
-	FVector ToTarget = (TraceEnd - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTarget * DistanceToSphere;
-	FVector RandimVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0, SphereRadius);
-	FVector EndLocation = SphereCenter + RandimVector;
-	FVector ToEndLocation = EndLocation - TraceStart;
-
-	//DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	//DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Green, true);
-	//DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size()), FColor::Blue, true);
-
-
-	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
-}
-
 void AHitScanWeapon::WeaponTraceHit(FHitResult& OutHit, const FVector& TraceStart, const FVector& HitTraget)
 {
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		FVector TraceEnd = bUseScatter ? TraceEndWithScatter(TraceStart,HitTraget) : TraceStart + (HitTraget - TraceStart) * 1.25;
+		FVector TraceEnd = TraceStart + (HitTraget - TraceStart) * 1.25;
 		World->LineTraceSingleByChannel(OutHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility);
 		FVector BeamEnd = TraceEnd;
 		if (OutHit.bBlockingHit)
@@ -100,7 +97,7 @@ void AHitScanWeapon::WeaponTraceHit(FHitResult& OutHit, const FVector& TraceStar
 		}
 		if (BeamParticle)
 		{
-			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticle, TraceStart , FRotator::ZeroRotator , true);
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticle, TraceStart, FRotator::ZeroRotator, true);
 			if (Beam)
 			{
 				Beam->SetVectorParameter(FName("Target"), BeamEnd);
@@ -109,3 +106,5 @@ void AHitScanWeapon::WeaponTraceHit(FHitResult& OutHit, const FVector& TraceStar
 		}
 	}
 }
+
+

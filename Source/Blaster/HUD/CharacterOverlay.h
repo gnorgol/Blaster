@@ -12,6 +12,7 @@
 class UProgressBar;
 class UTextBlock;
 class UMultiLineEditableTextBox;
+class UImage;
 UCLASS()
 class BLASTER_API UCharacterOverlay : public UUserWidget
 {
@@ -42,4 +43,8 @@ public:
 		UTextBlock* MatchCountdownText;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* GrenadeAmountText;
+	UPROPERTY(meta = (BindWidget))
+		UImage* HighPingImage;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* HighPingAnimation;
 };

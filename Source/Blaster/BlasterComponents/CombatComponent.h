@@ -44,6 +44,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
+	UFUNCTION(BlueprintCallable)
+	void FinishSwap();
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapon();
 
 	UFUNCTION(BlueprintCallable)
 		void LaunchGrenade();
@@ -51,6 +55,7 @@ public:
 		void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 
 	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+	bool bLocallyReloading = false;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -64,11 +69,17 @@ protected:
 	UFUNCTION()
 		void OnRep_SecondaryWeapon();
 
-	UFUNCTION(Server, Reliable)
-	void ServerFire(const FVector_NetQuantize& TraceHitTraget);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire(const FVector_NetQuantize& TraceHitTraget,float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTraget);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTraget,float FireDelay);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTraget);
 
 	void TraceUnderCrosshair(FHitResult& TraceHitResult);
 
@@ -114,8 +125,13 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
-	UPROPERTY(Replicated)
-	bool bAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bAiming = false;
+
+	bool bAimingButtonPressed = false;
+
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
@@ -151,6 +167,11 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 	void Fire();
+	void FireProjectileWeapon();
+	void FireHitscanWeapon();
+	void FireShotgunWeapon();
+	void LocalFire(FVector_NetQuantize TraceHitTarget);
+	void LocalShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTarget);
 
 	bool CanFire();
 

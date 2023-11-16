@@ -12,7 +12,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	if (NumOfPlayers == 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NumOfPlayers >= 2"));
 		UWorld* World = GetWorld();
 		if (!ensure(World != nullptr)) return;
 
