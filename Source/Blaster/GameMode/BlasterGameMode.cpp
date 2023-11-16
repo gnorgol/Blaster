@@ -102,7 +102,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 
 	if (EliminatedPlayer)
 	{
-		EliminatedPlayer->RagdollDeath();
+		EliminatedPlayer->RagdollDeath(false);
 		EliminatedPlayer->SetKiller(KillerCharacter);		
 	}
 }
@@ -123,6 +123,26 @@ void ABlasterGameMode::RequestRespawn(ACharacter* CharacterToRespawn, AControlle
 		RestartPlayerAtPlayerStart(Controller, PlayerStarts[RandomIndex]);
 
 	}
+}
+
+void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerStateLever)
+{
+	if (PlayerStateLever == nullptr)
+	{
+		return;
+	}
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+	if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(PlayerStateLever))
+	{
+		BlasterGameState->TopScoringPlayers.Remove(PlayerStateLever);
+	}
+	ABlasterCharacter* CharacterLeaving = Cast<ABlasterCharacter>(PlayerStateLever->GetPawn());
+	if (CharacterLeaving)
+	{
+		CharacterLeaving->RagdollDeath(true);
+	}
+
+
 }
 
 

@@ -154,11 +154,26 @@ ABlasterCharacter::ABlasterCharacter()
 void ABlasterCharacter::DeathTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if (BlasterGameMode)
+	if (BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
 	}
+	if (bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
 
+	}
+
+}
+
+void ABlasterCharacter::ServerLeaveGame_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterGameMode && BlasterPlayerState)
+	{
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
 }
 
 void ABlasterCharacter::KillCam(float DeltaTime)
@@ -191,7 +206,7 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 
 
 
-void ABlasterCharacter::RagdollDeath()
+void ABlasterCharacter::RagdollDeath(bool bPlayerLeftGame)
 {
 	if (CombatComponent)
 	{
@@ -204,14 +219,14 @@ void ABlasterCharacter::RagdollDeath()
 			DropOrDestroyWeapon(CombatComponent->SecondaryWeapon);
 		}
 	}
-	MulticastRagdollDeath();
+	MulticastRagdollDeath(bPlayerLeftGame);
 	bIsDead = true;
-	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
+
 }
 
-void ABlasterCharacter::MulticastRagdollDeath_Implementation()
+void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGame)
 {
-
+	bLeftGame = bPlayerLeftGame;
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
@@ -240,6 +255,16 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 	}
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	bool bHideSniperScope = IsLocallyControlled() &&
+		CombatComponent &&
+		CombatComponent->bAiming &&
+		CombatComponent->EquippedWeapon &&
+		CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
+	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
 
 }
 
