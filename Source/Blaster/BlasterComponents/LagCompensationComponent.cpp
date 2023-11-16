@@ -75,15 +75,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 		World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECC_HitBox);
 		if (ConfirmHitResult.bBlockingHit)
 		{
-			if (ConfirmHitResult.Component.IsValid())
-			{
-				UBoxComponent* HitBox = Cast<UBoxComponent>(ConfirmHitResult.Component.Get());
-				if (HitBox)
-				{
-					DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Red, false, 8.f);
-				}
 
-			}
 			//hit the head
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -103,15 +95,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECC_HitBox);
 			if (ConfirmHitResult.bBlockingHit)
 			{
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* HitBox = Cast<UBoxComponent>(ConfirmHitResult.Component.Get());
-					if (HitBox)
-					{
-						DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Blue, false, 8.f);
-					}
-
-				}
 				//hit the body
 				ResetHitBoxes(HitCharacter, CurrentFrame);
 				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -154,15 +137,6 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 
 	if (PathResult.HitResult.bBlockingHit)
 	{
-		if (PathResult.HitResult.Component.IsValid())
-		{
-			UBoxComponent* HitBox = Cast<UBoxComponent>(PathResult.HitResult.Component.Get());
-			if (HitBox)
-			{
-				DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Red, false, 8.f);
-			}
-
-		}
 		//hit the head
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -182,15 +156,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		UGameplayStatics::PredictProjectilePath(GetWorld(), PathParams, PathResult);
 		if (PathResult.HitResult.bBlockingHit)
 		{
-			if (PathResult.HitResult.Component.IsValid())
-			{
-				UBoxComponent* HitBox = Cast<UBoxComponent>(PathResult.HitResult.Component.Get());
-				if (HitBox)
-				{
-					DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Blue, false, 8.f);
-				}
 
-			}
 			//hit the body
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -238,7 +204,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 	{
 		FHitResult ConfirmHitResult;
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, true);
 		if (World)
 		{
 			World->LineTraceSingleByChannel(
@@ -250,15 +215,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if (BlasterCharacter)
 			{
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* HitBox = Cast<UBoxComponent>(ConfirmHitResult.Component.Get());
-					if (HitBox)
-					{
-						DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Red, false, 8.f);
-					}
 
-				}
 				if (ShotgunResult.HeadShots.Contains(BlasterCharacter))
 				{
 					ShotgunResult.HeadShots[BlasterCharacter]++;
@@ -300,15 +257,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ConfirmShotgunHit(cons
 
 			if (HitCharacter)
 			{
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* HitBox = Cast<UBoxComponent>(ConfirmHitResult.Component.Get());
-					if (HitBox)
-					{
-						DrawDebugBox(GetWorld(), HitBox->GetComponentLocation(), HitBox->GetScaledBoxExtent(), FQuat(HitBox->GetComponentRotation()), FColor::Blue, false, 8.f);
-					}
 
-				}
 				if (ShotgunResult.BodyShots.Contains(HitCharacter))
 				{
 					ShotgunResult.BodyShots[HitCharacter]++;

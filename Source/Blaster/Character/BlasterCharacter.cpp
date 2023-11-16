@@ -24,6 +24,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "Components/BoxComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "Blaster/GameState/BlasterGameState.h"
 
 
 // Sets default values
@@ -149,6 +150,11 @@ ABlasterCharacter::ABlasterCharacter()
 
 	}
 
+	//Add the crown mesh to the character head
+	CrownMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrownMesh"));
+	CrownMesh->SetupAttachment(GetMesh(), FName("head"));
+	CrownMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CrownMesh->SetVisibility(false);
 }
 
 void ABlasterCharacter::DeathTimerFinished()
@@ -266,6 +272,26 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGam
 	}
 	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
 
+}
+
+void ABlasterCharacter::MultcastGainTheLead_Implementation()
+{
+	//Show the Crown
+	if (CrownMesh == nullptr)
+	{
+		return;
+	}
+	CrownMesh->SetVisibility(true);
+}
+
+void ABlasterCharacter::MulticastLoseTheLead_Implementation()
+{
+	//Hide the Crown
+	if (CrownMesh == nullptr)
+	{
+		return;
+	}
+	CrownMesh->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -407,6 +433,11 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+			{
+				MultcastGainTheLead();
+			}
 			
 		}
 	}

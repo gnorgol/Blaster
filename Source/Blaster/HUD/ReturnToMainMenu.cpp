@@ -30,7 +30,6 @@ void UReturnToMainMenu::MenuSetup()
 	}
 	if (ReturnButton && !ReturnButton->OnClicked.IsBound())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Return Button Bound"));
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
 	}
 	UGameInstance* GameInstance = GetGameInstance();

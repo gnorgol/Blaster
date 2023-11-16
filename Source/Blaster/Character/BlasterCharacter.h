@@ -112,6 +112,11 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerLeaveGame();
 	FOnLeftGame OnLeftGame;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultcastGainTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLoseTheLead();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -318,8 +323,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AWeapon> DefaultWeaponClass;
-
-
+	UPROPERTY(EditAnywhere)
+		UStaticMeshComponent* CrownMesh;
 
 
 };

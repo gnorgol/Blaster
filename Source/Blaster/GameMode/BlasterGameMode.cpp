@@ -79,6 +79,8 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 
+
+
 	if (VictimPlayerState)
 	{
 		VictimPlayerState->AddToDefeats(1);
@@ -90,8 +92,37 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 	}
 	if (KillerPlayerState && KillerPlayerState != VictimPlayerState && BlasterGameState)
 	{
+		TArray<ABlasterPlayerState*> PlayersCurrentlyTopScoring;
+		for (auto TopPlayer : BlasterGameState->TopScoringPlayers)
+		{
+			PlayersCurrentlyTopScoring.Add(TopPlayer);
+		}
 		KillerPlayerState->AddToScore(1.f);
 		BlasterGameState->UpdateTopScoringPlayers(KillerPlayerState);
+		if (BlasterGameState->TopScoringPlayers.Contains(KillerPlayerState))
+		{
+			ABlasterCharacter* CharacterWinner = Cast<ABlasterCharacter>(KillerPlayerState->GetPawn());
+			if (CharacterWinner)
+			{
+				CharacterWinner->MultcastGainTheLead();
+			}
+
+		}
+
+		for (int32 i = 0; i < PlayersCurrentlyTopScoring.Num(); i++)
+		{
+			if (!BlasterGameState->TopScoringPlayers.Contains(PlayersCurrentlyTopScoring[i]))
+			{
+				ABlasterCharacter* CharacterLoser = Cast<ABlasterCharacter>(PlayersCurrentlyTopScoring[i]->GetPawn());
+				if (CharacterLoser)
+				{
+					CharacterLoser->MulticastLoseTheLead();
+				}
+			}
+
+		}
+
+
 		KillerPlayerState->SetKillName(VictimPlayerState->GetPlayerName());
 		//clear kill after 5 seconds
 		FTimerHandle KillTimer;
