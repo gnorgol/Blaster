@@ -69,14 +69,14 @@ protected:
 	UFUNCTION()
 		void OnRep_SecondaryWeapon();
 
-	UFUNCTION(Server, Reliable)
-	void ServerFire(const FVector_NetQuantize& TraceHitTraget);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire(const FVector_NetQuantize& TraceHitTraget,float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTraget);
 
-	UFUNCTION(Server, Reliable)
-		void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTraget);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTraget,float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTraget);
