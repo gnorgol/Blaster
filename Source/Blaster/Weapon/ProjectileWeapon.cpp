@@ -36,6 +36,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 					SpawnedProjectile->bUseServerSideRewind = false;
 					SpawnedProjectile->SetWeaponType(WeaponTypes);
 					SpawnedProjectile->Damage = Damage;
+					SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
 				}
 				else // Is Server and not host - Use non-replicated Projectile use server side rewind
 				{
@@ -73,6 +74,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 				SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 				SpawnedProjectile->bUseServerSideRewind = false;
 				SpawnedProjectile->Damage = Damage;
+				SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
 				SpawnedProjectile->SetWeaponType(WeaponTypes);
 			}
 		}

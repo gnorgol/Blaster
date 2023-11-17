@@ -34,8 +34,11 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float InitialSpeed = 15000.f;
-
+	//Only for grenade and rocket
+	UPROPERTY(EditAnywhere)
 		float Damage = 20.0f;
+	UPROPERTY(EditAnywhere)
+		float HeadShotMultiplier = 2.0f;
 
 	EWeaponType GetWeaponType() const { return WeaponType; }
 	void SetWeaponType(EWeaponType Type) { WeaponType = Type; }
