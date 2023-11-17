@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include <Blaster/Weapon/WeaponTypes.h>
 #include "BlasterGameMode.generated.h"
 
 namespace MatchState
@@ -17,6 +18,7 @@ namespace MatchState
 class ABlasterCharacter;
 class ABlasterPlayerController;
 class ABlasterPlayerState;
+
 UCLASS()
 class BLASTER_API ABlasterGameMode : public AGameMode
 {
@@ -25,7 +27,7 @@ class BLASTER_API ABlasterGameMode : public AGameMode
 public:
 	ABlasterGameMode();
 	virtual void Tick(float DeltaTime) override;
-	virtual void PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer);
+	virtual void PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer , EWeaponType KillerWeaponType);
 	virtual void RequestRespawn(ACharacter* CharacterToRespawn , AController* Controller);
 	void PlayerLeftGame(ABlasterPlayerState* PlayerStateLever);
 

@@ -59,7 +59,7 @@ public:
 	FORCEINLINE int32 GetCurrentAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
-	virtual void Fire(const FVector& HitTarget);
+    virtual void Fire(const FVector& HitTarget,EWeaponType WeaponTypes);
 	void DropWeapon();
 	void AddAmmo(int32 AmmoToAdd);
 

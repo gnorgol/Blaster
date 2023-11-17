@@ -25,6 +25,7 @@
 #include "Components/BoxComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Weapon/Projectile.h"
 
 
 // Sets default values
@@ -731,6 +732,7 @@ void ABlasterCharacter::PlayReloadMontage()
 }
 void ABlasterCharacter::PlayThrowGrenadeMontage()
 {
+	UE_LOG(LogTemp, Warning, TEXT("PlayThrowGrenadeMontage"));
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;
@@ -759,6 +761,24 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	{
 		return;
 	}
+	//Log damage Causer
+	UE_LOG(LogTemp, Warning, TEXT("Damage Causer: %s"), *DamageCauser->GetName());
+	//if a weapon caused the damage or a grenade
+	AWeapon* Weapon = Cast<AWeapon>(DamageCauser);
+	AProjectile* Projectile = Cast<AProjectile>(DamageCauser);
+	EWeaponType WeaponTypes;
+	if (Weapon)
+	{
+		WeaponTypes = Weapon->GetWeaponType();
+	}
+	else if (Projectile)
+	{
+		WeaponTypes = Projectile->GetWeaponType();
+	}
+	else
+	{
+		WeaponTypes = EWeaponType::EWT_MAX;
+	}
 	float DamageToHealth = DamageAmount;
 	if (Shield > 0.f)
 	{
@@ -786,7 +806,8 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
-			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController, WeaponTypes);
+
 
 		}
 

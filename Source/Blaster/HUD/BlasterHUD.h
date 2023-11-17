@@ -10,6 +10,7 @@ class UTexture2D;
 class UCharacterOverlay;
 class UUserWidget;
 class UAnnouncementWidget;
+class UKillAnnoucement;
 
 USTRUCT(BlueprintType)
 struct FHUDPackage {
@@ -61,6 +62,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	float CrosshairSpreadMax = 16.f;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	TSubclassOf<UKillAnnoucement> KillAnnouncementClass;
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 };

@@ -11,10 +11,11 @@
 #include "WeaponTypes.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "WeaponTypes.h"
 
-void AHitScanWeapon::Fire(const FVector& HitTarget)
+void AHitScanWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 {
-	Super::Fire(HitTarget);
+	Super::Fire(HitTarget, WeaponTypes);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (Owner == nullptr)

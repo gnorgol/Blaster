@@ -17,7 +17,7 @@
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
-	AWeapon::Fire(FVector());
+	AWeapon::Fire(FVector(),EWeaponType::EWT_Shotgun);
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	bool bHitCharacter = false;
 	if (Owner == nullptr)

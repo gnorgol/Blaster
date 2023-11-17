@@ -73,7 +73,7 @@ void ABlasterGameMode::Tick(float DeltaTime)
 	}
 }
 
-void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer)
+void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer, EWeaponType KillerWeaponType)
 {
 	ABlasterPlayerState* KillerPlayerState = Killer ? Cast<ABlasterPlayerState>(Killer->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
@@ -135,6 +135,15 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABl
 	{
 		EliminatedPlayer->RagdollDeath(false);
 		EliminatedPlayer->SetKiller(KillerCharacter);		
+	}
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator();It; It++)
+	{
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(*It);
+		if (PlayerController && KillerPlayerState && VictimPlayerState)
+		{
+			PlayerController->BrodcastKillFeed(KillerPlayerState, VictimPlayerState, KillerWeaponType);
+		}
+
 	}
 }
 

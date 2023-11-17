@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "WeaponTypes.h"
 #include "ProjectileWeapon.generated.h"
 
 class AProjectile;
@@ -13,7 +14,7 @@ class BLASTER_API AProjectileWeapon : public AWeapon
 	GENERATED_BODY()
 
 public:
-	virtual void Fire(const FVector& HitTarget) override;
+	virtual void Fire(const FVector& HitTarget,EWeaponType WeaponTypes) override;
 	
 private:
 

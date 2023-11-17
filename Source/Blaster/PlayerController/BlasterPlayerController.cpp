@@ -26,6 +26,25 @@
 
 
 
+void ABlasterPlayerController::BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim,  EWeaponType WeaponTypeUsed)
+{
+	ClientKillFeed(Killer, Victim, WeaponTypeUsed);
+}
+void ABlasterPlayerController::ClientKillFeed_Implementation(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD)
+	{
+		FText KillerName = Killer ? FText::FromString(Killer->GetPlayerName()) : FText::FromString("Unknown");
+		FText VictimName = Victim ? FText::FromString(Victim->GetPlayerName()) : FText::FromString("Unknown");
+		APlayerState* Self = GetPlayerState<APlayerState>();
+		FText SelfName = Self ? FText::FromString(Self->GetPlayerName()) : FText::FromString("Unknown");
+
+		BlasterHUD->CharacterOverlay->SetKillFeedText(KillerName, VictimName, SelfName, WeaponTypeUsed);
+
+	}
+}
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -198,10 +217,6 @@ void ABlasterPlayerController::SetHUDKillFieldInfo(const FString& KillerName, co
 		{
 			KillFieldText = FString::Printf(TEXT("%s killed %s"), *KillerName, *VictimName);
 		}
-		FText KillFieldTextBox = BlasterHUD->CharacterOverlay->KillFieldTextBox->GetText();
-
-		FString NewKillFieldText = FString::Printf(TEXT("%s\n%s"), *KillFieldTextBox.ToString(), *KillFieldText);
-		BlasterHUD->CharacterOverlay->KillFieldTextBox->SetText(FText::FromString(NewKillFieldText));
 	}
 }
 
@@ -381,6 +396,7 @@ void ABlasterPlayerController::ShowRetunToMainMenu()
 		}
 	}
 }
+
 void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
 {
 	HighPingDelegate.Broadcast(bHighPing);

@@ -451,7 +451,8 @@ void UCombatComponent::LocalFire(FVector_NetQuantize TraceHitTarget)
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
+		//UE_LOG(LogTemp, Warning, TEXT("Weapon Type: %s"), EquippedWeapon->GetWeaponType());
+		EquippedWeapon->Fire(TraceHitTarget, EquippedWeapon->GetWeaponType());
 
 	}
 }
@@ -859,6 +860,7 @@ bool UCombatComponent::ShouldSwapWeapon()
 }
 void UCombatComponent::ThrowGrenade()
 {
+	
 	if (GrenadeAmount == 0)
 	{
 		return;
@@ -870,6 +872,7 @@ void UCombatComponent::ThrowGrenade()
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Throw Grenade"));
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
@@ -952,8 +955,10 @@ void UCombatComponent::FinishSwapAttachWeapon()
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false);
+	
 	if (Character && Character->IsLocallyControlled())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade"));
 		ServerLaunchGrenade(HitTarget);
 	}
 
@@ -961,19 +966,23 @@ void UCombatComponent::LaunchGrenade()
 
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Server"));
 	if (Character && GrenadeClass && Character->GetAttachedGrenade())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade GOOOOOOO"));
 		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
 
 		FVector ToTarget = Target - SpawnLocation;
-		const FRotator SpawnRotation = ToTarget.Rotation();
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.Owner = Character;
 		SpawnParameters.Instigator = Character;
 		UWorld* World = GetWorld();
+		AProjectile* SpawnedProjectile = nullptr;
 		if (World)
 		{
-			World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, SpawnRotation, SpawnParameters);
+			SpawnedProjectile = World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParameters);
+			SpawnedProjectile->SetWeaponType(EWeaponType::EWT_Grenade);
+			UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Spawn"));
 		}
 
 	}

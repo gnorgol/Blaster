@@ -45,6 +45,8 @@ public:
 	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim , EWeaponType WeaponTypeUsed);
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
@@ -82,6 +84,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* MenuAction;
 	void ShowRetunToMainMenu();
+	UFUNCTION(Client, Reliable)
+	void ClientKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
 	
 private:
 	UPROPERTY()
