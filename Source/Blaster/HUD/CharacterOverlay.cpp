@@ -15,6 +15,7 @@ void UCharacterOverlay::SetKillFeedText(FText AttackerName, FText VictimName, FT
 	UE_LOG(LogTemp, Warning, TEXT("AttackerName: %s"), *AttackerName.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("VictimName: %s"), *VictimName.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("PlayerName: %s"), *PlayerName.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("WeaponTypesKiller: %d"), WeaponTypesKiller);
 
 
 	if (PlayerName.ToString() != AttackerName.ToString())

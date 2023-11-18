@@ -938,6 +938,8 @@ void UCombatComponent::FinishSwap()
 
 void UCombatComponent::FinishSwapAttachWeapon()
 {
+	if (Character == nullptr || !Character->HasAuthority()) return;
+
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;

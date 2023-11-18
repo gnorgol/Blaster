@@ -76,8 +76,7 @@ public:
 		ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
-		float HitTime,
-		AWeapon* DamageCauser);
+		float HitTime);
 
 	//Shotgun Server Side Rewind
 
