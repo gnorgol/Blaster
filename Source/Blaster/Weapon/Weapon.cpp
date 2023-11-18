@@ -229,7 +229,7 @@ void AWeapon::OnEquippedSecondary()
 	}
 
 }
-void AWeapon::Fire(const FVector& HitTarget)
+void AWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 {
 	if (FireAnimation)
 	{

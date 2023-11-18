@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "WeaponTypes.h"
 #include "HitScanWeapon.generated.h"
 
 /**
@@ -16,7 +17,7 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 	GENERATED_BODY()
 
 public:
-	virtual void Fire(const FVector& HitTarget) override;
+	virtual void Fire(const FVector& HitTarget, EWeaponType WeaponTypes) override;
 	
 protected:
 	

@@ -10,6 +10,7 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -43,9 +44,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEliminated();
 
-	void RagdollDeath();
+	void RagdollDeath(bool bPlayerLeftGame);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastRagdollDeath();
+	void MulticastRagdollDeath(bool bPlayerLeftGame);
 
 	
 	void PlayDeathMontage();
@@ -108,8 +109,14 @@ public:
 
 	bool bFinishedSwapping = false;
 
+	UFUNCTION(Server, Reliable)
+		void ServerLeaveGame();
+	FOnLeftGame OnLeftGame;
 
-
+	UFUNCTION(NetMulticast, Reliable)
+	void MultcastGainTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLoseTheLead();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -295,6 +302,12 @@ private:
 
 	void DeathTimerFinished();
 
+	bool bLeftGame = false;
+
+
+
+
+
 	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
 
@@ -310,8 +323,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AWeapon> DefaultWeaponClass;
-
-
+	UPROPERTY(EditAnywhere)
+		UStaticMeshComponent* CrownMesh;
 
 
 };

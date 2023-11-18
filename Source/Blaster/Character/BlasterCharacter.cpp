@@ -24,6 +24,8 @@
 #include <Kismet/GameplayStatics.h>
 #include "Components/BoxComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Weapon/Projectile.h"
 
 
 // Sets default values
@@ -149,16 +151,36 @@ ABlasterCharacter::ABlasterCharacter()
 
 	}
 
+	//Add the crown mesh to the character head
+	CrownMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrownMesh"));
+	CrownMesh->SetupAttachment(GetMesh(), FName("head"));
+	CrownMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CrownMesh->SetVisibility(false);
 }
 
 void ABlasterCharacter::DeathTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if (BlasterGameMode)
+	if (BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
 	}
+	if (bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
 
+	}
+
+}
+
+void ABlasterCharacter::ServerLeaveGame_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterGameMode && BlasterPlayerState)
+	{
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
 }
 
 void ABlasterCharacter::KillCam(float DeltaTime)
@@ -191,7 +213,7 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 
 
 
-void ABlasterCharacter::RagdollDeath()
+void ABlasterCharacter::RagdollDeath(bool bPlayerLeftGame)
 {
 	if (CombatComponent)
 	{
@@ -204,14 +226,14 @@ void ABlasterCharacter::RagdollDeath()
 			DropOrDestroyWeapon(CombatComponent->SecondaryWeapon);
 		}
 	}
-	MulticastRagdollDeath();
+	MulticastRagdollDeath(bPlayerLeftGame);
 	bIsDead = true;
-	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
+
 }
 
-void ABlasterCharacter::MulticastRagdollDeath_Implementation()
+void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGame)
 {
-
+	bLeftGame = bPlayerLeftGame;
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
@@ -240,7 +262,37 @@ void ABlasterCharacter::MulticastRagdollDeath_Implementation()
 	}
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	bool bHideSniperScope = IsLocallyControlled() &&
+		CombatComponent &&
+		CombatComponent->bAiming &&
+		CombatComponent->EquippedWeapon &&
+		CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
+	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &ABlasterCharacter::DeathTimerFinished, DeathDelay);
 
+}
+
+void ABlasterCharacter::MultcastGainTheLead_Implementation()
+{
+	//Show the Crown
+	if (CrownMesh == nullptr)
+	{
+		return;
+	}
+	CrownMesh->SetVisibility(true);
+}
+
+void ABlasterCharacter::MulticastLoseTheLead_Implementation()
+{
+	//Hide the Crown
+	if (CrownMesh == nullptr)
+	{
+		return;
+	}
+	CrownMesh->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -382,6 +434,11 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+			{
+				MultcastGainTheLead();
+			}
 			
 		}
 	}
@@ -675,6 +732,7 @@ void ABlasterCharacter::PlayReloadMontage()
 }
 void ABlasterCharacter::PlayThrowGrenadeMontage()
 {
+	UE_LOG(LogTemp, Warning, TEXT("PlayThrowGrenadeMontage"));
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;
@@ -703,6 +761,24 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	{
 		return;
 	}
+	//Log damage Causer
+	UE_LOG(LogTemp, Warning, TEXT("Damage Causer: %s"), *DamageCauser->GetName());
+	//if a weapon caused the damage or a grenade
+	AWeapon* Weapon = Cast<AWeapon>(DamageCauser);
+	AProjectile* Projectile = Cast<AProjectile>(DamageCauser);
+	EWeaponType WeaponTypes;
+	if (Weapon)
+	{
+		WeaponTypes = Weapon->GetWeaponType();
+	}
+	else if (Projectile)
+	{
+		WeaponTypes = Projectile->GetWeaponType();
+	}
+	else
+	{
+		WeaponTypes = EWeaponType::EWT_MAX;
+	}
 	float DamageToHealth = DamageAmount;
 	if (Shield > 0.f)
 	{
@@ -730,7 +806,8 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
-			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController, WeaponTypes);
+
 
 		}
 

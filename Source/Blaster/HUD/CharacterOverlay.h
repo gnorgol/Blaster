@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include <Components/ScrollBox.h>
+#include <Blaster/Weapon/WeaponTypes.h>
 #include "CharacterOverlay.generated.h"
+
+
 
 /**
  * 
@@ -13,6 +17,10 @@ class UProgressBar;
 class UTextBlock;
 class UMultiLineEditableTextBox;
 class UImage;
+class URichTextBlock;
+class UHorizontalBox;
+class UKillFeedScrollBox;
+class AWeapon;
 UCLASS()
 class BLASTER_API UCharacterOverlay : public UUserWidget
 {
@@ -34,8 +42,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* KillFieldPlayerText;
 	UPROPERTY(meta = (BindWidget))
-		UMultiLineEditableTextBox* KillFieldTextBox;
-	UPROPERTY(meta = (BindWidget))
 		UTextBlock* WeaponAmmoAmountText;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* CarriedAmmoAmountText;
@@ -47,4 +53,10 @@ public:
 		UImage* HighPingImage;
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 		UWidgetAnimation* HighPingAnimation;
+	UPROPERTY(meta = (BindWidget))
+		UScrollBox* KillFeedScrollBox;
+	UPROPERTY(meta = (BindWidget))
+		URichTextBlock* KillFeedText;
+
+	void SetKillFeedText(FText AttackerName, FText VictimName, FText PlayerName, EWeaponType WeaponTypesKiller);
 };

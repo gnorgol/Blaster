@@ -14,12 +14,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHig
 class ABlasterHUD;
 class UCharacterOverlay;
 class ABlasterGameMode;
+class UInputAction;
+
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
 public:
+
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
@@ -42,10 +45,13 @@ public:
 	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim , EWeaponType WeaponTypeUsed);
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
 	void PollInit();
+	virtual void SetupInputComponent() ;
 	// Sync time between server and client
 
 	UFUNCTION(Server, Reliable)
@@ -75,7 +81,11 @@ protected:
 	void CheckPing(float DeltaTime);
 	UFUNCTION(Server, Reliable)
 		void ServerReportPingStatus(bool bHighPing);
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* MenuAction;
+	void ShowRetunToMainMenu();
+	UFUNCTION(Client, Reliable)
+	void ClientKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
 	
 private:
 	UPROPERTY()
@@ -131,5 +141,13 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Ping")
 	float HighPingThreshold = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+
+	UPROPERTY()
+		class UReturnToMainMenu* ReturnToMainMenuWidget;
+
+	bool bReturnToMainMenuWidgetVisible = false;
 	
 };

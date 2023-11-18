@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Projectile.generated.h"
 
 class UBoxComponent;
@@ -13,6 +14,8 @@ class UParticleSystemComponent;
 class USoundCue;
 class UNiagaraComponent;
 class UNiagaraSystem;
+
+
 UCLASS()
 class BLASTER_API AProjectile : public AActor
 {
@@ -31,8 +34,15 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float InitialSpeed = 15000.f;
-
+	//Only for grenade and rocket
+	UPROPERTY(EditAnywhere)
 		float Damage = 20.0f;
+	UPROPERTY(EditAnywhere)
+		float HeadShotMultiplier = 2.0f;
+
+	EWeaponType GetWeaponType() const { return WeaponType; }
+	void SetWeaponType(EWeaponType Type) { WeaponType = Type; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -73,14 +83,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 		UNiagaraSystem* TrailSystem;
 
-	UPROPERTY()
+	
 		UNiagaraComponent* TrailSystemComponent;
 
 	void SpawnTrailSystem();
 
 	UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* ProjectileMesh;
-
+	UPROPERTY()
+	EWeaponType WeaponType;
 private:
 
 
@@ -89,9 +100,6 @@ private:
 
 	UPROPERTY()
 		UParticleSystemComponent* TracerComponent;
-
-
-	
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastIsHitCharacter(AActor* OtherActor);

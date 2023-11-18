@@ -11,10 +11,11 @@
 #include "WeaponTypes.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "WeaponTypes.h"
 
-void AHitScanWeapon::Fire(const FVector& HitTarget)
+void AHitScanWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 {
-	Super::Fire(HitTarget);
+	Super::Fire(HitTarget, WeaponTypes);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (Owner == nullptr)
@@ -37,7 +38,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			bool bCauseAuthorityDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 			if (HasAuthority() && bCauseAuthorityDamage)
 			{
-				UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+				const float DamageToApply = HitResult.BoneName.ToString() == FString("head") ? Damage * HeadShotMultiplier : Damage;
+				UGameplayStatics::ApplyDamage(BlasterCharacter, DamageToApply, InstigatorController, this, UDamageType::StaticClass());
 			}
 			if (bUseServerSideRewind && !HasAuthority())
 			{
@@ -45,7 +47,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
 				if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensationComponent()&& BlasterOwnerCharacter->IsLocallyControlled())
 				{
-					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime, this);
+					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime);
 				}
 			}
 			
@@ -94,6 +96,10 @@ void AHitScanWeapon::WeaponTraceHit(FHitResult& OutHit, const FVector& TraceStar
 		if (OutHit.bBlockingHit)
 		{
 			BeamEnd = OutHit.ImpactPoint;
+		}
+		else
+		{
+			OutHit.ImpactPoint = TraceEnd;
 		}
 		if (BeamParticle)
 		{

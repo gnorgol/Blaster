@@ -59,7 +59,8 @@ public:
 	FORCEINLINE int32 GetCurrentAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
-	virtual void Fire(const FVector& HitTarget);
+	FORCEINLINE float GetHeadShotMultiplier() const { return HeadShotMultiplier; }
+    virtual void Fire(const FVector& HitTarget,EWeaponType WeaponTypes);
 	void DropWeapon();
 	void AddAmmo(int32 AmmoToAdd);
 
@@ -117,8 +118,11 @@ protected:
 		float DistanceToSphere = 800.0f;
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 		float SphereRadius = 75.f;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon Damage")
 		float Damage = 20.0f;
+	UPROPERTY(EditAnywhere, Category = "Weapon Damage")
+		float HeadShotMultiplier = 2.0f;
+
 	UPROPERTY(Replicated,EditAnywhere)
 	bool bUseServerSideRewind = false;
 	UPROPERTY()

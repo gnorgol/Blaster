@@ -5,10 +5,10 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Projectile.h"
 
-void AProjectileWeapon::Fire(const FVector& HitTarget)
+void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 {
 
-	Super::Fire(HitTarget);
+	Super::Fire(HitTarget,WeaponTypes);
 	APawn* InvestigatorPawn = Cast<APawn>(GetOwner());
 	UWorld* World = GetWorld();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
@@ -34,12 +34,15 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 					SpawnedProjectile->bUseServerSideRewind = false;
+					SpawnedProjectile->SetWeaponType(WeaponTypes);
 					SpawnedProjectile->Damage = Damage;
+					SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
 				}
 				else // Is Server and not host - Use non-replicated Projectile use server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 					SpawnedProjectile->bUseServerSideRewind = true;
+					SpawnedProjectile->SetWeaponType(WeaponTypes);
 				}
 			}
 			else // On the client - Use replicated Projectile
@@ -51,12 +54,14 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 					SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
 					SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
 					//SpawnedProjectile->Damage = Damage;
+					SpawnedProjectile->SetWeaponType(WeaponTypes);
 
 				}
 				else // Client - Not Locally Controlled - Use non-replicated Projectile no server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 					SpawnedProjectile->bUseServerSideRewind = false;
+					SpawnedProjectile->SetWeaponType(WeaponTypes);
 
 				}
 
@@ -69,6 +74,8 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 				SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 				SpawnedProjectile->bUseServerSideRewind = false;
 				SpawnedProjectile->Damage = Damage;
+				SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
+				SpawnedProjectile->SetWeaponType(WeaponTypes);
 			}
 		}
 			
