@@ -414,6 +414,10 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -421,6 +425,10 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
@@ -666,6 +674,7 @@ void ABlasterCharacter::MulticastEliminated_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 void ABlasterCharacter::PlayHitReactMontage()
 {
