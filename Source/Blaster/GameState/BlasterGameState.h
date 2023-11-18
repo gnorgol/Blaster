@@ -28,6 +28,10 @@ public:
 	TArray<ABlasterPlayerState*> BlueTeam;
 
 	//Team Score
+	void SetRedTeamScore();
+	void SetBlueTeamScore();
+
+
 	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScore)
 		float RedTeamScore = 0;
 	UFUNCTION()

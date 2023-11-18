@@ -161,7 +161,7 @@ ABlasterCharacter::ABlasterCharacter()
 
 void ABlasterCharacter::DeathTimerFinished()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	if (BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
@@ -176,7 +176,7 @@ void ABlasterCharacter::DeathTimerFinished()
 
 void ABlasterCharacter::ServerLeaveGame_Implementation()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if (BlasterGameMode && BlasterPlayerState)
 	{
@@ -375,7 +375,7 @@ void ABlasterCharacter::UpdateHUDAmmo()
 }
 void ABlasterCharacter::SpawnDefaultWeapon()
 {
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	UWorld* World = GetWorld();
 	if (BlasterGameMode && World && !bIsDead && DefaultWeaponClass)
 	{
@@ -682,7 +682,7 @@ void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
 
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
 
 	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
@@ -796,13 +796,13 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (bIsDead)
+
+	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
+	if (bIsDead || BlasterGameMode == nullptr)
 	{
 		return;
 	}
-	//Log damage Causer
-	UE_LOG(LogTemp, Warning, TEXT("Damage Causer: %s"), *DamageCauser->GetName());
-	//if a weapon caused the damage or a grenade
+	DamageAmount = BlasterGameMode->CalculateDamage(InstigatedBy,Controller, DamageAmount);
 	AWeapon* Weapon = Cast<AWeapon>(DamageCauser);
 	AProjectile* Projectile = Cast<AProjectile>(DamageCauser);
 	EWeaponType WeaponTypes;
@@ -840,7 +840,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	if (Health == 0.f)
 	{
 		//Die
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
 		if (BlasterGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;

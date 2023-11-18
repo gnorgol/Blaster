@@ -27,6 +27,7 @@ class ABlasterPlayerState;
 class UWidgetComponent;
 class UBoxComponent;
 class UOverheadWidget;
+class ABlasterGameMode;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -333,6 +334,8 @@ private:
 
 	FLinearColor TeamColor = FLinearColor::White;
 
+	UPROPERTY()
+		ABlasterGameMode* BlasterGameMode;
 
 
 };

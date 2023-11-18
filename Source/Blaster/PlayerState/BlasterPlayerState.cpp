@@ -18,8 +18,7 @@ void ABlasterPlayerState::OnRep_Score()
 		{
 			Controller->SetHUDScore(GetScore());
 		}
-	}
-	
+	}	
 }
 
 void ABlasterPlayerState::OnRep_KillName()

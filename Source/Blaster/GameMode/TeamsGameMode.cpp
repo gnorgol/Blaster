@@ -33,6 +33,28 @@ void ATeamsGameMode::HandleMatchHasStarted()
 	}
 }
 
+float ATeamsGameMode::CalculateDamage(AController* Killer, AController* Victim, float Damage)
+{
+	ABlasterPlayerState* KillerPlayerState = Killer->GetPlayerState<ABlasterPlayerState>();
+	ABlasterPlayerState* VictimPlayerState = Victim->GetPlayerState<ABlasterPlayerState>();
+	if (KillerPlayerState == nullptr || VictimPlayerState == nullptr)
+	{
+		return Damage;
+	}
+	if (KillerPlayerState->GetTeam() == VictimPlayerState->GetTeam())
+	{
+		return 0.f;
+	}
+	return Damage;
+}
+
+
+
+ATeamsGameMode::ATeamsGameMode()
+{
+	bTeamMatch = true;
+}
+
 void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 Super::PostLogin(NewPlayer);
