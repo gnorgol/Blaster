@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "BlasterPlayerState.generated.h"
 
 /**
@@ -57,7 +58,12 @@ private:
 	UPROPERTY(Replicated)
 		FText ListOfKills;
 
+	UPROPERTY(Replicated)
+		ETeam Team = ETeam::ET_NoTeam;
 
+public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	FORCEINLINE void SetTeam(ETeam NewTeam) { Team = NewTeam; }
 
 	
 };

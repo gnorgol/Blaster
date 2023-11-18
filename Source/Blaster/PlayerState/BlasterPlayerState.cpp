@@ -39,6 +39,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
 	DOREPLIFETIME(ABlasterPlayerState, KillName);
 	DOREPLIFETIME(ABlasterPlayerState, KilledBy);
+	DOREPLIFETIME(ABlasterPlayerState, Team);
 
 }
 
