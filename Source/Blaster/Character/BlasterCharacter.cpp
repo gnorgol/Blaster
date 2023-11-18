@@ -26,6 +26,7 @@
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/Projectile.h"
+#include <Blaster/HUD/OverheadWidget.h>
 
 
 // Sets default values
@@ -194,6 +195,29 @@ void ABlasterCharacter::KillCam(float DeltaTime)
 	}
 }
 
+void ABlasterCharacter::SetTeamColor(ETeam Team)
+{
+	switch (Team)
+	{
+	case ETeam::ET_RedTeam:
+		TeamColor = FLinearColor::Red;
+		break;
+	case ETeam::ET_BlueTeam:
+		TeamColor = FLinearColor::Blue;
+		break;
+	case ETeam::ET_NoTeam:
+		TeamColor = FLinearColor::White;		
+		break;
+	case ETeam::ET_MAX:
+		//Color orange
+		TeamColor = FLinearColor(1.f, 0.5f, 0.f, 1.f);
+		break;
+	default:
+		TeamColor = FLinearColor::White;
+		break;
+	}
+}
+
 
 void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 {
@@ -299,7 +323,7 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -442,6 +466,7 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			SetTeamColor(BlasterPlayerState->GetTeam());
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
@@ -463,7 +488,12 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	{
 		KillCam(DeltaTime);
 	}
+	
+	if (OverheadWidgetInstance)
+	{
 
+		OverheadWidgetInstance->ShowPlayerName(this, TeamColor);
+	}
 	HideCameraIfCharacterCloseToWall();
 	PollInit();
 }

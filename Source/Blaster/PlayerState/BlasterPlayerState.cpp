@@ -119,6 +119,27 @@ void ABlasterPlayerState::clearKillName()
 	KilledBy = "";
 }
 
+void ABlasterPlayerState::OnRep_Team()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Character->SetTeamColor(Team);
+	}
+
+}
+
+void ABlasterPlayerState::SetTeam(ETeam NewTeam)
+{
+	Team = NewTeam;
+
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Character->SetTeamColor(NewTeam);
+	}
+}
+
 void ABlasterPlayerState::OnRep_Defeats()
 {
 	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;

@@ -8,6 +8,7 @@
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Blaster/BlasterTypes/CombatState.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "BlasterCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
@@ -25,6 +26,7 @@ class ABlasterPlayerController;
 class ABlasterPlayerState;
 class UWidgetComponent;
 class UBoxComponent;
+class UOverheadWidget;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -207,7 +209,7 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
-
+	void SetTeamColor(ETeam Team);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -218,6 +220,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		 UWidgetComponent* OverheadWidget;
+
+	UPROPERTY()
+		UOverheadWidget* OverheadWidgetInstance;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 		AWeapon* OverlappingWeapon;
@@ -325,6 +330,9 @@ private:
 		TSubclassOf<AWeapon> DefaultWeaponClass;
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* CrownMesh;
+
+	FLinearColor TeamColor = FLinearColor::White;
+
 
 
 };

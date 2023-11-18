@@ -20,11 +20,13 @@ public:
 
 	void SetDisplayText(FString TextToDisplay);
 
+	void SetColor(FLinearColor Color);
+
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerNetRole(APawn* InPawn);
 
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerName(APawn* InPawn);
+	void ShowPlayerName(APawn* InPawn, FLinearColor TextColor);
 
 protected:
 	virtual void NativeDestruct() override;
