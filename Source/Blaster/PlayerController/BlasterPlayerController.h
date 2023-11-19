@@ -15,6 +15,8 @@ class ABlasterHUD;
 class UCharacterOverlay;
 class ABlasterGameMode;
 class UInputAction;
+class ABlasterGameState;
+class ABlasterPlayerState;
 
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
@@ -37,10 +39,14 @@ public:
 	void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTimes) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDBlueTeamScore(float Score,float MaxScore);
+	void SetHUDRedTeamScore(float Score, float MaxScore);
 
 	virtual float GetServerTime(); // Sync time between server and client
 	virtual void ReceivedPlayer() override; 
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamGame);
 
 	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
 
@@ -68,13 +74,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Time")
 		float TimeSyncRunningTime = 0.0f;
 	void CheckTimeSync(float deltaTime);
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamGame);
 	void HandleCooldown();
 	UFUNCTION(Server , Reliable)
 		void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match,float Cooldown, float StartingTime);
+		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match,float Cooldown, float StartingTime, bool bIsTeamsMatch);
 
 	void HighPingWarning();
 	void StopHighPingWarning();
@@ -86,6 +92,16 @@ protected:
 	void ShowRetunToMainMenu();
 	UFUNCTION(Client, Reliable)
 	void ClientKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
+
+	FString GetInfoText (const TArray<ABlasterPlayerState*>& PlayerStates , FLinearColor& colorText);
+	FString GetTeamInfoText(ABlasterGameState* BlasterGameState, FLinearColor& colorText);
 	
 private:
 	UPROPERTY()

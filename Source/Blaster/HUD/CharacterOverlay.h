@@ -57,6 +57,14 @@ public:
 		UScrollBox* KillFeedScrollBox;
 	UPROPERTY(meta = (BindWidget))
 		URichTextBlock* KillFeedText;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* BlueTeamScoreText;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* RedTeamScoreText;
+	UPROPERTY(meta = (BindWidget))
+		UProgressBar* BlueTeamScoreBar;
+	UPROPERTY(meta = (BindWidget))
+		UProgressBar* RedTeamScoreBar;
 
 	void SetKillFeedText(FText AttackerName, FText VictimName, FText PlayerName, EWeaponType WeaponTypesKiller);
 };

@@ -26,6 +26,7 @@
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/Projectile.h"
+#include <Blaster/HUD/OverheadWidget.h>
 
 
 // Sets default values
@@ -160,7 +161,7 @@ ABlasterCharacter::ABlasterCharacter()
 
 void ABlasterCharacter::DeathTimerFinished()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	if (BlasterGameMode && !bLeftGame)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
@@ -175,7 +176,7 @@ void ABlasterCharacter::DeathTimerFinished()
 
 void ABlasterCharacter::ServerLeaveGame_Implementation()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if (BlasterGameMode && BlasterPlayerState)
 	{
@@ -191,6 +192,29 @@ void ABlasterCharacter::KillCam(float DeltaTime)
 		FVector KillerDirection = KillerLocation - ViewCamera->GetComponentLocation();
 		FRotator KillerRotation = UKismetMathLibrary::MakeRotFromX(KillerDirection);
 		ViewCamera->SetWorldRotation(KillerRotation);
+	}
+}
+
+void ABlasterCharacter::SetTeamColor(ETeam Team)
+{
+	switch (Team)
+	{
+	case ETeam::ET_RedTeam:
+		TeamColor = FLinearColor::Red;
+		break;
+	case ETeam::ET_BlueTeam:
+		TeamColor = FLinearColor::Blue;
+		break;
+	case ETeam::ET_NoTeam:
+		TeamColor = FLinearColor::White;		
+		break;
+	case ETeam::ET_MAX:
+		//Color orange
+		TeamColor = FLinearColor(1.f, 0.5f, 0.f, 1.f);
+		break;
+	default:
+		TeamColor = FLinearColor::White;
+		break;
 	}
 }
 
@@ -299,7 +323,7 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -351,7 +375,7 @@ void ABlasterCharacter::UpdateHUDAmmo()
 }
 void ABlasterCharacter::SpawnDefaultWeapon()
 {
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	UWorld* World = GetWorld();
 	if (BlasterGameMode && World && !bIsDead && DefaultWeaponClass)
 	{
@@ -414,6 +438,10 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -421,6 +449,10 @@ void ABlasterCharacter::HideCameraIfCharacterCloseToWall()
 		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
@@ -434,6 +466,7 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			SetTeamColor(BlasterPlayerState->GetTeam());
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
@@ -455,7 +488,12 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	{
 		KillCam(DeltaTime);
 	}
+	
+	if (OverheadWidgetInstance)
+	{
 
+		OverheadWidgetInstance->ShowPlayerName(this, TeamColor);
+	}
 	HideCameraIfCharacterCloseToWall();
 	PollInit();
 }
@@ -644,7 +682,7 @@ void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
 
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
 
 	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
@@ -666,6 +704,7 @@ void ABlasterCharacter::MulticastEliminated_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -757,13 +796,13 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (bIsDead)
+	UE_LOG(LogTemp, Warning, TEXT("ReceiveDamage"));
+	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
+	if (bIsDead || BlasterGameMode == nullptr)
 	{
 		return;
 	}
-	//Log damage Causer
-	UE_LOG(LogTemp, Warning, TEXT("Damage Causer: %s"), *DamageCauser->GetName());
-	//if a weapon caused the damage or a grenade
+	DamageAmount = BlasterGameMode->CalculateDamage(InstigatedBy,Controller, DamageAmount);
 	AWeapon* Weapon = Cast<AWeapon>(DamageCauser);
 	AProjectile* Projectile = Cast<AProjectile>(DamageCauser);
 	EWeaponType WeaponTypes;
@@ -801,7 +840,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, c
 	if (Health == 0.f)
 	{
 		//Die
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
 		if (BlasterGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;

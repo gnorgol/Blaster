@@ -18,8 +18,7 @@ void ABlasterPlayerState::OnRep_Score()
 		{
 			Controller->SetHUDScore(GetScore());
 		}
-	}
-	
+	}	
 }
 
 void ABlasterPlayerState::OnRep_KillName()
@@ -39,6 +38,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
 	DOREPLIFETIME(ABlasterPlayerState, KillName);
 	DOREPLIFETIME(ABlasterPlayerState, KilledBy);
+	DOREPLIFETIME(ABlasterPlayerState, Team);
 
 }
 
@@ -116,6 +116,27 @@ void ABlasterPlayerState::clearKillName()
 {
 	KillName = "";
 	KilledBy = "";
+}
+
+void ABlasterPlayerState::OnRep_Team()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Character->SetTeamColor(Team);
+	}
+
+}
+
+void ABlasterPlayerState::SetTeam(ETeam NewTeam)
+{
+	Team = NewTeam;
+
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Character->SetTeamColor(NewTeam);
+	}
 }
 
 void ABlasterPlayerState::OnRep_Defeats()
