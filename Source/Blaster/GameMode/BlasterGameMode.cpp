@@ -75,11 +75,13 @@ void ABlasterGameMode::Tick(float DeltaTime)
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer, EWeaponType KillerWeaponType)
 {
+	UE_LOG(LogTemp, Warning, TEXT("PlayerEliminated"));
+	if (Killer == nullptr || Killer->PlayerState == nullptr) return;
+	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
 	ABlasterPlayerState* KillerPlayerState = Killer ? Cast<ABlasterPlayerState>(Killer->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
-
-
+	
 
 	if (VictimPlayerState)
 	{

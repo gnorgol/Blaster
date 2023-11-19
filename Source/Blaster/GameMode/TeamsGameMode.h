@@ -19,6 +19,7 @@ class BLASTER_API ATeamsGameMode : public ABlasterGameMode
 protected:
 	virtual void HandleMatchHasStarted() override;
 	virtual float CalculateDamage(AController* Killer, AController* Victim, float Damage) override;
+	virtual void PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer, EWeaponType KillerWeaponType) override;
 
 
 public:

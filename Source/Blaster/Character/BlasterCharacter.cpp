@@ -796,7 +796,7 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("ReceiveDamage"));
 	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 	if (bIsDead || BlasterGameMode == nullptr)
 	{

@@ -15,6 +15,8 @@ class ABlasterHUD;
 class UCharacterOverlay;
 class ABlasterGameMode;
 class UInputAction;
+class ABlasterGameState;
+class ABlasterPlayerState;
 
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
@@ -39,8 +41,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void HideTeamScores();
 	void InitTeamScores();
-	void SetHUDBlueTeamScore(float Score);
-	void SetHUDRedTeamScore(float Score);
+	void SetHUDBlueTeamScore(float Score,float MaxScore);
+	void SetHUDRedTeamScore(float Score, float MaxScore);
 
 	virtual float GetServerTime(); // Sync time between server and client
 	virtual void ReceivedPlayer() override; 
@@ -97,6 +99,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
+
+	FString GetInfoText (const TArray<ABlasterPlayerState*>& PlayerStates , FLinearColor& colorText);
+	FString GetTeamInfoText(ABlasterGameState* BlasterGameState, FLinearColor& colorText);
 	
 private:
 	UPROPERTY()
