@@ -48,8 +48,9 @@ private:
 
 	//The Subsystem that will be used to create the session
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
-
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 MaxNumPlayers{ 4 };
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FString GameMode {TEXT("FreeForAll")};
 
 	FString PathToLobbyMap{ TEXT("") };
