@@ -37,6 +37,7 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FStri
 		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
 		MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
+
 	}
 }
 
@@ -114,6 +115,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Find Failed"));
+			
 		}
 		JoinButton->SetIsEnabled(true);
 	}
@@ -143,6 +145,8 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Join Failed"));
+			MultiplayerSessionsSubsystem->DestroySession();
+
 		}
 		JoinButton->SetIsEnabled(true);
 	}
@@ -170,6 +174,20 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
 {
+	if (bWasSuccessful)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Session Destroyed"));
+		}
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Destroy Failed"));
+		}
+	}
 }
 
 
@@ -187,6 +205,7 @@ void UMenu::HostButtonClicked()
 
 void UMenu::JoinButtonClicked()
 {
+	MultiplayerSessionsSubsystem->DestroySession();
 	JoinButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{

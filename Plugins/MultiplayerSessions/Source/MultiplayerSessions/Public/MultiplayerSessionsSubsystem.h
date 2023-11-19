@@ -17,6 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, 
 
 
 
+
 /**
 
 */
@@ -41,6 +42,12 @@ public:
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
+
+
+
+
+	int32 DesiredNumPublicConnections{};
+	FString DesiredGameMode{};
 
 protected:
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
@@ -68,4 +75,6 @@ private:
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
 	FString LastGameMode;
+
+
 };

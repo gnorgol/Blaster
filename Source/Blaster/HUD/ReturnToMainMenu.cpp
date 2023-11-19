@@ -122,7 +122,8 @@ void UReturnToMainMenu::ReturnButtonClicked()
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
+		APlayerController* FirstPlayerController = World->GetFirstPlayerController();		
+		
 		if (FirstPlayerController)
 		{
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn());

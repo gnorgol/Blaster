@@ -183,6 +183,20 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
 }
+void ABlasterCharacter::ClientLeaveGame()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ClientLeaveGame_Implementation"));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	
+	if (BlasterGameMode && BlasterPlayerState)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Client Name: ") + BlasterPlayerState->GetPlayerName());
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
+}
+
 
 void ABlasterCharacter::KillCam(float DeltaTime)
 {
@@ -318,6 +332,8 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 	}
 	CrownMesh->SetVisibility(false);
 }
+
+
 
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()

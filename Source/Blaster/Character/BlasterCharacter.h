@@ -114,6 +114,7 @@ public:
 
 	UFUNCTION(Server, Reliable)
 		void ServerLeaveGame();
+	void ClientLeaveGame();
 	FOnLeftGame OnLeftGame;
 
 	UFUNCTION(NetMulticast, Reliable)
