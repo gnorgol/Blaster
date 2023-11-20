@@ -47,9 +47,9 @@ bool UMenu::Initialize()
 	{
 		return false;
 	}
-	if (HostButton)
+	if (CreateButton)
 	{
-		HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
+		CreateButton->OnClicked.AddDynamic(this, &ThisClass::CreateButtonClicked);
 	}
 	if (JoinButton)
 	{
@@ -86,7 +86,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Creation Failed"));
 		}		
-		HostButton->SetIsEnabled(true);
+		CreateButton->SetIsEnabled(true);
 	}
 }
 
@@ -275,6 +275,18 @@ void UMenu::ShowMainMenu(ESlateVisibility bShow)
 
 }
 
+void UMenu::ShowCreateMenu(ESlateVisibility bShow)
+{
+	if (CreateMenuPanel)
+	{
+		CreateMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Create Menu Panel not found"));
+	}
+}
+
 void UMenu::ClearGamesBox()
 {
 	if (GamesBox)
@@ -288,14 +300,12 @@ void UMenu::ClearGamesBox()
 
 }
 
-void UMenu::HostButtonClicked()
+void UMenu::CreateButtonClicked()
 {
-	HostButton->SetIsEnabled(false);
+	CreateButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers,GameMode);
-
-		
+		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers,GameMode);		
 	}
 }
 

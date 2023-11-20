@@ -51,17 +51,23 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UButton* HostButton;
 	UPROPERTY(meta = (BindWidget))
+	UButton* CreateButton;
+	UPROPERTY(meta = (BindWidget))
 	UButton* JoinButton;
 	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel* MainMenuPanel;
 	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel* JoinMenuPanel;
 	UPROPERTY(meta = (BindWidget))
-		UTextBlock* InfoJoinText;
+	UTextBlock* InfoJoinText;
+	UPROPERTY(meta = (BindWidget))
+		UCanvasPanel* CreateMenuPanel;
 	UFUNCTION(BlueprintCallable)
 	void ShowJoinMenu(ESlateVisibility bShow);
 	UFUNCTION(BlueprintCallable)
 	void ShowMainMenu(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowCreateMenu(ESlateVisibility bShow);
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* GamesBox;
 
@@ -76,7 +82,7 @@ private:
 
 
 	UFUNCTION()
-	void HostButtonClicked();
+	void CreateButtonClicked();
 	UFUNCTION()
 	void JoinButtonClicked();
 
