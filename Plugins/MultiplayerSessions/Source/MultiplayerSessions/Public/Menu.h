@@ -5,11 +5,25 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include <Components/CanvasPanel.h>
+#include <Components/TextBlock.h>
+#include <ButtonJoinGame.h>
+#include <Components/VerticalBox.h>
+#include "OnlineSessionSettings.h"
 #include "Menu.generated.h"
+
+
+
 
 /**
  * 
  */
+class UButton;
+class UCanvasPanel;
+class UTextBlock;
+class UButtonJoinGame;
+class UVerticalBox;
+class FOnlineSessionSearchResult;
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 {
@@ -35,9 +49,31 @@ protected:
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* HostButton;
+	UButton* HostButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* JoinButton;
+	UButton* JoinButton;
+	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel* MainMenuPanel;
+	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel* JoinMenuPanel;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* InfoJoinText;
+	UFUNCTION(BlueprintCallable)
+	void ShowJoinMenu(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowMainMenu(ESlateVisibility bShow);
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* GamesBox;
+
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<class UUserWidget> ButtonJoinGameClass;
+
+
+
+
+	void ClearGamesBox();
+
 
 	UFUNCTION()
 	void HostButtonClicked();

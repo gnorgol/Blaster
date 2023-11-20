@@ -96,17 +96,50 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 	{
 		return;
 	}
+	if (MainMenuPanel && JoinMenuPanel)
+	{
+		ShowJoinMenu(ESlateVisibility::Visible);
+		ShowMainMenu(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Menu Panels not found"));
+	}
+	InfoJoinText->SetText(FText::FromString(""));
+	ClearGamesBox();
 	for (auto Result : SessionResults)
 	{
+
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("GameMode"), SettingsValue);
+
+		//Create UButtonJoinGame
+		UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
+
+
+		//add button to GamesBox
+		if (GamesBox)
+		{
+			ButtonJoinGame->AddToViewport();
+			GamesBox->AddChild(ButtonJoinGame);
+			ButtonJoinGame->HostNameText->SetText(FText::FromString(Result.Session.OwningUserName));
+			ButtonJoinGame->GameModeNameText->SetText(FText::FromString(SettingsValue));
+			ButtonJoinGame->SearchResult = Result;
+			ButtonJoinGame->MultiplayerSubsystem = MultiplayerSessionsSubsystem;
+
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+		}
 		if (SettingsValue == GameMode)
 		{
 			if (GEngine)
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Session Found"));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SettingsValue);
 			}
-			MultiplayerSessionsSubsystem->JoinSession(Result);
+			//MultiplayerSessionsSubsystem->JoinSession(Result);
 			return;
 		}
 	}
@@ -117,8 +150,32 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Find Failed"));
 			
 		}
-		JoinButton->SetIsEnabled(true);
+		if (InfoJoinText)
+		{
+			
+			//add button to GamesBox
+			//for (size_t i = 0; i < 30; i++)
+			//{
+			//	UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
+			//	if (GamesBox)
+			//	{
+
+			//		ButtonJoinGame->AddToViewport();
+			//		GamesBox->AddChild(ButtonJoinGame);
+
+			//	}
+			//	else
+			//	{
+			//		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+			//	}
+			//}
+
+			InfoJoinText->SetText(FText::FromString("No Sessions Found"));
+		}
+		
+		
 	}
+	JoinButton->SetIsEnabled(true);
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -191,6 +248,45 @@ void UMenu::OnDestroySession(bool bWasSuccessful)
 }
 
 
+
+void UMenu::ShowJoinMenu(ESlateVisibility bShow)
+{
+	if (JoinMenuPanel)
+	{
+		JoinMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Join Menu Panel not found"));
+	}
+
+}
+
+void UMenu::ShowMainMenu(ESlateVisibility bShow)
+{
+	if (MainMenuPanel)
+	{
+		MainMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Main Menu Panel not found"));
+	}
+
+}
+
+void UMenu::ClearGamesBox()
+{
+	if (GamesBox)
+	{
+		GamesBox->ClearChildren();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+	}
+
+}
 
 void UMenu::HostButtonClicked()
 {
