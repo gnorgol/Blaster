@@ -68,6 +68,8 @@ public:
 
 	void UpdateHUDAmmo();
 
+	void UpdateHUDGrenade();
+
 	void SpawnDefaultWeapon();
 
 	UPROPERTY(EditAnywhere)

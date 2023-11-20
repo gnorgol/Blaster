@@ -347,10 +347,7 @@ void ABlasterCharacter::BeginPlay()
 	}
 	
 	Tags.Add(FName("Player"));
-	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
-	UpdateHUDHealth();
-	UpdateHUDShield();
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -373,7 +370,7 @@ void ABlasterCharacter::UpdateHUDHealth()
 	}
 }
 void ABlasterCharacter::UpdateHUDShield()
-{
+{	
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 	if (BlasterPlayerController)
 	{
@@ -387,6 +384,14 @@ void ABlasterCharacter::UpdateHUDAmmo()
 	{
 		BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->CarriedAmmo);
 		BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->EquippedWeapon->GetCurrentAmmo());	
+	}
+}
+void ABlasterCharacter::UpdateHUDGrenade()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHUDGrenadeAmount(CombatComponent->GrenadeAmount);
 	}
 }
 void ABlasterCharacter::SpawnDefaultWeapon()
@@ -489,6 +494,18 @@ void ABlasterCharacter::PollInit()
 				MultcastGainTheLead();
 			}
 			
+		}
+	}
+	if (BlasterPlayerController == nullptr)
+	{
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+		if (BlasterPlayerController)
+		{
+			SpawnDefaultWeapon();
+			UpdateHUDAmmo();
+			UpdateHUDHealth();
+			UpdateHUDShield();
+			UpdateHUDGrenade();
 		}
 	}
 }
