@@ -804,7 +804,6 @@ void ABlasterCharacter::PlayReloadMontage()
 }
 void ABlasterCharacter::PlayThrowGrenadeMontage()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayThrowGrenadeMontage"));
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;

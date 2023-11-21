@@ -17,6 +17,7 @@
 #include "Blaster/Character/BlastAnimInstance.h"
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Weapon/Shotgun.h"
+#include <Blaster/Weapon/ProjectileGrenade.h>
 
 
 
@@ -961,7 +962,6 @@ void UCombatComponent::LaunchGrenade()
 	
 	if (Character && Character->IsLocallyControlled())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade"));
 		ServerLaunchGrenade(HitTarget);
 	}
 
@@ -969,10 +969,8 @@ void UCombatComponent::LaunchGrenade()
 
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Server"));
 	if (Character && GrenadeClass && Character->GetAttachedGrenade())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade GOOOOOOO"));
 		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
 
 		FVector ToTarget = Target - SpawnLocation;
@@ -985,7 +983,15 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 		{
 			SpawnedProjectile = World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParameters);
 			SpawnedProjectile->SetWeaponType(EWeaponType::EWT_Grenade);
-			UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Spawn"));
+			//Ignore Character
+			if (AProjectileGrenade* Grenade = Cast<AProjectileGrenade>(SpawnedProjectile))
+			{
+				if (UPrimitiveComponent* PrimitiveComponent = Grenade->FindComponentByClass<UPrimitiveComponent>())
+				{
+					PrimitiveComponent->IgnoreActorWhenMoving(Character, true);
+				}
+			}
+
 		}
 
 	}
