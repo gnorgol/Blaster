@@ -135,6 +135,7 @@ protected:
 	void Equip(const FInputActionValue& Value);
 	void SwitchWeapon(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
+	void SprintPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void ReloadPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
@@ -158,6 +159,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* CrouchAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* SprintAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* EquipAction;
@@ -172,6 +175,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* SwitchWeaponAction;
 
+
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
 	void PollInit();
@@ -184,6 +188,7 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool IsSprinting();
 	bool bHitCharacter = false;
 	UFUNCTION()
 	virtual void OnRep_Killer();
@@ -281,6 +286,8 @@ private:
 	float ProxyYawDelta;
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
+
+
 
 	void HideCharacter(bool bHide);
 

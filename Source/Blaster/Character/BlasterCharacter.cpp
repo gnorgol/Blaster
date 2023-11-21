@@ -517,6 +517,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	RotateInPlace(DeltaTime);
+
 	if (Killer)
 	{
 		KillCam(DeltaTime);
@@ -576,6 +577,11 @@ bool ABlasterCharacter::IsWeaponEquipped()
 bool ABlasterCharacter::IsAiming()
 {
 	return (CombatComponent && CombatComponent->bAiming);
+}
+
+bool ABlasterCharacter::IsSprinting()
+{
+	return (CombatComponent && CombatComponent->bIsSpriting);
 }
 
 void ABlasterCharacter::OnRep_Killer()
@@ -660,6 +666,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwitchWeapon);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SprintPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadPressed);
@@ -828,7 +835,6 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ReceiveDamage"));
 	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 	if (bIsDead || BlasterGameMode == nullptr)
 	{
@@ -977,13 +983,30 @@ void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 		UnCrouch();
 	}
 }
+void ABlasterCharacter::SprintPressed(const FInputActionValue& Value)
+{
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
+	if (CombatComponent && CombatComponent->CombatState == ECombatState::ECS_Unoccupied && IsAiming() == false)
+	{
+		
+		CombatComponent->SetSprinting(Value.Get<float>() > 0.0f);
+	}
+	else
+	{
+		CombatComponent->SetSprinting(false);
+	}
+
+}
 void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 {
 	if (bDisableGameplayInput)
 	{
 		return;
 	}
-	if (CombatComponent && IsWeaponEquipped())
+	if (CombatComponent && IsWeaponEquipped() && CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
 	}

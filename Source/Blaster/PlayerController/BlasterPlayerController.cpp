@@ -562,7 +562,9 @@ void ABlasterPlayerController::HandleCooldown()
 			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Visible);
 			FString AnnounceText = Announcement::NewMatchStartsIn;
 			//BlasterHUD->AnnouncementOverlay->InfoText->SetText(FText());
+
 			BlasterHUD->AnnouncementOverlay->AnnouncementText->SetText(FText::FromString(AnnounceText));
+
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 			if (BlasterGameState && BlasterPlayerState)
@@ -575,7 +577,7 @@ void ABlasterPlayerController::HandleCooldown()
 			
 				BlasterHUD->AnnouncementOverlay->InfoText->SetColorAndOpacity(colorText);
 				BlasterHUD->AnnouncementOverlay->AnnouncementText->SetText(FText::FromString(AnnounceText));
-			}			
+			}
 		}
 
 	}
@@ -585,6 +587,7 @@ void ABlasterPlayerController::HandleCooldown()
 		BlasterCharacter->bDisableGameplayInput = true;
 		BlasterCharacter->GetCombatComponent()->FireButtonPressed(false);
 	}
+
 }
 FString ABlasterPlayerController::GetInfoText(const TArray<ABlasterPlayerState*>& PlayerStates ,FLinearColor& colorText)
 {
@@ -685,7 +688,6 @@ void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMat
 	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	bShowTeamScores = bIsTeamsMatch;
-	UE_LOG(LogTemp, Warning, TEXT("Client Join Midgame"));
 	OnMatchStateSet(MatchState, bIsTeamsMatch);
 	
 	if (BlasterHUD && MatchState == MatchState::WaitingToStart)
@@ -739,7 +741,6 @@ void ABlasterPlayerController::PollInit()
 				}
 				if (bInitializeShield)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Initialize Shield"));
 					SetHUDShield(HUDShield, HUDMaxShield);
 				}
 				if (bInitializeScore)
@@ -756,7 +757,6 @@ void ABlasterPlayerController::PollInit()
 				}
 				if (bInitializeCarriedAmmo)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Initialize Carried Ammo"));
 					SetHUDCarriedAmmo(HUDCarriedAmmo);
 				}
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
@@ -764,7 +764,6 @@ void ABlasterPlayerController::PollInit()
 				{
 					if (!bInitializeGrenadeAmount)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Initialize Grenade Amount"));
 						SetHUDGrenadeAmount(BlasterCharacter->GetCombatComponent()->GetGrenades());
 					}
 					

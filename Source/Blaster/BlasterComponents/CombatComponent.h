@@ -60,9 +60,12 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
+	void SetSprinting(bool bIsSprinting);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
+	UFUNCTION(Server, Reliable)
+		void ServerSetSprinting(bool bIsSprinting);
 
 	UFUNCTION()
 		void OnRep_EquippedWeapon();
@@ -133,10 +136,21 @@ private:
 	UFUNCTION()
 	void OnRep_Aiming();
 
+	UPROPERTY(ReplicatedUsing = OnRep_Sprinting)
+	bool bIsSpriting = false;
+
+	bool bSprintingButtonPressed = false;
+
+	UFUNCTION()
+		void OnRep_Sprinting();
+
+
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)
 	float AimingWalkSpeed;
+	UPROPERTY(EditAnywhere)
+		float SprintingSpeed;
 
 	bool bFireButtonPressed;
 

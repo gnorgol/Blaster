@@ -215,12 +215,45 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 
 
 }
+void UCombatComponent::SetSprinting(bool bIsSprinting)
+{
+	if (Character == nullptr)
+	{
+		return;
+	}
+	bIsSpriting = bIsSprinting;
+	ServerSetSprinting(bIsSprinting);
+	if (Character->IsLocallyControlled())
+	{
+		bSprintingButtonPressed = bIsSprinting;
+	}
+	if (bIsSpriting)
+	{
+		CombatState = ECombatState::ECS_Sprinting;
+	}
+	else
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+}
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimingWalkSpeed : BaseWalkSpeed;
+	}
+}
+
+void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
+{
+	bIsSpriting = bIsSprinting;
+	if (Character)
+	{
+		if (Character->IsAiming() == false)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
+		}		
 	}
 }
 
@@ -466,7 +499,6 @@ void UCombatComponent::LocalFire(FVector_NetQuantize TraceHitTarget)
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
-		//UE_LOG(LogTemp, Warning, TEXT("Weapon Type: %s"), EquippedWeapon->GetWeaponType());
 		EquippedWeapon->Fire(TraceHitTarget, EquippedWeapon->GetWeaponType());
 
 	}
@@ -538,6 +570,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, GrenadeAmount);
+	DOREPLIFETIME(UCombatComponent, bIsSpriting);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -611,6 +644,13 @@ void UCombatComponent::OnRep_Aiming()
 	{
 		bAiming = bAimingButtonPressed;
 
+	}
+}
+void UCombatComponent::OnRep_Sprinting()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bIsSpriting = bSprintingButtonPressed;
 	}
 }
 void UCombatComponent::ReloadEmptyWeapon()
@@ -807,6 +847,12 @@ void UCombatComponent::OnRep_CombatState()
 			Character->PlaySwapMontage();
 		}
 		break;
+	case ECombatState::ECS_Sprinting:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = SprintingSpeed;
+		}
+		break;
 	case ECombatState::ECS_Max:
 		break;
 	default:
@@ -888,7 +934,6 @@ void UCombatComponent::ThrowGrenade()
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Throw Grenade"));
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
