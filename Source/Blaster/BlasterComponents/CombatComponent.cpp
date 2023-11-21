@@ -18,6 +18,7 @@
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Weapon/Shotgun.h"
 #include <Blaster/Weapon/ProjectileGrenade.h>
+#include "Blaster/GameMode/BlasterGameMode.h"
 
 
 
@@ -415,7 +416,20 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& TraceHitResult)
 
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>())
 		{
-			HUDPackage.CrosshairsColor = FLinearColor::Red;
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(TraceHitResult.GetActor());
+			ABlasterGameMode* BlasterGameMode = nullptr;
+			BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+
+
+			if (HitCharacter->GetTeamColor() == Character->GetTeamColor() && BlasterGameMode && BlasterGameMode->bTeamMatch)
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Green;
+			}
+			else
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Red;
+			}
+			
 		}
 		else
 		{

@@ -127,7 +127,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
+
 
 	void Move(const FInputActionValue& Value);
 	virtual void Jump() override;
@@ -211,6 +211,7 @@ public:
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE FLinearColor GetTeamColor() const { return TeamColor; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
 	void SetTeamColor(ETeam Team);
@@ -334,8 +335,8 @@ private:
 		TSubclassOf<AWeapon> DefaultWeaponClass;
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* CrownMesh;
-
 	FLinearColor TeamColor = FLinearColor::White;
+
 
 	UPROPERTY()
 		ABlasterGameMode* BlasterGameMode;
