@@ -13,12 +13,14 @@
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
 #include "PlayerMappableKeySettings.h"
+#include <EnhancedInputSubsystems.h>
 
 void UMenuInGame::MenuSetup()
 {
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
 	bIsFocusable = true;
+
 
 	UWorld* World = GetWorld();
 	if (World)
@@ -30,6 +32,15 @@ void UMenuInGame::MenuSetup()
 			InputModeData.SetWidgetToFocus(TakeWidget());
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->bShowMouseCursor = true;
+			//if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			//{
+			//	Subsystem->RemoveMappingContext(BlastCharacterMappingContext);
+			//}
+			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+			if (BlastCharacter)
+			{
+				BlastCharacter->bDisableGameplayInput = true;
+			}
 		}
 	}
 	if (ReturnMainMenuButton && !ReturnMainMenuButton->OnClicked.IsBound())
@@ -65,6 +76,15 @@ void UMenuInGame::MenuTeardown()
 			FInputModeGameOnly InputModeData;
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->bShowMouseCursor = false;
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(BlastCharacterMappingContext,0);
+			}
+			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+			if (BlastCharacter)
+			{
+				BlastCharacter->bDisableGameplayInput = false;
+			}
 		}
 	}
 	if (ReturnMainMenuButton && ReturnMainMenuButton->OnClicked.IsBound())

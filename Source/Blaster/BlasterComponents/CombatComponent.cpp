@@ -94,8 +94,7 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 		HUD = HUD == nullptr ? Cast<ABlasterHUD>(PlayerController->GetHUD()) : HUD;
 		if (HUD)
 		{
-			
-			if (EquippedWeapon)
+			if (EquippedWeapon && !Character->IsDead())
 			{				
 				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
 				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
@@ -140,8 +139,10 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 
 			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 
-
 			HUD->SetHUDPackage(HUDPackage);
+			
+			
+			
 		}
 	}
 }

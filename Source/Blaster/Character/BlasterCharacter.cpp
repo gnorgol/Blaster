@@ -265,13 +265,14 @@ void ABlasterCharacter::RagdollDeath(bool bPlayerLeftGame)
 		}
 	}
 	MulticastRagdollDeath(bPlayerLeftGame);
-	bIsDead = true;
+	
 
 }
 
 void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGame)
 {
 	bLeftGame = bPlayerLeftGame;
+	bIsDead = true;
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
