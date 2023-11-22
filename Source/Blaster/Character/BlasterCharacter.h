@@ -9,7 +9,9 @@
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "Blaster/BlasterTypes/Team.h"
+#include <PlayerMappableInputConfig.h>
 #include "BlasterCharacter.generated.h"
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -123,6 +125,8 @@ public:
 	void MultcastGainTheLead();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLoseTheLead();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlastCharacterMappingContext;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -150,8 +154,7 @@ protected:
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-		UInputMappingContext* BlastCharacterMappingContext;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -209,7 +212,6 @@ public:
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE void SetShield(float NewShield) { Shield = NewShield; }
-	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }

@@ -159,11 +159,11 @@ private:
 	float HighPingThreshold = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = HUD)
-	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+	TSubclassOf<class UUserWidget> MenuInGameWidgetClass;
 
 	UPROPERTY()
-		class UReturnToMainMenu* ReturnToMainMenuWidget;
+		class UMenuInGame* MenuInGameWidget;
 
-	bool bReturnToMainMenuWidgetVisible = false;
+	bool bMenuInGameWidgetVisible = false;
 	
 };

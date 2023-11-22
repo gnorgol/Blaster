@@ -20,7 +20,7 @@
 #include <Blaster/GameState/BlasterGameState.h>
 #include "Components/Image.h"
 #include "GameFramework/PlayerState.h"
-#include "Blaster/HUD/ReturnToMainMenu.h"
+#include "Blaster/HUD/MenuInGame.h"
 #include "EnhancedInputComponent.h"
 #include "Blaster/BlasterTypes/Annoucement.h"
 
@@ -320,7 +320,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			{
-				Subsystem->AddMappingContext(BlasterCharacter->GetBlastCharacterMappingContext(), 0);
+				Subsystem->AddMappingContext(BlasterCharacter->BlastCharacterMappingContext, 0);
 			}
 		}
 	}
@@ -376,24 +376,24 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 void ABlasterPlayerController::ShowRetunToMainMenu()
 {
 
-	if (ReturnToMainMenuWidgetClass == nullptr)
+	if (MenuInGameWidgetClass == nullptr)
 	{
 		return;
 	}
-	if (ReturnToMainMenuWidget == nullptr)
+	if (MenuInGameWidget == nullptr)
 	{
-		ReturnToMainMenuWidget = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidgetClass);
+		MenuInGameWidget = CreateWidget<UMenuInGame>(this, MenuInGameWidgetClass);
 	}
-	if (ReturnToMainMenuWidget)
+	if (MenuInGameWidget)
 	{
-		bReturnToMainMenuWidgetVisible = !bReturnToMainMenuWidgetVisible;
-		if (bReturnToMainMenuWidgetVisible)
+		bMenuInGameWidgetVisible = !bMenuInGameWidgetVisible;
+		if (bMenuInGameWidgetVisible)
 		{
-			ReturnToMainMenuWidget->MenuSetup();
+			MenuInGameWidget->MenuSetup();
 		}
 		else
 		{
-			ReturnToMainMenuWidget->MenuTeardown();
+			MenuInGameWidget->MenuTeardown();
 		}
 	}
 }
