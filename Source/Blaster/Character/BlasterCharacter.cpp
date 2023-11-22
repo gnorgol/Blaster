@@ -754,7 +754,7 @@ void ABlasterCharacter::PlayHitReactMontage()
 		return;
 	}
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && HitReactMontage && !AnimInstance->GetCurrentActiveMontage())
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName = TEXT("FromFront");
