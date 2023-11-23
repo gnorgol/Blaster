@@ -16,6 +16,7 @@ class UCanvasPanel;
 class UVerticalBox;
 class UButton;
 class UInputMappingContext;
+class ABlasterCharacter;
 UCLASS()
 class BLASTER_API UMenuInGame : public UUserWidget
 {
@@ -66,10 +67,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> KeyMappingButtonClass;
 
+	UPROPERTY()
+		ABlasterCharacter* BlasterCharacter;
 
-
-	UPROPERTY(EditAnywhere, Category = Input)
-		UInputMappingContext* BlastCharacterMappingContext;
 
 	//KeyMappingButton->InputKey1->BindOnKeySelected(FOnKeySelected::CreateUObject(this, &UMenuInGame::OnKeySelected, index));
 

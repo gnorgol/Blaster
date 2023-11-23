@@ -15,6 +15,7 @@
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
 
+
 void UMenuInGame::MenuSetup()
 {
 	AddToViewport();
@@ -36,10 +37,10 @@ void UMenuInGame::MenuSetup()
 			//{
 			//	Subsystem->RemoveMappingContext(BlastCharacterMappingContext);
 			//}
-			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
-			if (BlastCharacter)
+			BlasterCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+			if (BlasterCharacter)
 			{
-				BlastCharacter->bDisableGameplayInput = true;
+				BlasterCharacter->bDisableGameplayInput = true;
 			}
 		}
 	}
@@ -78,7 +79,7 @@ void UMenuInGame::MenuTeardown()
 			PlayerController->bShowMouseCursor = false;
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			{
-				Subsystem->AddMappingContext(BlastCharacterMappingContext,0);
+				Subsystem->AddMappingContext(BlasterCharacter->BlastCharacterMappingContext,0);
 			}
 			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
 			if (BlastCharacter)
@@ -161,9 +162,8 @@ void UMenuInGame::ReturnButtonClicked()
 	{
 		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
 
-		if (FirstPlayerController)
+		if (FirstPlayerController) 
 		{
-			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn());
 			if (BlasterCharacter)
 			{
 				BlasterCharacter->ServerLeaveGame();
@@ -183,27 +183,30 @@ void UMenuInGame::SettingButtonClicked()
 	ShowSettingPanel(ESlateVisibility::Visible);
 	int32 index = 0;
 
-	for (const FEnhancedActionKeyMapping& Mapping : BlastCharacterMappingContext->GetMappings())
+	if (BlasterCharacter)
 	{
-		
-		UKeyMappingButton* KeyMappingButton = CreateWidget<UKeyMappingButton>(this, KeyMappingButtonClass);
-		if (KeyMappingButton)
+		for (const FEnhancedActionKeyMapping& Mapping : BlasterCharacter->BlastCharacterMappingContext->GetMappings())
 		{
-			UPlayerMappableKeySettings* PlayerMappableKeySettings = Mapping.GetPlayerMappableKeySettings();
-			if (PlayerMappableKeySettings)
+			UKeyMappingButton* KeyMappingButton = CreateWidget<UKeyMappingButton>(this, KeyMappingButtonClass);
+			if (KeyMappingButton)
 			{
-				FText ActionName = Mapping.GetPlayerMappableKeySettings()->DisplayName;
-				KeyMappingButton->InputKey1->SetSelectedKey(Mapping.Key);
-				KeyMappingButton->KeyLabelText->SetText(ActionName);
-				KeyMappingButton->AddToViewport();
-				SettingBox->AddChild(KeyMappingButton);
-				KeyMappingButton->KeyIndex = index;
-			}	
+				UPlayerMappableKeySettings* PlayerMappableKeySettings = Mapping.GetPlayerMappableKeySettings();
+				if (PlayerMappableKeySettings)
+				{
+					FText ActionName = Mapping.GetPlayerMappableKeySettings()->DisplayName;
+					KeyMappingButton->InputKey1->SetSelectedKey(Mapping.Key);
+					KeyMappingButton->KeyLabelText->SetText(ActionName);
+					KeyMappingButton->AddToViewport();
+					SettingBox->AddChild(KeyMappingButton);
+					KeyMappingButton->KeyIndex = index;
+				}
+
+			}
+			index++;
 
 		}
-		index++;
-
 	}
+	
 }
 
 void UMenuInGame::ClearSettingBox()
