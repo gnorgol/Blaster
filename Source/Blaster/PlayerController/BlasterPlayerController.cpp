@@ -27,6 +27,9 @@
 #include <Blaster/HUD/ChatBox.h>
 #include "Components/WrapBox.h"
 #include "Components/EditableTextBox.h"
+#include "Blaster/Weapon/Weapon.h"
+#include "Blaster/HUD/BlasterHUD.h"
+#include <Blueprint/WidgetLayoutLibrary.h>
 
 
 
@@ -780,16 +783,61 @@ void ABlasterPlayerController::OnChatMessageSent(const FText& Message, ETextComm
 	if (CommitMethod == ETextCommit::OnEnter)
 	{
 		FString PlayerName = GetPlayerState<APlayerState>()->GetPlayerName();
+		//Check if Message is a command /spec
+		if (Message.ToString() == "/spec")
+		{
+				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+				if (BlasterCharacter)
+				{
+					BlasterCharacter->GetCombatComponent()->RemoveCrosshair();
+					BlasterCharacter->RagdollDeath(false);
+					//Disable CharacterOverlay
+					BlasterHUD->CharacterOverlay->SetVisibility(ESlateVisibility::Hidden);
+					//Disable Chat
+					ChatWidget->SetVisibility(ESlateVisibility::Hidden);
+					//remove all widgets
+					UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+					ServerChangeState(BlasterCharacter);
+					if (!HasAuthority())
+					{
+						ClientChangeState(BlasterCharacter);
+					}
+					
+					//BlasterCharacter->GetController()->ChangeState(NAME_Spectating);
+				}
+				
+			
+		}
+		else
+		{
+			ServerChatCommitted(Message, PlayerName);
 
-		ServerChatCommitted(Message, PlayerName);
-
-		//Clear ChatInputText
-		ChatWidget->ChatInputText->SetText(FText());
-		//Leave from ChatInputText
-		ShowOrHideChat();
-
-
+			//Clear ChatInputText
+			ChatWidget->ChatInputText->SetText(FText());
+			//Leave from ChatInputText
+			ShowOrHideChat();
+		}
 	}
+}
+
+void ABlasterPlayerController::ClientChangeState_Implementation(ABlasterCharacter* BlasterCharacter)
+{
+	if (BlasterCharacter != nullptr)
+	{
+		BlasterCharacter->GetController()->ChangeState(NAME_Spectating);
+	}
+}
+
+void ABlasterPlayerController::ServerChangeState_Implementation(ABlasterCharacter* BlasterCharacter)
+{
+	if (BlasterCharacter != nullptr)
+	{
+		BlasterCharacter->GetController()->ChangeState(NAME_Spectating);
+	}
+}
+bool ABlasterPlayerController::ServerChangeState_Validate(ABlasterCharacter* BlasterCharacter)
+{
+	return true;
 }
 
 void ABlasterPlayerController::ServerChatCommitted_Implementation(const FText& Text, const FString& PlayerName)

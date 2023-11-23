@@ -56,6 +56,7 @@ public:
 
 	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	bool bLocallyReloading = false;
+	void RemoveCrosshair();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -70,7 +70,4 @@ private:
 	UPROPERTY()
 		ABlasterCharacter* BlasterCharacter;
 
-
-	//KeyMappingButton->InputKey1->BindOnKeySelected(FOnKeySelected::CreateUObject(this, &UMenuInGame::OnKeySelected, index));
-
 };
