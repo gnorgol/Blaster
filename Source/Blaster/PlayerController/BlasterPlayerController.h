@@ -53,6 +53,10 @@ public:
 	FHighPingDelegate HighPingDelegate;
 
 	void BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim , EWeaponType WeaponTypeUsed);
+
+	UFUNCTION(Client, Reliable)
+	void ClientChatCommitted(const FText& Text, const FString& PlayerName);
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
@@ -92,6 +96,11 @@ protected:
 	void ShowRetunToMainMenu();
 	UFUNCTION(Client, Reliable)
 	void ClientKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ChatAction;
+	void ShowOrHideChat();
+	bool bChatVisible = false;
+
 
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
@@ -102,7 +111,11 @@ protected:
 
 	FString GetInfoText (const TArray<ABlasterPlayerState*>& PlayerStates , FLinearColor& colorText);
 	FString GetTeamInfoText(ABlasterGameState* BlasterGameState, FLinearColor& colorText);
-	
+	UPROPERTY()
+	class UChatBox* ChatWidget;
+
+
+
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
@@ -163,6 +176,18 @@ private:
 
 	UPROPERTY()
 		class UMenuInGame* MenuInGameWidget;
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<UUserWidget> ChatWidgetClass;
+
+	UFUNCTION()
+		void OnChatMessageSent(const FText& Message, ETextCommit::Type CommitMethod);
+	UFUNCTION(Server, Reliable)
+		void ServerChatCommitted(const FText& Text, const FString& PlayerName);
+
+
+
+	bool bChatWidgetVisible = false;
 
 	bool bMenuInGameWidgetVisible = false;
 	

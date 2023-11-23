@@ -23,6 +23,10 @@
 #include "Blaster/HUD/MenuInGame.h"
 #include "EnhancedInputComponent.h"
 #include "Blaster/BlasterTypes/Annoucement.h"
+#include "Components/Border.h"
+#include <Blaster/HUD/ChatBox.h>
+#include "Components/WrapBox.h"
+#include "Components/EditableTextBox.h"
 
 
 
@@ -31,6 +35,7 @@ void ABlasterPlayerController::BrodcastKillFeed(APlayerState* Killer, APlayerSta
 {
 	ClientKillFeed(Killer, Victim, WeaponTypeUsed);
 }
+
 void ABlasterPlayerController::ClientKillFeed_Implementation(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -51,6 +56,19 @@ void ABlasterPlayerController::BeginPlay()
 	Super::BeginPlay();
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckMatchState();
+	if (ChatWidgetClass)
+	{
+		APlayerController* LocalPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		ChatWidget = CreateWidget<UChatBox>(LocalPlayerController, ChatWidgetClass);
+
+		if (ChatWidget)
+		{
+			ChatWidget->AddToViewport();
+			ChatWidget->ChatInputText->OnTextCommitted.AddDynamic(this, &ABlasterPlayerController::OnChatMessageSent);
+			ChatWidget->SetVisibility(ESlateVisibility::Hidden);
+			
+		}
+	}
 }
 
 void ABlasterPlayerController::SetHUDMatchTime()
@@ -398,6 +416,38 @@ void ABlasterPlayerController::ShowRetunToMainMenu()
 	}
 }
 
+void ABlasterPlayerController::ShowOrHideChat()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ShowOrHideChat"));
+	if (ChatWidget)
+	{
+		bChatWidgetVisible = !bChatWidgetVisible;
+		if (bChatWidgetVisible)
+		{
+			FInputModeGameAndUI InputModeGameAndUI;
+			UE_LOG(LogTemp, Warning, TEXT("Show Chat"));
+			ChatWidget->SetVisibility(ESlateVisibility::Visible);
+			//Enter to ChatInputText
+			ChatWidget->ChatInputText->SetUserFocus(GetWorld()->GetFirstPlayerController());
+			SetInputMode(InputModeGameAndUI);
+			SetShowMouseCursor(true);
+			ChatWidget->ChatScrollBox->ScrollToEnd();
+
+
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Hide Chat"));
+			FInputModeGameOnly InputModeGameOnly;
+			ChatWidget->SetVisibility(ESlateVisibility::Hidden);
+			//Leave from ChatInputText
+			SetInputMode(InputModeGameOnly);
+			SetShowMouseCursor(false);
+
+		}
+	}
+}
+
 void ABlasterPlayerController::OnRep_ShowTeamScores()
 {
 	if (bShowTeamScores)
@@ -724,6 +774,36 @@ void ABlasterPlayerController::OnRep_MatchState()
 	
 }
 
+void ABlasterPlayerController::OnChatMessageSent(const FText& Message, ETextCommit::Type CommitMethod)
+{
+
+	if (CommitMethod == ETextCommit::OnEnter)
+	{
+		FString PlayerName = GetPlayerState<APlayerState>()->GetPlayerName();
+
+		ServerChatCommitted(Message, PlayerName);
+
+		//Clear ChatInputText
+		ChatWidget->ChatInputText->SetText(FText());
+		//Leave from ChatInputText
+		ShowOrHideChat();
+
+
+	}
+}
+
+void ABlasterPlayerController::ServerChatCommitted_Implementation(const FText& Text, const FString& PlayerName)
+{
+	BlasterGameMode->SendChatMsg(Text, PlayerName);
+}
+void ABlasterPlayerController::ClientChatCommitted_Implementation(const FText& Text, const FString& PlayerName)
+{
+	if (ChatWidget)
+	{
+		ChatWidget->AddChatMessage(Text, PlayerName);
+	}
+}
+
 
 
 void ABlasterPlayerController::PollInit()
@@ -781,6 +861,7 @@ void ABlasterPlayerController::SetupInputComponent()
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Completed, this, &ABlasterPlayerController::ShowRetunToMainMenu);
+		EnhancedInputComponent->BindAction(ChatAction, ETriggerEvent::Completed, this, &ABlasterPlayerController::ShowOrHideChat);
 	}
 }
 

@@ -31,6 +31,7 @@ public:
 	virtual void RequestRespawn(ACharacter* CharacterToRespawn , AController* Controller);
 	void PlayerLeftGame(ABlasterPlayerState* PlayerStateLever);
 	virtual float CalculateDamage(AController* Killer, AController* Victim, float Damage);
+	void SendChatMsg(const FText& Text, const FString& PlayerName);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Time")
 		float WarmupTime = 5.0f;
@@ -42,6 +43,7 @@ public:
 		float LevelStartingTime = 0.f;
 
 	bool bTeamMatch = false;
+
 
 protected:
 	virtual void BeginPlay() override;

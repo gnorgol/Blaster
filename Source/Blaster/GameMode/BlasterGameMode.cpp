@@ -191,6 +191,17 @@ float ABlasterGameMode::CalculateDamage(AController* Killer, AController* Victim
 	return Damage;
 }
 
+void ABlasterGameMode::SendChatMsg(const FText& Text, const FString& PlayerName)
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+		if (BlasterPlayerController)
+		{
+			BlasterPlayerController->ClientChatCommitted(Text, PlayerName);
+		}
+	}
+}
 
 
 
