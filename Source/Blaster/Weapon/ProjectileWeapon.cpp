@@ -12,7 +12,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 	APawn* InvestigatorPawn = Cast<APawn>(GetOwner());
 	UWorld* World = GetWorld();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-	if (MuzzleFlashSocket && World)
+	if (MuzzleFlashSocket && World && InvestigatorPawn)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		// From the socket location to the hit target
@@ -33,16 +33,26 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 				if (InvestigatorPawn->IsLocallyControlled()) // Is Server and host - Use replicated Projectile
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = false;
-					SpawnedProjectile->SetWeaponType(WeaponTypes);
-					SpawnedProjectile->Damage = Damage;
-					SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
+					if (SpawnedProjectile)
+					{
+						SpawnedProjectile->bUseServerSideRewind = false;
+						SpawnedProjectile->SetWeaponType(WeaponTypes);
+						SpawnedProjectile->Damage = Damage;
+						SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
+					}
+
 				}
 				else // Is Server and not host - Use non-replicated Projectile use server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = true;
-					SpawnedProjectile->SetWeaponType(WeaponTypes);
+					if (SpawnedProjectile)
+					{
+						SpawnedProjectile->bUseServerSideRewind = true;
+						SpawnedProjectile->SetReplicates(true);
+						SpawnedProjectile->SetWeaponType(WeaponTypes);
+
+					}
+					
 				}
 			}
 			else // On the client - Use replicated Projectile
@@ -50,19 +60,25 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 				if (InvestigatorPawn->IsLocallyControlled()) // Client - Locally Controlled - Use non-replicated Projectile , use server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = true;
-					SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
-					SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
-					//SpawnedProjectile->Damage = Damage;
-					SpawnedProjectile->SetWeaponType(WeaponTypes);
+					if (SpawnedProjectile)
+					{
+						SpawnedProjectile->bUseServerSideRewind = true;
+						SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
+						SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
+						//SpawnedProjectile->Damage = Damage;
+						SpawnedProjectile->SetWeaponType(WeaponTypes);
+					}
+
 
 				}
 				else // Client - Not Locally Controlled - Use non-replicated Projectile no server side rewind
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = false;
-					SpawnedProjectile->SetWeaponType(WeaponTypes);
-
+					if (SpawnedProjectile)
+					{
+						SpawnedProjectile->bUseServerSideRewind = false;
+						SpawnedProjectile->SetWeaponType(WeaponTypes);
+					}
 				}
 
 			}
@@ -72,10 +88,14 @@ void AProjectileWeapon::Fire(const FVector& HitTarget, EWeaponType WeaponTypes)
 			if (InvestigatorPawn->HasAuthority())
 			{
 				SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-				SpawnedProjectile->bUseServerSideRewind = false;
-				SpawnedProjectile->Damage = Damage;
-				SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
-				SpawnedProjectile->SetWeaponType(WeaponTypes);
+				if (SpawnedProjectile)
+				{
+					SpawnedProjectile->bUseServerSideRewind = false;
+					SpawnedProjectile->Damage = Damage;
+					SpawnedProjectile->HeadShotMultiplier = HeadShotMultiplier;
+					SpawnedProjectile->SetWeaponType(WeaponTypes);
+				}
+
 			}
 		}
 			
