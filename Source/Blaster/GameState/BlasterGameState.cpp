@@ -5,6 +5,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include <Blaster/GameMode/BlasterGameMode.h>
 
 void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -44,6 +45,17 @@ void ABlasterGameState::SetRedTeamScore()
 	{
 		BPlayer->SetHUDRedTeamScore(RedTeamScore, TeamScoreMax);
 	}
+	if (RedTeamScore >= TeamScoreMax)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Red Team Win"));
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ABlasterGameState::SetMatchWinner, 1.5f, false);
+
+
+
+
+
+	}
 }
 
 void ABlasterGameState::SetBlueTeamScore()
@@ -55,6 +67,15 @@ void ABlasterGameState::SetBlueTeamScore()
 	{
 		BPlayer->SetHUDBlueTeamScore(BlueTeamScore, TeamScoreMax);
 	}
+	if (BlueTeamScore >= TeamScoreMax)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Blue Team Win"));
+		//win blue team
+		//get Blaster Game Mode
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ABlasterGameState::SetMatchWinner, 1.5f, false);
+
+	}
 }
 
 void ABlasterGameState::OnRep_RedTeamScore()
@@ -64,6 +85,7 @@ void ABlasterGameState::OnRep_RedTeamScore()
 	{
 		BPlayer->SetHUDRedTeamScore(RedTeamScore, TeamScoreMax);
 	}
+
 }
 
 void ABlasterGameState::OnRep_BlueTeamScore()
@@ -72,5 +94,14 @@ void ABlasterGameState::OnRep_BlueTeamScore()
 	if (BPlayer)
 	{
 		BPlayer->SetHUDBlueTeamScore(BlueTeamScore, TeamScoreMax);
+	}
+}
+
+void ABlasterGameState::SetMatchWinner()
+{
+	ABlasterGameMode* BGameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
+	if (BGameMode)
+	{
+		BGameMode->SetMatchState(MatchState::Cooldown);
 	}
 }

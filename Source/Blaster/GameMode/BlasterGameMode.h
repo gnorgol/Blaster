@@ -53,4 +53,6 @@ private:
 
 public:
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+
+	FORCEINLINE void SetMatchState(FName NewState) { MatchState = NewState; }
 };
