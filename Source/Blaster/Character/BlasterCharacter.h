@@ -149,6 +149,8 @@ protected:
 	void FirePressed(const FInputActionValue& Value);
 	void ThrowGrenadePressed(const FInputActionValue& Value);
 	void RotateInPlace(float DeltaTime);
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -182,6 +184,8 @@ protected:
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
 	void PollInit();
+
+	void RemoveTeamPlayerStarts();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 public:	

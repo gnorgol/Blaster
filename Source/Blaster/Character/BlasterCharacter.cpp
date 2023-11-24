@@ -27,6 +27,7 @@
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/Projectile.h"
 #include <Blaster/HUD/OverheadWidget.h>
+#include "Blaster/PlayerStart/TeamPlayerStart.h"
 
 
 // Sets default values
@@ -486,15 +487,13 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if (BlasterPlayerState)
 		{
-			BlasterPlayerState->AddToScore(0.f);
-			BlasterPlayerState->AddToDefeats(0);
-			SetTeamColor(BlasterPlayerState->GetTeam());
+			OnPlayerStateInitialized();
+
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
 				MultcastGainTheLead();
 			}
-			
 		}
 	}
 	if (BlasterPlayerController == nullptr)
@@ -508,10 +507,28 @@ void ABlasterCharacter::PollInit()
 			UpdateHUDShield();
 			UpdateHUDGrenade();
 		}
+		
 	}
+
 }
 
+void ABlasterCharacter::RemoveTeamPlayerStarts()
+{
+	if (HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		for (AActor* PlayerStart : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(PlayerStart);
+			if (TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStart->Destroy();
+			}
+		}
+	}
 
+}
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -553,6 +570,44 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+}
+
+void ABlasterCharacter::OnPlayerStateInitialized()
+{
+	BlasterPlayerState->AddToScore(0.f);
+	BlasterPlayerState->AddToDefeats(0);
+	SetTeamColor(BlasterPlayerState->GetTeam());
+	SetSpawnPoint();
+}
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if (HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for (AActor* PlayerStart : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(PlayerStart);
+			if (TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamPlayerStart);
+			}
+		}
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			int RandomIndex = FMath::RandRange(0, TeamPlayerStarts.Num() - 1);
+			ATeamPlayerStart* ChosenPlayerStart = TeamPlayerStarts[RandomIndex];
+			SetActorLocation(ChosenPlayerStart->GetActorLocation());
+			SetActorRotation(ChosenPlayerStart->GetActorRotation());
+		}
+		//Wait 5 seconds removing all team player starts
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ABlasterCharacter::RemoveTeamPlayerStarts, 5.f);
+
+
+	}
+
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
