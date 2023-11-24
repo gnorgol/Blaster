@@ -102,6 +102,6 @@ void ABlasterGameState::SetMatchWinner()
 	ABlasterGameMode* BGameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
 	if (BGameMode)
 	{
-		BGameMode->SetMatchState(MatchState::Cooldown);
+		BGameMode->SetMatchStatest(MatchState::Cooldown);
 	}
 }

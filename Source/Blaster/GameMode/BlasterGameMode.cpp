@@ -43,6 +43,11 @@ void ABlasterGameMode::OnMatchStateSet()
 	}
 
 }
+void ABlasterGameMode::SetMatchStatest(FName NewState)
+{
+	MatchState = NewState;
+	OnMatchStateSet();
+}
 void ABlasterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
