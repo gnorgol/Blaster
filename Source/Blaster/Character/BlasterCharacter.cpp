@@ -341,7 +341,13 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, TEXT("BeginPlay Charater"));
+
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
+	
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -349,19 +355,16 @@ void ABlasterCharacter::BeginPlay()
 	}
 	
 	Tags.Add(FName("Player"));
+	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
-	if (HasAuthority())
-	{
-		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
-	}
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
-		}
-	}
+	//if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	//{
+	//	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+	//	{
+	//		Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+	//	}
+	//}
 }
 void ABlasterCharacter::UpdateHUDHealth()
 {

@@ -195,4 +195,11 @@ private:
 
 	UFUNCTION(Client, Reliable)
 	void ClientChangeState(ABlasterCharacter* BlasterCharacter);
+
+
+	float TotalSessionTime;
+
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRestartMap();
 };
