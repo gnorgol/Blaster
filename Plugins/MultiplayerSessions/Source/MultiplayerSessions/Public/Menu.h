@@ -30,7 +30,7 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-		void MenuSetup(int32 NumberOfPublicConnections = 4 , FString TypeOfMatch = TEXT("FreeForAll"), FString LobbyPath = TEXT("/Game/ThirdPerson/Maps/Lobby"));
+		void MenuSetup(int32 NumberOfPublicConnections = 4 , FString TypeOfMatch = TEXT("FreeForAll"), FString LobbyPath = TEXT("/Game/ThirdPerson/Maps/Lobby"), FString MapName = TEXT("Hangar"));
 
 protected:
 	virtual bool Initialize() override;
@@ -94,6 +94,8 @@ private:
 	int32 MaxNumPlayers{ 4 };
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FString GameMode {TEXT("FreeForAll")};
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FString MapName{ TEXT("Hangar") };
 
 	FString PathToLobbyMap{ TEXT("") };
 };

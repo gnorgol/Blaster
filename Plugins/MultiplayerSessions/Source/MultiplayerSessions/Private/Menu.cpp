@@ -7,10 +7,11 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 
-void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath)
+void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath, FString Map)
 {
 	MaxNumPlayers = NumberOfPublicConnections;
 	GameMode = TypeOfMatch;
+	MapName = Map;
 	PathToLobbyMap = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
@@ -305,7 +306,7 @@ void UMenu::CreateButtonClicked()
 	CreateButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers,GameMode);		
+		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers, GameMode, MapName);
 	}
 }
 

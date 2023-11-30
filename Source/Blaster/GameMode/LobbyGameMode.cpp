@@ -22,16 +22,11 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			if (!ensure(World != nullptr)) return;
 			bUseSeamlessTravel = true;
 			FString GameMode = Subsystem->DesiredGameMode;
-			if (GameMode == "FreeForAll")
-			{
-				World->ServerTravel("/Game/Maps/Hangar?listen");
-			}
-			else if (GameMode == "TeamDeathMatch")
-			{
-				World->ServerTravel("/Game/Maps/TeamDeathMatch?listen");
-			}
-
-			
+			FString MapName = Subsystem->DesiredMapName;
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("GameMode: %s"), *GameMode));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("MapName: %s"), *MapName));
+			FString URL = FString::Printf(TEXT("/Game/Maps/%s%s?listen"), *MapName, *GameMode);
+			World->ServerTravel(URL);		
 			
 		}
 	}
