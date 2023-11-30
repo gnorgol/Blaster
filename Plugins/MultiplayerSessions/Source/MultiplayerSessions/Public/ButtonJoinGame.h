@@ -28,6 +28,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* GameModeNameText;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* MapNameText;
+
 	FOnlineSessionSearchResult SearchResult;
 
 	class UMultiplayerSessionsSubsystem* MultiplayerSubsystem;

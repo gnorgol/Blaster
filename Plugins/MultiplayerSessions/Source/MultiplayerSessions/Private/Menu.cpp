@@ -114,6 +114,9 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("GameMode"), SettingsValue);
 
+		FString SettingsValueMap;
+		Result.Session.SessionSettings.Get(FName("MapName"), SettingsValueMap);
+
 		//Create UButtonJoinGame
 		UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
 
@@ -125,6 +128,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			GamesBox->AddChild(ButtonJoinGame);
 			ButtonJoinGame->HostNameText->SetText(FText::FromString(Result.Session.OwningUserName));
 			ButtonJoinGame->GameModeNameText->SetText(FText::FromString(SettingsValue));
+			ButtonJoinGame->MapNameText->SetText(FText::FromString(SettingsValueMap));
 			ButtonJoinGame->SearchResult = Result;
 			ButtonJoinGame->MultiplayerSubsystem = MultiplayerSessionsSubsystem;
 
