@@ -14,6 +14,8 @@
 #include <Components/VerticalBox.h>
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
+#include <Blaster/PlayerController/SaveInputMapping.h>
+#include <Kismet/GameplayStatics.h>
 
 
 void UMenuInGame::MenuSetup()
@@ -77,11 +79,29 @@ void UMenuInGame::MenuTeardown()
 			FInputModeGameOnly InputModeData;
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->bShowMouseCursor = false;
+			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			{
-				Subsystem->AddMappingContext(BlasterCharacter->BlastCharacterMappingContext,0);
+				USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+
+				SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterInputMapping"), 0));
+
+				if (SaveGameInstance && !SaveGameInstance->EnhancedActionMappings.IsEmpty())
+				{
+					//No need to save the mapping context, it is already saved in the save game instance
+					BlastCharacter->BlastCharacterMappingContext->UnmapAll();
+					BlastCharacter->BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+
+				}
+				else
+				{
+					//Save the mapping context
+					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+					SaveGameInstance->EnhancedActionMappings = BlastCharacter->BlastCharacterMappingContext->GetMappings();
+					Subsystem->AddMappingContext(BlastCharacter->BlastCharacterMappingContext, 0);
+				}
 			}
-			ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+			
 			if (BlastCharacter)
 			{
 				BlastCharacter->bDisableGameplayInput = false;
@@ -185,7 +205,7 @@ void UMenuInGame::SettingButtonClicked()
 
 	if (BlasterCharacter)
 	{
-		for (const FEnhancedActionKeyMapping& Mapping : BlasterCharacter->BlastCharacterMappingContext->GetMappings())
+		for (const FEnhancedActionKeyMapping Mapping : BlasterCharacter->BlastCharacterMappingContext->GetMappings())
 		{
 			UKeyMappingButton* KeyMappingButton = CreateWidget<UKeyMappingButton>(this, KeyMappingButtonClass);
 			if (KeyMappingButton)

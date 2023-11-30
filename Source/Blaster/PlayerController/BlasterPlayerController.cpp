@@ -34,6 +34,7 @@
 
 
 
+
 void ABlasterPlayerController::BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim,  EWeaponType WeaponTypeUsed)
 {
 	ClientKillFeed(Killer, Victim, WeaponTypeUsed);
@@ -53,6 +54,8 @@ void ABlasterPlayerController::ClientKillFeed_Implementation(APlayerState* Kille
 
 	}
 }
+
+
 
 void ABlasterPlayerController::BeginPlay()
 {
@@ -319,8 +322,6 @@ void ABlasterPlayerController::SetHUDGrenadeAmount(int32 Amount)
 	}
 }
 
-
-
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -328,15 +329,6 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if (BlasterCharacter)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
-		//enable Input
-		APlayerController* PlayerController = Cast<APlayerController>(InPawn->GetController());
-		if (PlayerController)
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				Subsystem->AddMappingContext(BlasterCharacter->BlastCharacterMappingContext, 0);
-			}
-		}
 	}
 }
 
@@ -356,7 +348,6 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 
 	if (HighPingRunningTime > CheckPingFrequency)
 	{
-		//PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : Cast<APlayerState>(PlayerState);
 		if (PlayerState)
 		{
@@ -563,7 +554,6 @@ void ABlasterPlayerController::OnMatchStateSet(FName State , bool bTeamGame)
 }
 void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamGame)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleMatchHasStarted"));
 	if (HasAuthority())
 	{
 		bShowTeamScores = bTeamGame;

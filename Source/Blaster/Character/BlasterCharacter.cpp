@@ -28,6 +28,12 @@
 #include "Blaster/Weapon/Projectile.h"
 #include <Blaster/HUD/OverheadWidget.h>
 #include "Blaster/PlayerStart/TeamPlayerStart.h"
+#include "Blaster/PlayerController/SaveInputMapping.h"
+#include "InputMappingContext.h"
+#include "PlayerMappableKeySettings.h"
+
+
+
 
 
 // Sets default values
@@ -186,14 +192,13 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 }
 void ABlasterCharacter::ClientLeaveGame()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ClientLeaveGame_Implementation"));
+
 	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	
 	if (BlasterGameMode && BlasterPlayerState)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Client Name: ") + BlasterPlayerState->GetPlayerName());
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
 }
@@ -341,7 +346,7 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, TEXT("BeginPlay Charater"));
+
 
 	if (HasAuthority())
 	{
@@ -358,13 +363,6 @@ void ABlasterCharacter::BeginPlay()
 	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
 
-	//if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	//{
-	//	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-	//	{
-	//		Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
-	//	}
-	//}
 }
 void ABlasterCharacter::UpdateHUDHealth()
 {
@@ -509,11 +507,56 @@ void ABlasterCharacter::PollInit()
 			UpdateHUDHealth();
 			UpdateHUDShield();
 			UpdateHUDGrenade();
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer()))
+			{
+				USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterInputMapping"), 0));
+
+				if (SaveGameInstance && !SaveGameInstance->EnhancedActionMappings.IsEmpty())
+				{
+					//Load the saved mapping and add it to the subsystem
+					BlastCharacterMappingContext->UnmapAll();
+					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+				}
+				else
+				{
+					//No Save add the default mapping
+					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+
+
+				}
+			}
+
 		}
-		
+
+
 	}
 
 }
+
+
+void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, FEnhancedActionKeyMapping NewMapping)
+{
+	USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+
+	SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
+
+	for (int i = 0; i < SaveGameInstance->EnhancedActionMappings.Num(); i++)
+	{
+		if (SaveGameInstance->EnhancedActionMappings[i].Key == OldMapping.Key && SaveGameInstance->EnhancedActionMappings[i].Action == OldMapping.Action)
+		{
+			SaveGameInstance->EnhancedActionMappings[i] = NewMapping;
+			break;
+		}
+	}
+
+	// Save the game instance
+	bool bSuccess = UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterInputMapping"), 0);
+
+}
+
 
 void ABlasterCharacter::RemoveTeamPlayerStarts()
 {
@@ -552,6 +595,9 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	HideCameraIfCharacterCloseToWall();
 	PollInit();
 }
+
+
+
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
 	if (bDisableGameplayInput)

@@ -8,31 +8,32 @@
 #include "Components/InputKeySelector.h"
 #include "Framework/Commands/InputChord.h"
 #include <Blaster/Character/BlasterCharacter.h>
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "GameFramework/PlayerController.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blaster/PlayerController/SaveInputMapping.h"
+#include <Kismet/GameplayStatics.h>
+#include "EnhancedActionKeyMapping.h"
+#include <GameFramework/InputSettings.h>
 
 
 void UKeyMappingButton::SetKey(FInputChord SelectedKey)
 {
 	ABlasterCharacter *BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
-	
+
 	if (BlastCharacter)
 	{
-		UInputMappingContext* MappingContext = BlastCharacter->BlastCharacterMappingContext;
+		FEnhancedActionKeyMapping OldMappingContext = BlastCharacter->BlastCharacterMappingContext->GetMapping(KeyIndex);
+		FEnhancedActionKeyMapping NewMappingContext = OldMappingContext;
 		TArray<TObjectPtr<UInputModifier>> KeyModifier;
-		KeyModifier = MappingContext->Mappings[KeyIndex].Modifiers;
-		MappingContext->Mappings[KeyIndex].Key = SelectedKey.Key;
-		MappingContext->Mappings[KeyIndex].Modifiers = KeyModifier;
-		BlastCharacter->BlastCharacterMappingContext = MappingContext;
-		BlastCharacter->BlastCharacterMappingContext->ReloadConfig();
-		if (APlayerController* PlayerController = Cast<APlayerController>(BlastCharacter->GetController()))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				Subsystem->AddMappingContext(MappingContext, 0);
-			}
-		}
+		
+		KeyModifier = OldMappingContext.Modifiers;
+		NewMappingContext.Key = SelectedKey.Key;
+		NewMappingContext.Modifiers = KeyModifier;
+		NewMappingContext.Action = OldMappingContext.Action;
+		
+		BlastCharacter->SaveInputMapping(OldMappingContext, NewMappingContext);
+
 	}
-
-
 }
+

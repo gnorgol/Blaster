@@ -191,7 +191,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	void SaveInputMapping(FEnhancedActionKeyMapping OldMapping, FEnhancedActionKeyMapping NewMapping);
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
@@ -353,6 +353,7 @@ private:
 
 	UPROPERTY()
 		ABlasterGameMode* BlasterGameMode;
+
 
 
 };

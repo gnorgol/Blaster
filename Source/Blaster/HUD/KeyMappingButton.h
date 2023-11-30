@@ -5,6 +5,7 @@
 #include "KeyMappingButton.generated.h"
 
 class UInputMappingContext;
+class USaveGame;
 UCLASS()
 class BLASTER_API UKeyMappingButton : public UUserWidget
 {
@@ -22,4 +23,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	int32 KeyIndex;
+
+	USaveGame* SaveGameInstance;
+
+
 };
