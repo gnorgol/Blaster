@@ -22,7 +22,7 @@ UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
@@ -32,7 +32,7 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDKillFieldInfo(const FString& KillerName, const FString& VictimName);
-	void SetHUDKillFieldPlayerInfo(const FString& PlayerName,bool bIsDead);
+	void SetHUDKillFieldPlayerInfo(const FString& PlayerName, bool bIsDead);
 	void SetHUDMatchCountdown(float Countdown);
 	void SetHUDWarmupCountdown(float Countdown);
 	void SetHUDGrenadeAmount(int32 Amount);
@@ -41,57 +41,66 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void HideTeamScores();
 	void InitTeamScores();
-	void SetHUDBlueTeamScore(float Score,float MaxScore);
+	void SetHUDBlueTeamScore(float Score, float MaxScore);
 	void SetHUDRedTeamScore(float Score, float MaxScore);
 
 	virtual float GetServerTime(); // Sync time between server and client
-	virtual void ReceivedPlayer() override; 
+	virtual void ReceivedPlayer() override;
 	void OnMatchStateSet(FName State, bool bTeamGame);
 
 	float SingleTripTime = 0.0f; // Time it takes for a packet to go from client to server and back
 
 	FHighPingDelegate HighPingDelegate;
 
-	void BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim , EWeaponType WeaponTypeUsed);
+	void BrodcastKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
+
+	UFUNCTION(Client, Reliable)
+	void ClientChatCommitted(const FText& Text, const FString& PlayerName);
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDMatchTime();
 	void PollInit();
-	virtual void SetupInputComponent() ;
+	virtual void SetupInputComponent();
 	// Sync time between server and client
 
 	UFUNCTION(Server, Reliable)
-		void ServerRequestServerTime(float TimeOfClientRequest);
+	void ServerRequestServerTime(float TimeOfClientRequest);
 
 	UFUNCTION(Client, Reliable)
-		void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedRequest);
+	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedRequest);
 
 	float ClientServerDelta = 0.0f; // Difference between client and server time
 
 	UPROPERTY(EditAnywhere, Category = "Time")
-		float TimeSyncFrequency = 5.0f; // How often to sync time between client and server
+	float TimeSyncFrequency = 5.0f; // How often to sync time between client and server
 
 	UPROPERTY(EditAnywhere, Category = "Time")
-		float TimeSyncRunningTime = 0.0f;
+	float TimeSyncRunningTime = 0.0f;
 	void CheckTimeSync(float deltaTime);
 	void HandleMatchHasStarted(bool bTeamGame);
 	void HandleCooldown();
-	UFUNCTION(Server , Reliable)
-		void ServerCheckMatchState();
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match,float Cooldown, float StartingTime, bool bIsTeamsMatch);
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime, bool bIsTeamsMatch);
 
 	void HighPingWarning();
 	void StopHighPingWarning();
 	void CheckPing(float DeltaTime);
 	UFUNCTION(Server, Reliable)
-		void ServerReportPingStatus(bool bHighPing);
+	void ServerReportPingStatus(bool bHighPing);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-		UInputAction* MenuAction;
+	UInputAction* MenuAction;
 	void ShowRetunToMainMenu();
 	UFUNCTION(Client, Reliable)
 	void ClientKillFeed(APlayerState* Killer, APlayerState* Victim, EWeaponType WeaponTypeUsed);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ChatAction;
+	void ShowOrHideChat();
+	bool bChatVisible = false;
+
 
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
@@ -100,9 +109,11 @@ protected:
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
 
-	FString GetInfoText (const TArray<ABlasterPlayerState*>& PlayerStates , FLinearColor& colorText);
+	FString GetInfoText(const TArray<ABlasterPlayerState*>& PlayerStates, FLinearColor& colorText);
 	FString GetTeamInfoText(ABlasterGameState* BlasterGameState, FLinearColor& colorText);
-	
+	UPROPERTY()
+	class UChatBox* ChatWidget;
+
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
@@ -149,7 +160,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Ping")
 	float HighPingDuration = 5.f;
 
-	
+
 
 	UPROPERTY(EditAnywhere, Category = "Ping")
 	float CheckPingFrequency = 20.f;
@@ -159,11 +170,36 @@ private:
 	float HighPingThreshold = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = HUD)
-	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+	TSubclassOf<class UUserWidget> MenuInGameWidgetClass;
 
 	UPROPERTY()
-		class UReturnToMainMenu* ReturnToMainMenuWidget;
+	class UMenuInGame* MenuInGameWidget;
 
-	bool bReturnToMainMenuWidgetVisible = false;
-	
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<UUserWidget> ChatWidgetClass;
+
+	UFUNCTION()
+	void OnChatMessageSent(const FText& Message, ETextCommit::Type CommitMethod);
+	UFUNCTION(Server, Reliable)
+	void ServerChatCommitted(const FText& Text, const FString& PlayerName);
+
+
+
+	bool bChatWidgetVisible = false;
+
+	bool bMenuInGameWidgetVisible = false;
+
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerChangeState(ABlasterCharacter* BlasterCharacter);
+
+	UFUNCTION(Client, Reliable)
+	void ClientChangeState(ABlasterCharacter* BlasterCharacter);
+
+
+	float TotalSessionTime;
+
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRestartMap();
 };

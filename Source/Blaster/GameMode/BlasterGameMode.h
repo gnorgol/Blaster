@@ -31,6 +31,7 @@ public:
 	virtual void RequestRespawn(ACharacter* CharacterToRespawn , AController* Controller);
 	void PlayerLeftGame(ABlasterPlayerState* PlayerStateLever);
 	virtual float CalculateDamage(AController* Killer, AController* Victim, float Damage);
+	void SendChatMsg(const FText& Text, const FString& PlayerName);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Time")
 		float WarmupTime = 5.0f;
@@ -43,6 +44,7 @@ public:
 
 	bool bTeamMatch = false;
 
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
@@ -51,4 +53,7 @@ private:
 
 public:
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+
+	void SetMatchStatest(FName NewState);
+	//FORCEINLINE void SetMatchState(FName NewState) { MatchState = NewState; }
 };

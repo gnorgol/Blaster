@@ -8,6 +8,7 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
@@ -17,6 +18,8 @@
 #include "Blaster/Character/BlastAnimInstance.h"
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Weapon/Shotgun.h"
+#include <Blaster/Weapon/ProjectileGrenade.h>
+#include "Blaster/GameMode/BlasterGameMode.h"
 
 
 
@@ -41,6 +44,19 @@ void UCombatComponent::PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
 	{
 		Reload();
+	}
+}
+
+void UCombatComponent::RemoveCrosshair()
+{
+	if (HUD)
+	{
+		HUDPackage.CrosshairsCenter = nullptr;
+		HUDPackage.CrosshairsLeft = nullptr;
+		HUDPackage.CrosshairsRight = nullptr;
+		HUDPackage.CrosshairsTop = nullptr;
+		HUDPackage.CrosshairsBottom = nullptr;
+		HUD->SetHUDPackage(HUDPackage);
 	}
 }
 
@@ -92,8 +108,8 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 		HUD = HUD == nullptr ? Cast<ABlasterHUD>(PlayerController->GetHUD()) : HUD;
 		if (HUD)
 		{
-			
-			if (EquippedWeapon)
+
+			if (EquippedWeapon && !Character->IsDead())
 			{				
 				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
 				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
@@ -138,8 +154,10 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 
 			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 
-
 			HUD->SetHUDPackage(HUDPackage);
+			
+			
+			
 		}
 	}
 }
@@ -213,12 +231,45 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 
 
 }
+void UCombatComponent::SetSprinting(bool bIsSprinting)
+{
+	if (Character == nullptr)
+	{
+		return;
+	}
+	bIsSpriting = bIsSprinting;
+	ServerSetSprinting(bIsSprinting);
+	if (Character->IsLocallyControlled())
+	{
+		bSprintingButtonPressed = bIsSprinting;
+	}
+	if (bIsSpriting)
+	{
+		CombatState = ECombatState::ECS_Sprinting;
+	}
+	else
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+}
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimingWalkSpeed : BaseWalkSpeed;
+	}
+}
+
+void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
+{
+	bIsSpriting = bIsSprinting;
+	if (Character)
+	{
+		if (Character->IsAiming() == false)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
+		}		
 	}
 }
 
@@ -414,7 +465,20 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& TraceHitResult)
 
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>())
 		{
-			HUDPackage.CrosshairsColor = FLinearColor::Red;
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(TraceHitResult.GetActor());
+			ABlasterGameMode* BlasterGameMode = nullptr;
+			BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+
+
+			if (HitCharacter->GetTeamColor() == Character->GetTeamColor() && BlasterGameMode && BlasterGameMode->bTeamMatch)
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Green;
+			}
+			else
+			{
+				HUDPackage.CrosshairsColor = FLinearColor::Red;
+			}
+			
 		}
 		else
 		{
@@ -451,7 +515,6 @@ void UCombatComponent::LocalFire(FVector_NetQuantize TraceHitTarget)
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
-		//UE_LOG(LogTemp, Warning, TEXT("Weapon Type: %s"), EquippedWeapon->GetWeaponType());
 		EquippedWeapon->Fire(TraceHitTarget, EquippedWeapon->GetWeaponType());
 
 	}
@@ -523,6 +586,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, GrenadeAmount);
+	DOREPLIFETIME(UCombatComponent, bIsSpriting);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -596,6 +660,13 @@ void UCombatComponent::OnRep_Aiming()
 	{
 		bAiming = bAimingButtonPressed;
 
+	}
+}
+void UCombatComponent::OnRep_Sprinting()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bIsSpriting = bSprintingButtonPressed;
 	}
 }
 void UCombatComponent::ReloadEmptyWeapon()
@@ -792,6 +863,12 @@ void UCombatComponent::OnRep_CombatState()
 			Character->PlaySwapMontage();
 		}
 		break;
+	case ECombatState::ECS_Sprinting:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = SprintingSpeed;
+		}
+		break;
 	case ECombatState::ECS_Max:
 		break;
 	default:
@@ -873,7 +950,6 @@ void UCombatComponent::ThrowGrenade()
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Throw Grenade"));
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
@@ -961,7 +1037,6 @@ void UCombatComponent::LaunchGrenade()
 	
 	if (Character && Character->IsLocallyControlled())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade"));
 		ServerLaunchGrenade(HitTarget);
 	}
 
@@ -969,10 +1044,8 @@ void UCombatComponent::LaunchGrenade()
 
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Server"));
 	if (Character && GrenadeClass && Character->GetAttachedGrenade())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Launch Grenade GOOOOOOO"));
 		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
 
 		FVector ToTarget = Target - SpawnLocation;
@@ -985,7 +1058,15 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 		{
 			SpawnedProjectile = World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParameters);
 			SpawnedProjectile->SetWeaponType(EWeaponType::EWT_Grenade);
-			UE_LOG(LogTemp, Warning, TEXT("Launch Grenade Spawn"));
+			//Ignore Character
+			if (AProjectileGrenade* Grenade = Cast<AProjectileGrenade>(SpawnedProjectile))
+			{
+				if (UPrimitiveComponent* PrimitiveComponent = Grenade->FindComponentByClass<UPrimitiveComponent>())
+				{
+					PrimitiveComponent->IgnoreActorWhenMoving(Character, true);
+				}
+			}
+
 		}
 
 	}

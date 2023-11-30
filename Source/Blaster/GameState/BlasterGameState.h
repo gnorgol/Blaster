@@ -44,7 +44,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Team Score")
 		float TeamScoreMax = 10;
 
-
+	void SetMatchWinner();
 
 
 

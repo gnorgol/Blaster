@@ -19,8 +19,10 @@ class UMultiLineEditableTextBox;
 class UImage;
 class URichTextBlock;
 class UHorizontalBox;
+class UWrapBox;
 class UKillFeedScrollBox;
 class AWeapon;
+class UEditableText;
 UCLASS()
 class BLASTER_API UCharacterOverlay : public UUserWidget
 {
@@ -65,6 +67,16 @@ public:
 		UProgressBar* BlueTeamScoreBar;
 	UPROPERTY(meta = (BindWidget))
 		UProgressBar* RedTeamScoreBar;
+
+
+
+	UPROPERTY(meta = (BindWidget))
+	UWrapBox* ChatBox;
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ChatWidgetClass;
+
+	UPROPERTY()
+	class UChatBox* ChatWidget;
 
 	void SetKillFeedText(FText AttackerName, FText VictimName, FText PlayerName, EWeaponType WeaponTypesKiller);
 };

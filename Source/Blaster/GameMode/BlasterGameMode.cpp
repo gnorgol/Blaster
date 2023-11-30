@@ -43,6 +43,11 @@ void ABlasterGameMode::OnMatchStateSet()
 	}
 
 }
+void ABlasterGameMode::SetMatchStatest(FName NewState)
+{
+	MatchState = NewState;
+	OnMatchStateSet();
+}
 void ABlasterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -75,7 +80,6 @@ void ABlasterGameMode::Tick(float DeltaTime)
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* Killer, EWeaponType KillerWeaponType)
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayerEliminated"));
 	if (Killer == nullptr || Killer->PlayerState == nullptr) return;
 	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
 	ABlasterPlayerState* KillerPlayerState = Killer ? Cast<ABlasterPlayerState>(Killer->PlayerState) : nullptr;
@@ -192,6 +196,17 @@ float ABlasterGameMode::CalculateDamage(AController* Killer, AController* Victim
 	return Damage;
 }
 
+void ABlasterGameMode::SendChatMsg(const FText& Text, const FString& PlayerName)
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+		if (BlasterPlayerController)
+		{
+			BlasterPlayerController->ClientChatCommitted(Text, PlayerName);
+		}
+	}
+}
 
 
 

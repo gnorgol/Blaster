@@ -27,6 +27,13 @@
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/Projectile.h"
 #include <Blaster/HUD/OverheadWidget.h>
+#include "Blaster/PlayerStart/TeamPlayerStart.h"
+#include "Blaster/PlayerController/SaveInputMapping.h"
+#include "InputMappingContext.h"
+#include "PlayerMappableKeySettings.h"
+
+
+
 
 
 // Sets default values
@@ -183,6 +190,19 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
 }
+void ABlasterCharacter::ClientLeaveGame()
+{
+
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	
+	if (BlasterGameMode && BlasterPlayerState)
+	{
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
+}
+
 
 void ABlasterCharacter::KillCam(float DeltaTime)
 {
@@ -251,13 +271,14 @@ void ABlasterCharacter::RagdollDeath(bool bPlayerLeftGame)
 		}
 	}
 	MulticastRagdollDeath(bPlayerLeftGame);
-	bIsDead = true;
+	
 
 }
 
 void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGame)
 {
 	bLeftGame = bPlayerLeftGame;
+	bIsDead = true;
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true);
@@ -319,11 +340,19 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 	CrownMesh->SetVisibility(false);
 }
 
+
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
+
+
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
+	
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GrenadeSocket"));
@@ -331,22 +360,9 @@ void ABlasterCharacter::BeginPlay()
 	}
 	
 	Tags.Add(FName("Player"));
-	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
-	UpdateHUDHealth();
-	UpdateHUDShield();
-	if (HasAuthority())
-	{
-		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
-	}
+	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
-		}
-	}
+
 }
 void ABlasterCharacter::UpdateHUDHealth()
 {
@@ -357,7 +373,7 @@ void ABlasterCharacter::UpdateHUDHealth()
 	}
 }
 void ABlasterCharacter::UpdateHUDShield()
-{
+{	
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 	if (BlasterPlayerController)
 	{
@@ -371,6 +387,14 @@ void ABlasterCharacter::UpdateHUDAmmo()
 	{
 		BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->CarriedAmmo);
 		BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->EquippedWeapon->GetCurrentAmmo());	
+	}
+}
+void ABlasterCharacter::UpdateHUDGrenade()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHUDGrenadeAmount(CombatComponent->GrenadeAmount);
 	}
 }
 void ABlasterCharacter::SpawnDefaultWeapon()
@@ -464,26 +488,100 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if (BlasterPlayerState)
 		{
-			BlasterPlayerState->AddToScore(0.f);
-			BlasterPlayerState->AddToDefeats(0);
-			SetTeamColor(BlasterPlayerState->GetTeam());
+			OnPlayerStateInitialized();
+
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
 				MultcastGainTheLead();
 			}
-			
 		}
 	}
+	if (BlasterPlayerController == nullptr)
+	{
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+		if (BlasterPlayerController)
+		{
+			SpawnDefaultWeapon();
+			UpdateHUDAmmo();
+			UpdateHUDHealth();
+			UpdateHUDShield();
+			UpdateHUDGrenade();
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer()))
+			{
+				USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterInputMapping"), 0));
+
+				if (SaveGameInstance && !SaveGameInstance->EnhancedActionMappings.IsEmpty())
+				{
+					//Load the saved mapping and add it to the subsystem
+					BlastCharacterMappingContext->UnmapAll();
+					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+				}
+				else
+				{
+					//No Save add the default mapping
+					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+
+
+				}
+			}
+
+		}
+
+
+	}
+
 }
 
 
+void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, FEnhancedActionKeyMapping NewMapping)
+{
+	USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+
+	SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
+
+	for (int i = 0; i < SaveGameInstance->EnhancedActionMappings.Num(); i++)
+	{
+		if (SaveGameInstance->EnhancedActionMappings[i].Key == OldMapping.Key && SaveGameInstance->EnhancedActionMappings[i].Action == OldMapping.Action)
+		{
+			SaveGameInstance->EnhancedActionMappings[i] = NewMapping;
+			break;
+		}
+	}
+
+	// Save the game instance
+	bool bSuccess = UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterInputMapping"), 0);
+
+}
+
+
+void ABlasterCharacter::RemoveTeamPlayerStarts()
+{
+	if (HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		for (AActor* PlayerStart : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(PlayerStart);
+			if (TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStart->Destroy();
+			}
+		}
+	}
+
+}
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	RotateInPlace(DeltaTime);
+
 	if (Killer)
 	{
 		KillCam(DeltaTime);
@@ -497,6 +595,9 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	HideCameraIfCharacterCloseToWall();
 	PollInit();
 }
+
+
+
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
 	if (bDisableGameplayInput)
@@ -518,6 +619,44 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+}
+
+void ABlasterCharacter::OnPlayerStateInitialized()
+{
+	BlasterPlayerState->AddToScore(0.f);
+	BlasterPlayerState->AddToDefeats(0);
+	SetTeamColor(BlasterPlayerState->GetTeam());
+	SetSpawnPoint();
+}
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if (HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for (AActor* PlayerStart : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(PlayerStart);
+			if (TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamPlayerStart);
+			}
+		}
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			int RandomIndex = FMath::RandRange(0, TeamPlayerStarts.Num() - 1);
+			ATeamPlayerStart* ChosenPlayerStart = TeamPlayerStarts[RandomIndex];
+			SetActorLocation(ChosenPlayerStart->GetActorLocation());
+			SetActorRotation(ChosenPlayerStart->GetActorRotation());
+		}
+		//Wait 5 seconds removing all team player starts
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ABlasterCharacter::RemoveTeamPlayerStarts, 5.f);
+
+
+	}
+
 }
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
@@ -543,6 +682,11 @@ bool ABlasterCharacter::IsWeaponEquipped()
 bool ABlasterCharacter::IsAiming()
 {
 	return (CombatComponent && CombatComponent->bAiming);
+}
+
+bool ABlasterCharacter::IsSprinting()
+{
+	return (CombatComponent && CombatComponent->bIsSpriting);
 }
 
 void ABlasterCharacter::OnRep_Killer()
@@ -627,6 +771,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
 		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwitchWeapon);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchPressed);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SprintPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::FirePressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadPressed);
@@ -713,7 +858,7 @@ void ABlasterCharacter::PlayHitReactMontage()
 		return;
 	}
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && HitReactMontage && !AnimInstance->GetCurrentActiveMontage())
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName = TEXT("FromFront");
@@ -771,7 +916,6 @@ void ABlasterCharacter::PlayReloadMontage()
 }
 void ABlasterCharacter::PlayThrowGrenadeMontage()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayThrowGrenadeMontage"));
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;
@@ -796,7 +940,6 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ReceiveDamage"));
 	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 	if (bIsDead || BlasterGameMode == nullptr)
 	{
@@ -945,13 +1088,30 @@ void ABlasterCharacter::CrouchPressed(const FInputActionValue& Value)
 		UnCrouch();
 	}
 }
+void ABlasterCharacter::SprintPressed(const FInputActionValue& Value)
+{
+	if (bDisableGameplayInput)
+	{
+		return;
+	}
+	if (CombatComponent && CombatComponent->CombatState == ECombatState::ECS_Unoccupied && IsAiming() == false)
+	{
+		
+		CombatComponent->SetSprinting(Value.Get<float>() > 0.0f);
+	}
+	else
+	{
+		CombatComponent->SetSprinting(false);
+	}
+
+}
 void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 {
 	if (bDisableGameplayInput)
 	{
 		return;
 	}
-	if (CombatComponent && IsWeaponEquipped())
+	if (CombatComponent && IsWeaponEquipped() && CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
 	}

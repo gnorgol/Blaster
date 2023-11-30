@@ -17,6 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, 
 
 
 
+
 /**
 
 */
@@ -29,7 +30,7 @@ public:
 
 	// To handle session functionnality. The Menu class will call these
 
-	void CreateSession(int32 MaxNumPlayers, FString GameMode);
+	void CreateSession(int32 MaxNumPlayers, FString GameMode, FString MapName);
 	void FindSessions(int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SearchResult);
 	void DestroySession();
@@ -41,6 +42,13 @@ public:
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
+
+
+
+
+	int32 DesiredNumPublicConnections{};
+	FString DesiredGameMode{};
+	FString DesiredMapName{};
 
 protected:
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
@@ -68,4 +76,7 @@ private:
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
 	FString LastGameMode;
+	FString LastMapName;
+
+
 };

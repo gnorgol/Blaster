@@ -35,6 +35,7 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
 	bIsCrouching = BlasterCharacter->bIsCrouched;
 	bIsAiming = BlasterCharacter->IsAiming();
+	bIsSprint = BlasterCharacter->IsSprinting();
 	TurningInPlaceState = BlasterCharacter->GetTurningInPlace();
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 	bIsDead = BlasterCharacter->IsDead();
@@ -76,7 +77,10 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
 	bool bFABRIKOverride = BlasterCharacter->IsLocallyControlled() &&
-		BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade
+		BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade&&
+		BlasterCharacter->GetCombatState() != ECombatState::ECS_Sprinting &&
+		BlasterCharacter->GetCombatState() != ECombatState::ECS_SwappingWeapon
+
 		&& BlasterCharacter->bFinishedSwapping;
 	if (bFABRIKOverride)
 	{

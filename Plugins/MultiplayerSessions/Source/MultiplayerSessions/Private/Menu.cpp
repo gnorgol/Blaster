@@ -7,10 +7,11 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 
-void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath)
+void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath, FString Map)
 {
 	MaxNumPlayers = NumberOfPublicConnections;
 	GameMode = TypeOfMatch;
+	MapName = Map;
 	PathToLobbyMap = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
@@ -37,6 +38,7 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FStri
 		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
 		MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
+
 	}
 }
 
@@ -46,9 +48,9 @@ bool UMenu::Initialize()
 	{
 		return false;
 	}
-	if (HostButton)
+	if (CreateButton)
 	{
-		HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
+		CreateButton->OnClicked.AddDynamic(this, &ThisClass::CreateButtonClicked);
 	}
 	if (JoinButton)
 	{
@@ -85,7 +87,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Creation Failed"));
 		}		
-		HostButton->SetIsEnabled(true);
+		CreateButton->SetIsEnabled(true);
 	}
 }
 
@@ -95,17 +97,50 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 	{
 		return;
 	}
+	if (MainMenuPanel && JoinMenuPanel)
+	{
+		ShowJoinMenu(ESlateVisibility::Visible);
+		ShowMainMenu(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Menu Panels not found"));
+	}
+	InfoJoinText->SetText(FText::FromString(""));
+	ClearGamesBox();
 	for (auto Result : SessionResults)
 	{
+
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("GameMode"), SettingsValue);
+
+		//Create UButtonJoinGame
+		UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
+
+
+		//add button to GamesBox
+		if (GamesBox)
+		{
+			ButtonJoinGame->AddToViewport();
+			GamesBox->AddChild(ButtonJoinGame);
+			ButtonJoinGame->HostNameText->SetText(FText::FromString(Result.Session.OwningUserName));
+			ButtonJoinGame->GameModeNameText->SetText(FText::FromString(SettingsValue));
+			ButtonJoinGame->SearchResult = Result;
+			ButtonJoinGame->MultiplayerSubsystem = MultiplayerSessionsSubsystem;
+
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+		}
 		if (SettingsValue == GameMode)
 		{
 			if (GEngine)
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Session Found"));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SettingsValue);
 			}
-			MultiplayerSessionsSubsystem->JoinSession(Result);
+			//MultiplayerSessionsSubsystem->JoinSession(Result);
 			return;
 		}
 	}
@@ -114,9 +149,34 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Find Failed"));
+			
 		}
-		JoinButton->SetIsEnabled(true);
+		if (InfoJoinText)
+		{
+			
+			//add button to GamesBox
+			//for (size_t i = 0; i < 30; i++)
+			//{
+			//	UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
+			//	if (GamesBox)
+			//	{
+
+			//		ButtonJoinGame->AddToViewport();
+			//		GamesBox->AddChild(ButtonJoinGame);
+
+			//	}
+			//	else
+			//	{
+			//		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+			//	}
+			//}
+
+			InfoJoinText->SetText(FText::FromString("No Sessions Found"));
+		}
+		
+		
 	}
+	JoinButton->SetIsEnabled(true);
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -143,6 +203,8 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Join Failed"));
+			MultiplayerSessionsSubsystem->DestroySession();
+
 		}
 		JoinButton->SetIsEnabled(true);
 	}
@@ -170,23 +232,87 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
 {
+	if (bWasSuccessful)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Session Destroyed"));
+		}
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Session Destroy Failed"));
+		}
+	}
 }
 
 
 
-void UMenu::HostButtonClicked()
+void UMenu::ShowJoinMenu(ESlateVisibility bShow)
 {
-	HostButton->SetIsEnabled(false);
+	if (JoinMenuPanel)
+	{
+		JoinMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Join Menu Panel not found"));
+	}
+
+}
+
+void UMenu::ShowMainMenu(ESlateVisibility bShow)
+{
+	if (MainMenuPanel)
+	{
+		MainMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Main Menu Panel not found"));
+	}
+
+}
+
+void UMenu::ShowCreateMenu(ESlateVisibility bShow)
+{
+	if (CreateMenuPanel)
+	{
+		CreateMenuPanel->SetVisibility(bShow);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Create Menu Panel not found"));
+	}
+}
+
+void UMenu::ClearGamesBox()
+{
+	if (GamesBox)
+	{
+		GamesBox->ClearChildren();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GamesBox not found"));
+	}
+
+}
+
+void UMenu::CreateButtonClicked()
+{
+	CreateButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers,GameMode);
-
-		
+		MultiplayerSessionsSubsystem->CreateSession(MaxNumPlayers, GameMode, MapName);
 	}
 }
 
 void UMenu::JoinButtonClicked()
 {
+	MultiplayerSessionsSubsystem->DestroySession();
 	JoinButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{

@@ -9,7 +9,9 @@
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "Blaster/BlasterTypes/Team.h"
+#include <PlayerMappableInputConfig.h>
 #include "BlasterCharacter.generated.h"
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -68,6 +70,8 @@ public:
 
 	void UpdateHUDAmmo();
 
+	void UpdateHUDGrenade();
+
 	void SpawnDefaultWeapon();
 
 	UPROPERTY(EditAnywhere)
@@ -114,17 +118,20 @@ public:
 
 	UFUNCTION(Server, Reliable)
 		void ServerLeaveGame();
+	void ClientLeaveGame();
 	FOnLeftGame OnLeftGame;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MultcastGainTheLead();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLoseTheLead();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlastCharacterMappingContext;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
+
 
 	void Move(const FInputActionValue& Value);
 	virtual void Jump() override;
@@ -132,6 +139,7 @@ protected:
 	void Equip(const FInputActionValue& Value);
 	void SwitchWeapon(const FInputActionValue& Value);
 	void CrouchPressed(const FInputActionValue& Value);
+	void SprintPressed(const FInputActionValue& Value);
 	void AimPressed(const FInputActionValue& Value);
 	void ReloadPressed(const FInputActionValue& Value);
 	void AimOffset(float DeltaTime);
@@ -141,19 +149,22 @@ protected:
 	void FirePressed(const FInputActionValue& Value);
 	void ThrowGrenadePressed(const FInputActionValue& Value);
 	void RotateInPlace(float DeltaTime);
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-		UInputMappingContext* BlastCharacterMappingContext;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* CrouchAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+		UInputAction* SprintAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -169,18 +180,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 		UInputAction* SwitchWeaponAction;
 
+
 	void HideCameraIfCharacterCloseToWall();
 	// Poll for any classes and initialize HUD
 	void PollInit();
+
+	void RemoveTeamPlayerStarts();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	void SaveInputMapping(FEnhancedActionKeyMapping OldMapping, FEnhancedActionKeyMapping NewMapping);
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool IsSprinting();
 	bool bHitCharacter = false;
 	UFUNCTION()
 	virtual void OnRep_Killer();
@@ -201,13 +216,13 @@ public:
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE void SetShield(float NewShield) { Shield = NewShield; }
-	FORCEINLINE UInputMappingContext* GetBlastCharacterMappingContext() const { return BlastCharacterMappingContext; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 	FORCEINLINE bool GetDisableGameplayInput() const { return bDisableGameplayInput; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE FLinearColor GetTeamColor() const { return TeamColor; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
 	void SetTeamColor(ETeam Team);
@@ -278,6 +293,8 @@ private:
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
 
+
+
 	void HideCharacter(bool bHide);
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
@@ -331,11 +348,12 @@ private:
 		TSubclassOf<AWeapon> DefaultWeaponClass;
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* CrownMesh;
-
 	FLinearColor TeamColor = FLinearColor::White;
+
 
 	UPROPERTY()
 		ABlasterGameMode* BlasterGameMode;
+
 
 
 };

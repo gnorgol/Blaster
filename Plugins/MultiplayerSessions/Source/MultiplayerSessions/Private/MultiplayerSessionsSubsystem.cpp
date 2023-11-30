@@ -21,8 +21,11 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 	}
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString GameMode)
+void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString GameMode, FString MapName)
 {
+	DesiredGameMode = GameMode;
+	DesiredNumPublicConnections = NumPublicConnections;
+	DesiredMapName = MapName;
 	if (!SessionInterface.IsValid())
 	{
 
@@ -34,10 +37,12 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 		bCreateSessionOnDestroy = true;
 		LastNumPublicConnections = NumPublicConnections;
 		LastGameMode = GameMode;
+		LastMapName = MapName;
 		DestroySession();		
 	}
 
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+
 
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;
@@ -58,9 +63,6 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 		MultiplayerOnCreateSessionComplete.Broadcast(false);
 	}
 	
-
-
-
 }
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
@@ -185,7 +187,7 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 	if (bWasSuccessful && bCreateSessionOnDestroy)
 	{
 		bCreateSessionOnDestroy = false;
-		CreateSession(LastNumPublicConnections, LastGameMode);
+		CreateSession(LastNumPublicConnections, LastGameMode, LastMapName);
 	}
 	MultiplayerOnDestroySessionComplete.Broadcast(bWasSuccessful);
 }
@@ -200,3 +202,4 @@ void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bo
 	// Broadcast the custom delegate
 	MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
+

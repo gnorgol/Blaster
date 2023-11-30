@@ -5,18 +5,32 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include <Components/CanvasPanel.h>
+#include <Components/TextBlock.h>
+#include <ButtonJoinGame.h>
+#include <Components/VerticalBox.h>
+#include "OnlineSessionSettings.h"
 #include "Menu.generated.h"
+
+
+
 
 /**
  * 
  */
+class UButton;
+class UCanvasPanel;
+class UTextBlock;
+class UButtonJoinGame;
+class UVerticalBox;
+class FOnlineSessionSearchResult;
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 {
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-		void MenuSetup(int32 NumberOfPublicConnections = 4 , FString TypeOfMatch = TEXT("FreeForAll"), FString LobbyPath = TEXT("/Game/ThirdPerson/Maps/Lobby"));
+		void MenuSetup(int32 NumberOfPublicConnections = 4 , FString TypeOfMatch = TEXT("FreeForAll"), FString LobbyPath = TEXT("/Game/ThirdPerson/Maps/Lobby"), FString MapName = TEXT("Hangar"));
 
 protected:
 	virtual bool Initialize() override;
@@ -35,12 +49,40 @@ protected:
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* HostButton;
+	UButton* HostButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* JoinButton;
+	UButton* CreateButton;
+	UPROPERTY(meta = (BindWidget))
+	UButton* JoinButton;
+	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel* MainMenuPanel;
+	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel* JoinMenuPanel;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* InfoJoinText;
+	UPROPERTY(meta = (BindWidget))
+		UCanvasPanel* CreateMenuPanel;
+	UFUNCTION(BlueprintCallable)
+	void ShowJoinMenu(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowMainMenu(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowCreateMenu(ESlateVisibility bShow);
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* GamesBox;
+
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<class UUserWidget> ButtonJoinGameClass;
+
+
+
+
+	void ClearGamesBox();
+
 
 	UFUNCTION()
-	void HostButtonClicked();
+	void CreateButtonClicked();
 	UFUNCTION()
 	void JoinButtonClicked();
 
@@ -48,9 +90,12 @@ private:
 
 	//The Subsystem that will be used to create the session
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
-
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 MaxNumPlayers{ 4 };
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FString GameMode {TEXT("FreeForAll")};
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FString MapName{ TEXT("Hangar") };
 
 	FString PathToLobbyMap{ TEXT("") };
 };
