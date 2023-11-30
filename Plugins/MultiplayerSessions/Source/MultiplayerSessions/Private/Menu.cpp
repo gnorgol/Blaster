@@ -277,6 +277,10 @@ void UMenu::ShowMainMenu(ESlateVisibility bShow)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Main Menu Panel not found"));
 	}
+	if (JoinButton->bIsEnabled == false)
+	{
+			JoinButton->SetIsEnabled(true);
+	}
 
 }
 
