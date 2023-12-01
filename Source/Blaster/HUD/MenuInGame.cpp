@@ -168,7 +168,6 @@ void UMenuInGame::OnPlayerLeftGame()
 {
 	if (MultiplayerSessionsSubsystem)
 	{
-
 		MultiplayerSessionsSubsystem->DestroySession();
 	}
 }
@@ -182,18 +181,20 @@ void UMenuInGame::ReturnButtonClicked()
 	{
 		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
 
-		if (FirstPlayerController) 
+		if (BlasterCharacter)
 		{
-			if (BlasterCharacter)
-			{
-				BlasterCharacter->ServerLeaveGame();
-				BlasterCharacter->OnLeftGame.AddDynamic(this, &UMenuInGame::OnPlayerLeftGame);
-			}
-			else
-			{
-				ReturnMainMenuButton->SetIsEnabled(true);
-			}
+			BlasterCharacter->OnLeftGame.AddDynamic(this, &UMenuInGame::OnPlayerLeftGame);
+			BlasterCharacter->ServerLeaveGame();			
 		}
+		else
+		{
+			ReturnMainMenuButton->SetIsEnabled(true);
+		}
+		
+	}
+	else
+	{
+		ReturnMainMenuButton->SetIsEnabled(true);
 	}
 }
 

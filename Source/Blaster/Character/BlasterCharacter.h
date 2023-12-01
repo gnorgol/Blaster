@@ -118,6 +118,7 @@ public:
 
 	UFUNCTION(Server, Reliable)
 		void ServerLeaveGame();
+	UFUNCTION(Client, Reliable)
 	void ClientLeaveGame();
 	FOnLeftGame OnLeftGame;
 

@@ -189,8 +189,16 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 	{
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
+	else
+	{
+		//if the player is in the lobby left the game
+		OnLeftGame.Broadcast();	
+
+		//Client leave game
+		ClientLeaveGame();
+	}
 }
-void ABlasterCharacter::ClientLeaveGame()
+void ABlasterCharacter::ClientLeaveGame_Implementation()
 {
 
 	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
@@ -200,6 +208,11 @@ void ABlasterCharacter::ClientLeaveGame()
 	if (BlasterGameMode && BlasterPlayerState)
 	{
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
+	else
+	{
+		//if the player is in the lobby left the game
+		OnLeftGame.Broadcast();
 	}
 }
 
