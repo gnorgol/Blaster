@@ -54,6 +54,14 @@ void UMenuInGame::MenuSetup()
 	{
 		SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
 	}
+	if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
+	{
+		ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
+	}
+	if (CreditsButton && !CreditsButton->OnClicked.IsBound())
+	{
+		CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+	}
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
 	{
@@ -118,6 +126,8 @@ void UMenuInGame::MenuTeardown()
 	}
 	ShowMenuPanel(ESlateVisibility::Visible);
 	ShowSettingPanel(ESlateVisibility::Hidden);
+	ShowContactMePanel(ESlateVisibility::Hidden);
+	ShowCreditsPanel(ESlateVisibility::Hidden);
 
 	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
 	{
@@ -230,6 +240,19 @@ void UMenuInGame::SettingButtonClicked()
 	
 }
 
+void UMenuInGame::ContactMeButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowContactMePanel(ESlateVisibility::Visible);
+
+}
+
+void UMenuInGame::CreditsButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowCreditsPanel(ESlateVisibility::Visible);
+}
+
 void UMenuInGame::ClearSettingBox()
 {
 	if (SettingBox)
@@ -258,6 +281,23 @@ void UMenuInGame::ShowSettingPanel(ESlateVisibility bShow)
 	{
 		ClearSettingBox();
 	}
+}
+
+void UMenuInGame::ShowContactMePanel(ESlateVisibility bShow)
+{
+	if (ContactMePanel)
+	{
+		ContactMePanel->SetVisibility(bShow);
+	}
+}
+
+void UMenuInGame::ShowCreditsPanel(ESlateVisibility bShow)
+{
+	if (CreditsPanel)
+	{
+		CreditsPanel->SetVisibility(bShow);
+	}
+
 }
 
 

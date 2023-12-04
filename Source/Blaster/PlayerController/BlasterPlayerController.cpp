@@ -86,7 +86,6 @@ void ABlasterPlayerController::SetHUDMatchTime()
 		lastTime = TimeLeft;
 	}
 	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime - lastTime;
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::Printf(TEXT("%f+%f+%f-%f+%f"), CooldownTime, WarmupTime, MatchTime, GetServerTime(), LevelStartingTime));
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if (HasAuthority())
