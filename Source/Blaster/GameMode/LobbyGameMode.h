@@ -9,6 +9,7 @@
 /**
  * 
  */
+class UMultiplayerSessionsSubsystem;
 UCLASS()
 class BLASTER_API ALobbyGameMode : public AGameMode
 {
@@ -16,4 +17,15 @@ class BLASTER_API ALobbyGameMode : public AGameMode
 	
 public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	void TravelToMap(UMultiplayerSessionsSubsystem* Subsystem, bool& retFlag);
+
+	void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<UUserWidget> ButtonStartGameClass;
+
+	void ButtonStartGameClicked();
+
+	void SendChatMsg(const FText& Text, const FString& PlayerName);
 };

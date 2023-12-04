@@ -3,7 +3,12 @@
 
 #include "LobbyGameMode.h"
 #include "GameFramework/GameStateBase.h"
+#include "Components/Button.h"
 #include "MultiplayerSessionsSubsystem.h"
+#include <Blaster/HUD/StartGame.h>
+#include <Blaster/Character/BlasterCharacter.h>
+#include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
+
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -18,18 +23,70 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		check(Subsystem);
 		if (NumOfPlayers == Subsystem->DesiredNumPublicConnections)
 		{
-			UWorld* World = GetWorld();
-			if (!ensure(World != nullptr)) return;
-			bUseSeamlessTravel = true;
-			FString GameMode = Subsystem->DesiredGameMode;
-			FString MapName = Subsystem->DesiredMapName;
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("GameMode: %s"), *GameMode));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("MapName: %s"), *MapName));
-			FString URL = FString::Printf(TEXT("/Game/Maps/%s%s?listen"), *MapName, *GameMode);
-			World->ServerTravel(URL);		
+			bool retFlag;
+			TravelToMap(Subsystem, retFlag);
+			if (retFlag) return;
 			
 		}
 	}
 
 
+}
+
+void ALobbyGameMode::TravelToMap(UMultiplayerSessionsSubsystem* Subsystem, bool& retFlag)
+{
+	retFlag = true;
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) return;
+	bUseSeamlessTravel = true;
+	FString GameMode = Subsystem->DesiredGameMode;
+	FString MapName = Subsystem->DesiredMapName;
+
+	FString URL = FString::Printf(TEXT("/Game/Maps/%s%s?listen"), *MapName, *GameMode);
+	World->ServerTravel(URL);
+	retFlag = false;
+}
+
+void ALobbyGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		UStartGame* ButtonStartGame = CreateWidget<UStartGame>(PlayerController, ButtonStartGameClass);
+		if (ButtonStartGame)
+		{
+			ButtonStartGame->AddToViewport(1);
+		}
+	}
+}
+
+
+void ALobbyGameMode::ButtonStartGameClicked()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!ensure(GameInstance != nullptr)) return;
+	UMultiplayerSessionsSubsystem* Subsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+	check(Subsystem);
+	bool retFlag;
+	TravelToMap(Subsystem, retFlag);
+	if (retFlag) return;
+
+
+}
+
+void ALobbyGameMode::SendChatMsg(const FText& Text, const FString& PlayerName)
+{
+    UWorld* World = GetWorld();
+    if (!ensure(World != nullptr)) return;
+
+    for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+    {
+        ABlasterLobbyPlayerController* BlasterLobbyPlayerController = Cast<ABlasterLobbyPlayerController>(*It);
+        if (BlasterLobbyPlayerController && BlasterLobbyPlayerController->IsValidLowLevel())
+        {
+            BlasterLobbyPlayerController->ClientChatCommitted(Text, PlayerName);
+        }
+    }
 }

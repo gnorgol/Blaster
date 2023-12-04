@@ -123,6 +123,7 @@ private:
 	float WarmupTime = 0.f;
 	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0;
+	float lastTime = 0.f;
 
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)

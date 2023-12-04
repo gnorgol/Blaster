@@ -317,6 +317,9 @@ private:
 
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
+	UPROPERTY()
+	class ABlasterLobbyPlayerController* BlasterLobbyPlayerController;
+
 
 	FTimerHandle DeathTimerHandle;
 

@@ -51,9 +51,10 @@ void ABlasterGameMode::SetMatchStatest(FName NewState)
 void ABlasterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Orange, FString::Printf(TEXT("MatchState: %s"), *MatchState.ToString()));
 	if (MatchState == MatchState::WaitingToStart)
 	{
-		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime - lastTime;
 		if (CountdownTime <= 0.0f)
 		{
 			StartMatch();
@@ -63,14 +64,17 @@ void ABlasterGameMode::Tick(float DeltaTime)
 	else if (MatchState == MatchState::InProgress)
 	{
 		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		lastTime = CountdownTime;
+
 		if (CountdownTime <= 0.0f)
 		{
+			lastTime = 0.f;
 			SetMatchState(MatchState::Cooldown);
 		}
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
-		CountdownTime =  CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime - lastTime;
 		if (CountdownTime <= 0.0f)
 		{
 			RestartGame();

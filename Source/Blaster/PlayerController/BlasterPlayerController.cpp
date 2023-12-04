@@ -80,9 +80,13 @@ void ABlasterPlayerController::SetHUDMatchTime()
 {
 	float TimeLeft = 0.f;
 
-	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime - lastTime;
+	else if (MatchState == MatchState::InProgress) {
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+		lastTime = TimeLeft;
+	}
+	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime - lastTime;
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::Printf(TEXT("%f+%f+%f-%f+%f"), CooldownTime, WarmupTime, MatchTime, GetServerTime(), LevelStartingTime));
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if (HasAuthority())
