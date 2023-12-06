@@ -790,6 +790,13 @@ void ABlasterPlayerController::OnChatMessageSent(const FText& Message, ETextComm
 					ChatWidget->SetVisibility(ESlateVisibility::Hidden);
 					//remove all widgets
 					UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+					//Set Focus to game
+					FInputModeGameOnly InputModeGameOnly;
+					SetInputMode(InputModeGameOnly);
+					SetShowMouseCursor(false);
+
+
+
 					ServerChangeState(BlasterCharacter);
 					if (!HasAuthority())
 					{
