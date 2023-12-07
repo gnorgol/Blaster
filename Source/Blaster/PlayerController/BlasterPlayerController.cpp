@@ -80,9 +80,12 @@ void ABlasterPlayerController::SetHUDMatchTime()
 {
 	float TimeLeft = 0.f;
 
-	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime - lastTime;
+	else if (MatchState == MatchState::InProgress) {
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+		lastTime = TimeLeft;
+	}
+	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime - lastTime;
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if (HasAuthority())
@@ -90,7 +93,11 @@ void ABlasterPlayerController::SetHUDMatchTime()
 		if (BlasterGameMode == nullptr)
 		{
 			BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-			LevelStartingTime = BlasterGameMode->LevelStartingTime;
+
+			if (BlasterGameMode != nullptr)
+			{
+				LevelStartingTime = BlasterGameMode->LevelStartingTime;
+			}
 		}
 		BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 		if (BlasterGameMode)
@@ -783,6 +790,13 @@ void ABlasterPlayerController::OnChatMessageSent(const FText& Message, ETextComm
 					ChatWidget->SetVisibility(ESlateVisibility::Hidden);
 					//remove all widgets
 					UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+					//Set Focus to game
+					FInputModeGameOnly InputModeGameOnly;
+					SetInputMode(InputModeGameOnly);
+					SetShowMouseCursor(false);
+
+
+
 					ServerChangeState(BlasterCharacter);
 					if (!HasAuthority())
 					{

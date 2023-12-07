@@ -114,6 +114,18 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("GameMode"), SettingsValue);
 
+		FString SettingsValueMap;
+		Result.Session.SessionSettings.Get(FName("MapName"), SettingsValueMap);
+
+		//FString SettingsValueNumPlayers;
+		//Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayers);
+
+		
+		int32 SettingsValueMaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
+		int32 SettingsValueNumPlayersInt = SettingsValueMaxPlayers - Result.Session.NumOpenPublicConnections;
+		FString SettingsValueNumPlayersText = FString::Printf(TEXT("%d/%d"), SettingsValueNumPlayersInt, SettingsValueMaxPlayers);
+
+
 		//Create UButtonJoinGame
 		UButtonJoinGame* ButtonJoinGame = CreateWidget<UButtonJoinGame>(this, ButtonJoinGameClass);
 
@@ -125,6 +137,8 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			GamesBox->AddChild(ButtonJoinGame);
 			ButtonJoinGame->HostNameText->SetText(FText::FromString(Result.Session.OwningUserName));
 			ButtonJoinGame->GameModeNameText->SetText(FText::FromString(SettingsValue));
+			ButtonJoinGame->MapNameText->SetText(FText::FromString(SettingsValueMap));
+			ButtonJoinGame->NumPlayersText->SetText(FText::FromString(SettingsValueNumPlayersText));
 			ButtonJoinGame->SearchResult = Result;
 			ButtonJoinGame->MultiplayerSubsystem = MultiplayerSessionsSubsystem;
 
@@ -272,6 +286,10 @@ void UMenu::ShowMainMenu(ESlateVisibility bShow)
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Main Menu Panel not found"));
+	}
+	if (JoinButton->bIsEnabled == false)
+	{
+			JoinButton->SetIsEnabled(true);
 	}
 
 }

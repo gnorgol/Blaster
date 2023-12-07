@@ -54,6 +54,14 @@ void UMenuInGame::MenuSetup()
 	{
 		SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
 	}
+	if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
+	{
+		ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
+	}
+	if (CreditsButton && !CreditsButton->OnClicked.IsBound())
+	{
+		CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+	}
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
 	{
@@ -118,6 +126,8 @@ void UMenuInGame::MenuTeardown()
 	}
 	ShowMenuPanel(ESlateVisibility::Visible);
 	ShowSettingPanel(ESlateVisibility::Hidden);
+	ShowContactMePanel(ESlateVisibility::Hidden);
+	ShowCreditsPanel(ESlateVisibility::Hidden);
 
 	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
 	{
@@ -168,7 +178,6 @@ void UMenuInGame::OnPlayerLeftGame()
 {
 	if (MultiplayerSessionsSubsystem)
 	{
-
 		MultiplayerSessionsSubsystem->DestroySession();
 	}
 }
@@ -182,18 +191,20 @@ void UMenuInGame::ReturnButtonClicked()
 	{
 		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
 
-		if (FirstPlayerController) 
+		if (BlasterCharacter)
 		{
-			if (BlasterCharacter)
-			{
-				BlasterCharacter->ServerLeaveGame();
-				BlasterCharacter->OnLeftGame.AddDynamic(this, &UMenuInGame::OnPlayerLeftGame);
-			}
-			else
-			{
-				ReturnMainMenuButton->SetIsEnabled(true);
-			}
+			BlasterCharacter->OnLeftGame.AddDynamic(this, &UMenuInGame::OnPlayerLeftGame);
+			BlasterCharacter->ServerLeaveGame();			
 		}
+		else
+		{
+			ReturnMainMenuButton->SetIsEnabled(true);
+		}
+		
+	}
+	else
+	{
+		ReturnMainMenuButton->SetIsEnabled(true);
 	}
 }
 
@@ -229,6 +240,19 @@ void UMenuInGame::SettingButtonClicked()
 	
 }
 
+void UMenuInGame::ContactMeButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowContactMePanel(ESlateVisibility::Visible);
+
+}
+
+void UMenuInGame::CreditsButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowCreditsPanel(ESlateVisibility::Visible);
+}
+
 void UMenuInGame::ClearSettingBox()
 {
 	if (SettingBox)
@@ -257,6 +281,23 @@ void UMenuInGame::ShowSettingPanel(ESlateVisibility bShow)
 	{
 		ClearSettingBox();
 	}
+}
+
+void UMenuInGame::ShowContactMePanel(ESlateVisibility bShow)
+{
+	if (ContactMePanel)
+	{
+		ContactMePanel->SetVisibility(bShow);
+	}
+}
+
+void UMenuInGame::ShowCreditsPanel(ESlateVisibility bShow)
+{
+	if (CreditsPanel)
+	{
+		CreditsPanel->SetVisibility(bShow);
+	}
+
 }
 
 

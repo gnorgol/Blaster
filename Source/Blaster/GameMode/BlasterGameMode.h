@@ -42,6 +42,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Time")
 		float LevelStartingTime = 0.f;
 
+	float lastTime = 0.f;
+
 	bool bTeamMatch = false;
 
 

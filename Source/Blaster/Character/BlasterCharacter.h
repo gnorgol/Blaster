@@ -118,6 +118,7 @@ public:
 
 	UFUNCTION(Server, Reliable)
 		void ServerLeaveGame();
+	UFUNCTION(Client, Reliable)
 	void ClientLeaveGame();
 	FOnLeftGame OnLeftGame;
 
@@ -316,6 +317,9 @@ private:
 
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
+	UPROPERTY()
+	class ABlasterLobbyPlayerController* BlasterLobbyPlayerController;
+
 
 	FTimerHandle DeathTimerHandle;
 

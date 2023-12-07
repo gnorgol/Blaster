@@ -28,25 +28,25 @@ void UCharacterOverlay::SetKillFeedText(FText AttackerName, FText VictimName, FT
 		KillText.Append(" <img id=\"AssaultRifle\"/> ");
 		break;
 	case EWeaponType::EWT_Shotgun:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"Shotgun\"/> ");
 		break;
 	case EWeaponType::EWT_SniperRifle:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"SniperRifle\"/> ");
 		break;
 	case EWeaponType::EWT_Pistol:
 		KillText.Append(" <img id=\"Pistol\"/> ");
 		break;
 	case EWeaponType::EWT_RocketLauncher:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"RocketLauncher\"/> ");
 		break;
 	case EWeaponType::EWT_SubmachineGun:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"SubmachineGun\"/> ");
 		break;
 	case EWeaponType::EWT_GrenadeLauncher:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"GrenadeLauncher\"/> ");
 		break;
 	case EWeaponType::EWT_Grenade:
-		KillText.Append(" <img id=\"AssaultRifle\"/> ");
+		KillText.Append(" <img id=\"Grenade\"/> ");
 		break;
 	case EWeaponType::EWT_MAX:
 		KillText.Append(" <img id=\"AssaultRifle\"/> ");

@@ -31,6 +31,7 @@
 #include "Blaster/PlayerController/SaveInputMapping.h"
 #include "InputMappingContext.h"
 #include "PlayerMappableKeySettings.h"
+#include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
 
 
 
@@ -189,8 +190,16 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 	{
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 	}
+	else
+	{
+		//if the player is in the lobby left the game
+		OnLeftGame.Broadcast();	
+
+		//Client leave game
+		ClientLeaveGame();
+	}
 }
-void ABlasterCharacter::ClientLeaveGame()
+void ABlasterCharacter::ClientLeaveGame_Implementation()
 {
 
 	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
@@ -200,6 +209,11 @@ void ABlasterCharacter::ClientLeaveGame()
 	if (BlasterGameMode && BlasterPlayerState)
 	{
 		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
+	else
+	{
+		//if the player is in the lobby left the game
+		OnLeftGame.Broadcast();
 	}
 }
 
@@ -274,9 +288,27 @@ void ABlasterCharacter::RagdollDeath(bool bPlayerLeftGame)
 	
 
 }
-
+void ABlasterCharacter::MulticastEliminated_Implementation()
+{
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDWeaponAmmo(0);
+	}
+	bIsDead = true;
+	PlayDeathMontage();
+	bool bHideSniperScope = IsLocallyControlled() && CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
 void ABlasterCharacter::MulticastRagdollDeath_Implementation(bool bPlayerLeftGame)
 {
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bLeftGame = bPlayerLeftGame;
 	bIsDead = true;
 	GetMesh()->SetSimulatePhysics(true);
@@ -363,10 +395,12 @@ void ABlasterCharacter::BeginPlay()
 	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
 
+
 }
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
@@ -497,9 +531,10 @@ void ABlasterCharacter::PollInit()
 			}
 		}
 	}
-	if (BlasterPlayerController == nullptr)
+	if (BlasterPlayerController == nullptr && BlasterLobbyPlayerController == nullptr)
 	{
 		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+		BlasterLobbyPlayerController = BlasterLobbyPlayerController == nullptr ? Cast<ABlasterLobbyPlayerController>(Controller) : BlasterLobbyPlayerController;
 		if (BlasterPlayerController)
 		{
 			SpawnDefaultWeapon();
@@ -525,6 +560,28 @@ void ABlasterCharacter::PollInit()
 					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
 
+				}
+			}
+		}
+		else if (BlasterLobbyPlayerController)
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterLobbyPlayerController->GetLocalPlayer()))
+			{
+				USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterInputMapping"), 0));
+
+				if (SaveGameInstance && !SaveGameInstance->EnhancedActionMappings.IsEmpty())
+				{
+					//Load the saved mapping and add it to the subsystem
+					BlastCharacterMappingContext->UnmapAll();
+					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+				}
+				else
+				{
+					//No Save add the default mapping
+					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
+					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
 
 				}
 			}
@@ -836,21 +893,7 @@ void ABlasterCharacter::Destroyed()
 	}
 }
 
-void ABlasterCharacter::MulticastEliminated_Implementation()
-{
-	if (BlasterPlayerController)
-	{
-		BlasterPlayerController->SetHUDWeaponAmmo(0);
-	}
-	bIsDead = true;
-	PlayDeathMontage();
-	bool bHideSniperScope = IsLocallyControlled() && CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
-	if (bHideSniperScope)
-	{
-		ShowSniperScopeWidget(false);
-	}
-	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr)
@@ -940,7 +983,9 @@ void ABlasterCharacter::PlaySwapMontage()
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamageActor, float DamageAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+
 	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
+
 	if (bIsDead || BlasterGameMode == nullptr)
 	{
 		return;

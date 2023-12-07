@@ -39,10 +39,18 @@ private:
 		 UButton* ReturnMainMenuButton;
 	UPROPERTY(meta = (BindWidget))
 		UButton* SettingButton;
+	UPROPERTY(meta = (BindWidget))
+		UButton* ContactMeButton;
+	UPROPERTY(meta = (BindWidget))
+	UButton* CreditsButton;
 	UFUNCTION()
 		void ReturnButtonClicked();
 	UFUNCTION()
 		void SettingButtonClicked();
+	UFUNCTION()
+		void ContactMeButtonClicked();
+	UFUNCTION()
+		void CreditsButtonClicked();
 
 	UPROPERTY()
 		UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
@@ -55,7 +63,12 @@ private:
 	UPROPERTY(meta = (BindWidget))
 		UCanvasPanel* SettingPanel;
 	UPROPERTY(meta = (BindWidget))
+		UCanvasPanel* ContactMePanel;
+	UPROPERTY(meta = (BindWidget))
+			UCanvasPanel* CreditsPanel;
+	UPROPERTY(meta = (BindWidget))
 		UVerticalBox* SettingBox;
+
 
 	void ClearSettingBox();
 
@@ -63,6 +76,10 @@ private:
 		void ShowMenuPanel(ESlateVisibility bShow);
 	UFUNCTION(BlueprintCallable)
 		void ShowSettingPanel(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowContactMePanel(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+		void ShowCreditsPanel(ESlateVisibility bShow);
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> KeyMappingButtonClass;
