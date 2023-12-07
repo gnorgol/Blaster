@@ -38,7 +38,7 @@ void ALobbyGameMode::TravelToMap(UMultiplayerSessionsSubsystem* Subsystem, bool&
 	retFlag = true;
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
-	bUseSeamlessTravel = true;
+	bUseSeamlessTravel = false;
 	FString GameMode = Subsystem->DesiredGameMode;
 	FString MapName = Subsystem->DesiredMapName;
 
