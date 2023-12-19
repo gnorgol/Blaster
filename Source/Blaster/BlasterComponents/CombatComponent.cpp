@@ -269,8 +269,14 @@ void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
 		if (Character->IsAiming() == false)
 		{
 			Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
-		}		
+		}
+		MulticastSetSprinting(bIsSprinting);
 	}
+}
+
+void UCombatComponent::MulticastSetSprinting_Implementation(bool bIsSprinting)
+{
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()

@@ -68,6 +68,10 @@ protected:
 	UFUNCTION(Server, Reliable)
 		void ServerSetSprinting(bool bIsSprinting);
 
+
+UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetSprinting(bool bIsSprinting);
+
 	UFUNCTION()
 		void OnRep_EquippedWeapon();
 	UFUNCTION()

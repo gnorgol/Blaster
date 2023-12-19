@@ -657,6 +657,8 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
+	if (CombatComponent && CombatComponent->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (CombatComponent && CombatComponent->EquippedWeapon) bUseControllerRotationYaw = true;
 	if (bDisableGameplayInput)
 	{
 		bUseControllerRotationYaw = false;
@@ -1046,10 +1048,10 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Shield, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Killer, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, bDisableGameplayInput, COND_OwnerOnly);
+	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
+	DOREPLIFETIME(ABlasterCharacter, Killer);
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplayInput);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -1222,12 +1224,12 @@ void ABlasterCharacter::CalculateAO_Pitch()
 void ABlasterCharacter::SimProxiesTurn()
 {
 
-	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr)
+	if (CombatComponent == nullptr && CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;
 	}
-	float Speed = CalculateSpeed();
 	bRotateRootBone = false;
+	float Speed = CalculateSpeed();	
 	if (Speed > 0.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;

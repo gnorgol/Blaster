@@ -56,6 +56,8 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void CreateFieldsExplosionEffect(const FVector& Location);
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastCreateFieldsExplosionEffect(const FVector& Location);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float MinDamage = 10.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

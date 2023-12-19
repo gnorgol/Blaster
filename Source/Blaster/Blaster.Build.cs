@@ -10,6 +10,8 @@ public class Blaster : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput","Niagara", "MultiplayerSessions", "OnlineSubsystem", "OnlineSubsystemSteam", "Slate", "SlateCore" });
 
+
+
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
 		// Uncomment if you are using Slate UI
