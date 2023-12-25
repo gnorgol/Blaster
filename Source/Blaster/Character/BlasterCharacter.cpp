@@ -32,6 +32,9 @@
 #include "InputMappingContext.h"
 #include "PlayerMappableKeySettings.h"
 #include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOMINMAX
 #include <windows.h>
 
 

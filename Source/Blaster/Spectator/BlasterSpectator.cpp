@@ -12,7 +12,11 @@
 #include <Kismet/GameplayStatics.h>
 #include "PlayerMappableKeySettings.h"
 #include "GameFramework/InputSettings.h"
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOMINMAX
 #include <windows.h>
+
 
 
 
