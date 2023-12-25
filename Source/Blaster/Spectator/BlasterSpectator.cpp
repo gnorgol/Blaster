@@ -12,6 +12,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "PlayerMappableKeySettings.h"
 #include "GameFramework/InputSettings.h"
+#include <windows.h>
 
 
 
@@ -38,6 +39,25 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		//Load the saved mapping and add it to the subsystem
 		BlastCharacterMappingContext->UnmapAll();
 		BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+	}
+	else
+	{
+		//Detect if the keyborad is an AZERTY keyboard or a QWERTY keyboard
+		switch (PRIMARYLANGID(HIWORD(GetKeyboardLayout(0))))
+		{
+		case LANG_FRENCH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextAZERTY->GetMappings();
+			break;
+		case LANG_ENGLISH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		default:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		}
 	}
 	FInputAxisKeyMapping MoveForwardMapping;
 	FInputAxisKeyMapping MoveBackwardsMapping;

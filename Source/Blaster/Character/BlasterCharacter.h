@@ -128,6 +128,12 @@ public:
 	void MulticastLoseTheLead();
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* BlastCharacterMappingContext;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlastCharacterMappingContextAZERTY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlastCharacterMappingContextQWERTY;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

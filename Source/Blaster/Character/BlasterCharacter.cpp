@@ -32,9 +32,7 @@
 #include "InputMappingContext.h"
 #include "PlayerMappableKeySettings.h"
 #include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
-
-
-
+#include <windows.h>
 
 
 // Sets default values
@@ -379,7 +377,22 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	//Detect if the keyborad is an AZERTY keyboard or a QWERTY keyboard
+	switch (PRIMARYLANGID(HIWORD(GetKeyboardLayout(0))))
+	{
+		case LANG_FRENCH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextAZERTY->GetMappings();
+		break;
+		case LANG_ENGLISH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		default:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();			
+			break;
+	}
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -604,6 +617,7 @@ void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, F
 	{
 		if (SaveGameInstance->EnhancedActionMappings[i].Key == OldMapping.Key && SaveGameInstance->EnhancedActionMappings[i].Action == OldMapping.Action)
 		{
+
 			SaveGameInstance->EnhancedActionMappings[i] = NewMapping;
 			break;
 		}
@@ -611,6 +625,11 @@ void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, F
 
 	// Save the game instance
 	bool bSuccess = UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterInputMapping"), 0);
+
+	BlastCharacterMappingContext->UnmapAll();
+	BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+
+
 
 }
 
