@@ -774,6 +774,13 @@ void UCombatComponent::Reload()
 
 	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading)
 	{
+		bool bHideSniperScope = Character && Character->IsLocallyControlled() && bAiming && EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+		if (bHideSniperScope)
+		{
+			Character->ShowSniperScopeWidget(false);
+			SetAiming(false);
+		}
+
 		ServerReload();
 		HandleReload();
 		bLocallyReloading = true;
