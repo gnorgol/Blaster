@@ -39,14 +39,19 @@ private:
 		 UButton* ReturnMainMenuButton;
 	UPROPERTY(meta = (BindWidget))
 		UButton* SettingButton;
+
 	UPROPERTY(meta = (BindWidget))
 		UButton* ContactMeButton;
 	UPROPERTY(meta = (BindWidget))
 	UButton* CreditsButton;
+	UPROPERTY(meta = (BindWidget))
+		UButton* ResetDefaultButton;
 	UFUNCTION()
 		void ReturnButtonClicked();
 	UFUNCTION()
 		void SettingButtonClicked();
+	UFUNCTION()
+		void ResetDefaultButtonClicked();
 	UFUNCTION()
 		void ContactMeButtonClicked();
 	UFUNCTION()

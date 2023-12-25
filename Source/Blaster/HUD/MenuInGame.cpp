@@ -16,6 +16,10 @@
 #include <EnhancedInputSubsystems.h>
 #include <Blaster/PlayerController/SaveInputMapping.h>
 #include <Kismet/GameplayStatics.h>
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOMINMAX
+#include <windows.h>
 
 
 void UMenuInGame::MenuSetup()
@@ -61,6 +65,10 @@ void UMenuInGame::MenuSetup()
 	if (CreditsButton && !CreditsButton->OnClicked.IsBound())
 	{
 		CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+	}
+	if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
+	{
+		ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
 	}
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
@@ -238,6 +246,57 @@ void UMenuInGame::SettingButtonClicked()
 		}
 	}
 	
+}
+
+void UMenuInGame::ResetDefaultButtonClicked()
+{
+	int32 index = 0;
+	if (BlasterCharacter)
+	{
+		//Detect if the keyborad is an AZERTY keyboard or a QWERTY keyboard
+		switch (PRIMARYLANGID(HIWORD(GetKeyboardLayout(0))))
+		{
+		case LANG_FRENCH:
+			BlasterCharacter->BlastCharacterMappingContext->UnmapAll();
+			BlasterCharacter->BlastCharacterMappingContext->Mappings = BlasterCharacter->BlastCharacterMappingContextAZERTY->GetMappings();
+			break;
+		case LANG_ENGLISH:
+			BlasterCharacter->BlastCharacterMappingContext->UnmapAll();
+			BlasterCharacter->BlastCharacterMappingContext->Mappings = BlasterCharacter->BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		default:
+			BlasterCharacter->BlastCharacterMappingContext->UnmapAll();
+			BlasterCharacter->BlastCharacterMappingContext->Mappings = BlasterCharacter->BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		}
+	}
+	if (SettingBox)
+	{
+		SettingBox->ClearChildren();
+	}
+	for (const FEnhancedActionKeyMapping Mapping : BlasterCharacter->BlastCharacterMappingContext->GetMappings())
+	{
+		UKeyMappingButton* KeyMappingButton = CreateWidget<UKeyMappingButton>(this, KeyMappingButtonClass);
+		if (KeyMappingButton)
+		{
+			UPlayerMappableKeySettings* PlayerMappableKeySettings = Mapping.GetPlayerMappableKeySettings();
+			if (PlayerMappableKeySettings)
+			{
+				FText ActionName = Mapping.GetPlayerMappableKeySettings()->DisplayName;
+				KeyMappingButton->InputKey1->SetSelectedKey(Mapping.Key);
+				KeyMappingButton->KeyLabelText->SetText(ActionName);
+				KeyMappingButton->AddToViewport();
+				SettingBox->AddChild(KeyMappingButton);
+				KeyMappingButton->KeyIndex = index;
+			}
+
+		}
+		index++;
+	}
+	//Save the mapping context
+	USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
+	SaveGameInstance->EnhancedActionMappings = BlasterCharacter->BlastCharacterMappingContext->GetMappings();
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterInputMapping"), 0);
 }
 
 void UMenuInGame::ContactMeButtonClicked()
