@@ -54,7 +54,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 	LastSessionSettings->Set(FName("GameMode"), GameMode, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	LastSessionSettings->Set(FName("MapName"), MapName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-	LastSessionSettings->Set(FName("NumPlayers"), 1, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	//LastSessionSettings->Set(FName("NumPlayers"), 1, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	LastSessionSettings->Set(FName("MaxPlayers"), NumPublicConnections, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -141,6 +141,40 @@ void UMultiplayerSessionsSubsystem::StartSession()
 		// Broadcast the custom delegate
 		MultiplayerOnStartSessionComplete.Broadcast(false);
 	}
+}
+
+void UMultiplayerSessionsSubsystem::SetNumOfPlayersInSession(int32 NumOfPlayers)
+{
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+	int32 num = NumOfPlayers;
+	LastSessionSettings->Set(FName("NumPlayers"), num, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	int32 test = LastSessionSettings->Get(FName("NumPlayers"), test);
+	SessionInterface->UpdateSession(NAME_GameSession, *LastSessionSettings);
+}
+
+void UMultiplayerSessionsSubsystem::UnregisterPlayerFromSession(FName SessionName, const FUniqueNetId& PlayerId)
+{
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+	SessionInterface->UnregisterPlayer(SessionName, PlayerId);
+	SessionInterface->UpdateSession(NAME_GameSession, *LastSessionSettings);
+}
+
+
+
+void UMultiplayerSessionsSubsystem::RemovePlayerFromSession(int32 LocalUserNum, FName SessionName, const FUniqueNetId& PlayerId)
+{
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+	SessionInterface->RemovePlayerFromSession(LocalUserNum, SessionName, PlayerId);
+	SessionInterface->UpdateSession(NAME_GameSession, *LastSessionSettings);
 }
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)

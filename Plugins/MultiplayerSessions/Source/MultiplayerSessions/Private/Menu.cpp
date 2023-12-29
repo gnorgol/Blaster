@@ -119,10 +119,19 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 
 		//FString SettingsValueNumPlayers;
 		//Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayers);
-
+		
 		
 		int32 SettingsValueMaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
-		int32 SettingsValueNumPlayersInt = SettingsValueMaxPlayers - Result.Session.NumOpenPublicConnections;
+		//GetNumLobbyMembers
+		int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.NumPublicConnections - Result.Session.NumOpenPublicConnections;
+		//int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("NumPlayers: %d"), SettingsValueNumPlayersInt));
+		int32 test = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("TEST : %d"), test));
+		//Get MultiplayerSessionsSubsystem from the Result
+		//UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = Result.Session.SessionSettings.Get(FName("MultiplayerSessionsSubsystem"), MultiplayerSessionsSubsystem);
+
 		FString SettingsValueNumPlayersText = FString::Printf(TEXT("%d/%d"), SettingsValueNumPlayersInt, SettingsValueMaxPlayers);
 
 
@@ -196,6 +205,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
 	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Joining Session"));
 	if (OnlineSubsystem)
 	{
 		IOnlineSessionPtr SessionInterface = OnlineSubsystem->GetSessionInterface();

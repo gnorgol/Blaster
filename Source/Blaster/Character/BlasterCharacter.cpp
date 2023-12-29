@@ -18,6 +18,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameMode/LobbyGameMode.h"
 #include "TimerManager.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
@@ -36,6 +37,7 @@
 #define NOGDI
 #define NOMINMAX
 #include <windows.h>
+#include "GameFramework/PlayerState.h"
 
 
 // Sets default values
@@ -194,7 +196,13 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 	else
 	{
 		//if the player is in the lobby left the game
-		OnLeftGame.Broadcast();	
+		OnLeftGame.Broadcast();
+		ALobbyGameMode* LobbyGameMode = GetWorld()->GetAuthGameMode<ALobbyGameMode>();
+
+		if (LobbyGameMode)
+		{
+			LobbyGameMode->RemovePlayerFromLobby(BlasterLobbyPlayerController);
+		}
 
 		//Client leave game
 		ClientLeaveGame();
