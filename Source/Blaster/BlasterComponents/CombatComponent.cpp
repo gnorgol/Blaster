@@ -797,8 +797,8 @@ void UCombatComponent::FinishReloading()
 	bLocallyReloading = false;
 	if (Character->HasAuthority())
 	{
-		UpdateAmmoValues();
 		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
 	}
 	if (bFireButtonPressed)
 	{

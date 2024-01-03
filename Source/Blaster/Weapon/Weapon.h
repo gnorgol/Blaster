@@ -173,6 +173,9 @@ private:
 	UFUNCTION(Client, Reliable)
 		void ClientAddAmmo(int32 AmmoToAdd);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastAddWeaponAmmo(int32 AmmoToAdd);
+
 	// Numeber of Unprossed server request 
 	int32 Sequence = 0;
 
