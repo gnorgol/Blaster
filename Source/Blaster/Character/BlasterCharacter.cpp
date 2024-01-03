@@ -30,6 +30,7 @@
 #include <Blaster/HUD/OverheadWidget.h>
 #include "Blaster/PlayerStart/TeamPlayerStart.h"
 #include "Blaster/PlayerController/SaveInputMapping.h"
+#include "Blaster/PlayerController/SaveSensitivity.h"
 #include "InputMappingContext.h"
 #include "PlayerMappableKeySettings.h"
 #include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
@@ -383,6 +384,36 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 
 
 
+float ABlasterCharacter::GetSensitivity() const
+{
+	return sensitivity;
+}
+
+float ABlasterCharacter::GetAimSensitivity() const
+{
+	return aimSensitivity;
+}
+
+void ABlasterCharacter::SetSensitivity(float NewSensitivity)
+{
+	sensitivity = NewSensitivity;
+}
+
+void ABlasterCharacter::SetAimSensitivity(float NewAimSensitivity)
+{
+	aimSensitivity = NewAimSensitivity;
+}
+
+float ABlasterCharacter::GetDefaultSensitivity() const
+{
+	return defaultSensitivity;
+}
+
+float ABlasterCharacter::GetDefaultAimSensitivity() const
+{
+	return defaultAimSensitivity;
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -418,6 +449,19 @@ void ABlasterCharacter::BeginPlay()
 	Tags.Add(FName("Player"));
 	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
+	USaveSensitivity* SaveGameInstance = Cast<USaveSensitivity>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterSensitivity"), 0));
+
+	if (SaveGameInstance)
+	{
+
+		aimSensitivity = SaveGameInstance->AimSensitivity;
+		sensitivity = SaveGameInstance->MouseSensitivity;
+	}
+	else
+	{
+		aimSensitivity = defaultAimSensitivity;
+		sensitivity = defaultSensitivity;
+	}
 
 
 }
@@ -1110,10 +1154,12 @@ void ABlasterCharacter::Move(const FInputActionValue& Value)
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookVector = Value.Get<FVector2D>();
+	//if aiming, set the look sensitivity to half
+	float Sensitivity = IsAiming() ? aimSensitivity : sensitivity;
+	FVector2D ScaledLookVector = LookVector * Sensitivity;
 
-
-	AddControllerPitchInput(LookVector.Y);
-	AddControllerYawInput(LookVector.X);
+	AddControllerPitchInput(ScaledLookVector.Y);
+	AddControllerYawInput(ScaledLookVector.X);
 
 }
 void ABlasterCharacter::Equip(const FInputActionValue& Value)
@@ -1192,8 +1238,6 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("AimPressed"));
-	UE_LOG(LogTemp, Warning, TEXT("Value : %f"), Value.Get<float>());
 	if (CombatComponent && IsWeaponEquipped() && CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
 	{
 		CombatComponent->SetAiming(Value.Get<float>() > 0.5f);

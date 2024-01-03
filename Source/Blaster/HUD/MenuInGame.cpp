@@ -12,14 +12,17 @@
 #include "Components/InputKeySelector.h"
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
+#include <Components/Slider.h>
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
 #include <Blaster/PlayerController/SaveInputMapping.h>
+#include <Blaster/PlayerController/SaveSensitivity.h>
 #include <Kismet/GameplayStatics.h>
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 #define NOMINMAX
 #include <windows.h>
+
 
 
 void UMenuInGame::MenuSetup()
@@ -69,6 +72,14 @@ void UMenuInGame::MenuSetup()
 	if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
 	{
 		ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
+	}
+	if (MouseSensitivitySlider && !MouseSensitivitySlider->OnValueChanged.IsBound())
+	{
+		MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnMouseSensitivityValueChanged);
+	}
+	if (AimSensitivitySlider && !AimSensitivitySlider->OnValueChanged.IsBound())
+	{
+		AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
 	}
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
@@ -245,6 +256,26 @@ void UMenuInGame::SettingButtonClicked()
 			index++;
 
 		}
+		float MouseSensitivity = BlasterCharacter->GetSensitivity();
+		float AimSensitivity = BlasterCharacter->GetAimSensitivity();
+		if (MouseSensitivitySlider)
+		{
+			MouseSensitivitySlider->SetValue(MouseSensitivity);
+		}
+		if (AimSensitivitySlider)
+		{
+			AimSensitivitySlider->SetValue(AimSensitivity);
+		}
+		//Set Value Text
+		if (ValueMouseSensitivityText)
+		{
+			ValueMouseSensitivityText->SetText(FText::AsNumber(MouseSensitivity));
+		}
+		if (ValueAimSensitivityText)
+		{
+			ValueAimSensitivityText->SetText(FText::AsNumber(AimSensitivity));
+		}
+		
 	}
 	
 }
@@ -270,6 +301,16 @@ void UMenuInGame::ResetDefaultButtonClicked()
 			BlasterCharacter->BlastCharacterMappingContext->Mappings = BlasterCharacter->BlastCharacterMappingContextQWERTY->GetMappings();
 			break;
 		}
+		//Set slider to default sensitivity
+		if (MouseSensitivitySlider)
+		{
+			MouseSensitivitySlider->SetValue(BlasterCharacter->GetDefaultSensitivity());
+		}
+		if (AimSensitivitySlider)
+		{
+			AimSensitivitySlider->SetValue(BlasterCharacter->GetDefaultAimSensitivity());
+		}
+
 	}
 	if (SettingBox)
 	{
@@ -294,6 +335,9 @@ void UMenuInGame::ResetDefaultButtonClicked()
 		}
 		index++;
 	}
+
+
+
 	//Save the mapping context
 	USaveInputMapping* SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 	SaveGameInstance->EnhancedActionMappings = BlasterCharacter->BlastCharacterMappingContext->GetMappings();
@@ -311,6 +355,40 @@ void UMenuInGame::CreditsButtonClicked()
 {
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowCreditsPanel(ESlateVisibility::Visible);
+}
+
+void UMenuInGame::OnMouseSensitivityValueChanged(float Value)
+{
+	if (BlasterCharacter)
+	{
+		BlasterCharacter->SetSensitivity(Value);
+		if (ValueMouseSensitivityText)
+		{
+			ValueMouseSensitivityText->SetText(FText::AsNumber(Value));
+		}
+		//Save the sensitivity
+		USaveSensitivity* SaveGameInstance = Cast<USaveSensitivity>(UGameplayStatics::CreateSaveGameObject(USaveSensitivity::StaticClass()));
+		SaveGameInstance->MouseSensitivity = Value;
+		SaveGameInstance->AimSensitivity = BlasterCharacter->GetAimSensitivity();
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterSensitivity"), 0);
+	}
+}
+
+void UMenuInGame::OnAimSensitivityValueChanged(float Value)
+{
+	if (BlasterCharacter)
+	{
+		BlasterCharacter->SetAimSensitivity(Value);
+		if (ValueAimSensitivityText)
+		{
+			ValueAimSensitivityText->SetText(FText::AsNumber(Value));
+		}
+		//Save the sensitivity
+		USaveSensitivity* SaveGameInstance = Cast<USaveSensitivity>(UGameplayStatics::CreateSaveGameObject(USaveSensitivity::StaticClass()));
+		SaveGameInstance->AimSensitivity = Value;
+		SaveGameInstance->MouseSensitivity = BlasterCharacter->GetSensitivity();
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterSensitivity"), 0);
+	}
 }
 
 void UMenuInGame::ClearSettingBox()

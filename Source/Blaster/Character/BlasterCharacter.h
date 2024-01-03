@@ -137,6 +137,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* BlastCharacterMappingContextController;
+
+	float GetSensitivity() const;
+	float GetAimSensitivity() const;
+	void SetSensitivity(float NewSensitivity);
+	void SetAimSensitivity(float NewAimSensitivity);
+
+	float GetDefaultSensitivity() const;
+	float GetDefaultAimSensitivity() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -367,6 +376,12 @@ private:
 	UPROPERTY()
 		ABlasterGameMode* BlasterGameMode;
 
+	UPROPERTY(EditAnywhere, Category = "Input")	
+	float sensitivity = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	float aimSensitivity = 0.5f;
 
+	float defaultSensitivity = 1.0f;
+	float defaultAimSensitivity = 0.5f;
 
 };
