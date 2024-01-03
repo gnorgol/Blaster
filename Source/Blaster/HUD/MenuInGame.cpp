@@ -115,6 +115,7 @@ void UMenuInGame::MenuTeardown()
 					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 					SaveGameInstance->EnhancedActionMappings = BlastCharacter->BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacter->BlastCharacterMappingContext, 0);
+
 				}
 			}
 			

@@ -68,6 +68,12 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	FInputAxisKeyMapping MoveLeftMapping;
 	FInputAxisKeyMapping MoveRightMapping;
 
+	FInputAxisKeyMapping MoveForwardMappingGamepad;
+	FInputAxisKeyMapping MoveBackwardsMappingGamepad;
+	FInputAxisKeyMapping MoveLeftMappingGamepad;
+	FInputAxisKeyMapping MoveRightMappingGamepad;
+
+
 	for (const FEnhancedActionKeyMapping Mapping : BlastCharacterMappingContext->GetMappings()) {
 		if (Mapping.GetPlayerMappableKeySettings())
 		{
@@ -103,6 +109,16 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 
 	}
+	MoveForwardMappingGamepad.AxisName = "MoveForward";
+	MoveForwardMappingGamepad.Key = EKeys::Gamepad_LeftY;
+	MoveForwardMappingGamepad.Scale = 1;
+
+	MoveRightMappingGamepad.AxisName = "MoveRight";
+	MoveRightMappingGamepad.Key = EKeys::Gamepad_LeftX;
+	MoveRightMappingGamepad.Scale = 1;
+
+
+
 
 	UInputSettings* InputSettings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 
@@ -122,6 +138,9 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	InputSettings->AddAxisMapping(MoveBackwardsMapping);
 	InputSettings->AddAxisMapping(MoveLeftMapping);
 	InputSettings->AddAxisMapping(MoveRightMapping);
+	InputSettings->AddAxisMapping(MoveForwardMappingGamepad);
+	InputSettings->AddAxisMapping(MoveRightMappingGamepad);
+
 	InputSettings->SaveConfig();
 	InputSettings->ForceRebuildKeymaps();
 

@@ -576,6 +576,7 @@ void ABlasterCharacter::PollInit()
 					BlastCharacterMappingContext->UnmapAll();
 					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 				}
 				else
 				{
@@ -583,6 +584,7 @@ void ABlasterCharacter::PollInit()
 					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 
 				}
 			}
@@ -599,6 +601,7 @@ void ABlasterCharacter::PollInit()
 					BlastCharacterMappingContext->UnmapAll();
 					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 				}
 				else
 				{
@@ -606,6 +609,7 @@ void ABlasterCharacter::PollInit()
 					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 
 				}
 			}
@@ -1188,9 +1192,11 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 	{
 		return;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("AimPressed"));
+	UE_LOG(LogTemp, Warning, TEXT("Value : %f"), Value.Get<float>());
 	if (CombatComponent && IsWeaponEquipped() && CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
 	{
-		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
+		CombatComponent->SetAiming(Value.Get<float>() > 0.5f);
 	}
 }
 void ABlasterCharacter::ReloadPressed(const FInputActionValue& Value)
