@@ -18,6 +18,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameMode/LobbyGameMode.h"
 #include "TimerManager.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
@@ -29,12 +30,15 @@
 #include <Blaster/HUD/OverheadWidget.h>
 #include "Blaster/PlayerStart/TeamPlayerStart.h"
 #include "Blaster/PlayerController/SaveInputMapping.h"
+#include "Blaster/PlayerController/SaveSensitivity.h"
 #include "InputMappingContext.h"
 #include "PlayerMappableKeySettings.h"
 #include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
-
-
-
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOMINMAX
+#include <windows.h>
+#include "GameFramework/PlayerState.h"
 
 
 // Sets default values
@@ -193,7 +197,13 @@ void ABlasterCharacter::ServerLeaveGame_Implementation()
 	else
 	{
 		//if the player is in the lobby left the game
-		OnLeftGame.Broadcast();	
+		OnLeftGame.Broadcast();
+		ALobbyGameMode* LobbyGameMode = GetWorld()->GetAuthGameMode<ALobbyGameMode>();
+
+		if (LobbyGameMode)
+		{
+			LobbyGameMode->RemovePlayerFromLobby(BlasterLobbyPlayerController);
+		}
 
 		//Client leave game
 		ClientLeaveGame();
@@ -374,12 +384,57 @@ void ABlasterCharacter::MulticastLoseTheLead_Implementation()
 
 
 
+float ABlasterCharacter::GetSensitivity() const
+{
+	return sensitivity;
+}
+
+float ABlasterCharacter::GetAimSensitivity() const
+{
+	return aimSensitivity;
+}
+
+void ABlasterCharacter::SetSensitivity(float NewSensitivity)
+{
+	sensitivity = NewSensitivity;
+}
+
+void ABlasterCharacter::SetAimSensitivity(float NewAimSensitivity)
+{
+	aimSensitivity = NewAimSensitivity;
+}
+
+float ABlasterCharacter::GetDefaultSensitivity() const
+{
+	return defaultSensitivity;
+}
+
+float ABlasterCharacter::GetDefaultAimSensitivity() const
+{
+	return defaultAimSensitivity;
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	//Detect if the keyborad is an AZERTY keyboard or a QWERTY keyboard
+	switch (PRIMARYLANGID(HIWORD(GetKeyboardLayout(0))))
+	{
+		case LANG_FRENCH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextAZERTY->GetMappings();
+		break;
+		case LANG_ENGLISH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		default:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();			
+			break;
+	}
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -394,6 +449,19 @@ void ABlasterCharacter::BeginPlay()
 	Tags.Add(FName("Player"));
 	OverheadWidgetInstance = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
 
+	USaveSensitivity* SaveGameInstance = Cast<USaveSensitivity>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterSensitivity"), 0));
+
+	if (SaveGameInstance)
+	{
+
+		aimSensitivity = SaveGameInstance->AimSensitivity;
+		sensitivity = SaveGameInstance->MouseSensitivity;
+	}
+	else
+	{
+		aimSensitivity = defaultAimSensitivity;
+		sensitivity = defaultSensitivity;
+	}
 
 
 }
@@ -552,6 +620,7 @@ void ABlasterCharacter::PollInit()
 					BlastCharacterMappingContext->UnmapAll();
 					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 				}
 				else
 				{
@@ -559,6 +628,7 @@ void ABlasterCharacter::PollInit()
 					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 
 				}
 			}
@@ -575,6 +645,7 @@ void ABlasterCharacter::PollInit()
 					BlastCharacterMappingContext->UnmapAll();
 					BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 				}
 				else
 				{
@@ -582,6 +653,7 @@ void ABlasterCharacter::PollInit()
 					SaveGameInstance = Cast<USaveInputMapping>(UGameplayStatics::CreateSaveGameObject(USaveInputMapping::StaticClass()));
 					SaveGameInstance->EnhancedActionMappings = BlastCharacterMappingContext->GetMappings();
 					Subsystem->AddMappingContext(BlastCharacterMappingContext, 0);
+					Subsystem->AddMappingContext(BlastCharacterMappingContextController, 1);
 
 				}
 			}
@@ -604,6 +676,7 @@ void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, F
 	{
 		if (SaveGameInstance->EnhancedActionMappings[i].Key == OldMapping.Key && SaveGameInstance->EnhancedActionMappings[i].Action == OldMapping.Action)
 		{
+
 			SaveGameInstance->EnhancedActionMappings[i] = NewMapping;
 			break;
 		}
@@ -611,6 +684,11 @@ void ABlasterCharacter::SaveInputMapping(FEnhancedActionKeyMapping OldMapping, F
 
 	// Save the game instance
 	bool bSuccess = UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterInputMapping"), 0);
+
+	BlastCharacterMappingContext->UnmapAll();
+	BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
+
+
 
 }
 
@@ -657,6 +735,8 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
+	if (CombatComponent && CombatComponent->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (CombatComponent && CombatComponent->EquippedWeapon) bUseControllerRotationYaw = true;
 	if (bDisableGameplayInput)
 	{
 		bUseControllerRotationYaw = false;
@@ -1046,10 +1126,10 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Shield, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, Killer, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, bDisableGameplayInput, COND_OwnerOnly);
+	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
+	DOREPLIFETIME(ABlasterCharacter, Killer);
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplayInput);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -1074,10 +1154,12 @@ void ABlasterCharacter::Move(const FInputActionValue& Value)
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookVector = Value.Get<FVector2D>();
+	//if aiming, set the look sensitivity to half
+	float Sensitivity = IsAiming() ? aimSensitivity : sensitivity;
+	FVector2D ScaledLookVector = LookVector * Sensitivity;
 
-
-	AddControllerPitchInput(LookVector.Y);
-	AddControllerYawInput(LookVector.X);
+	AddControllerPitchInput(ScaledLookVector.Y);
+	AddControllerYawInput(ScaledLookVector.X);
 
 }
 void ABlasterCharacter::Equip(const FInputActionValue& Value)
@@ -1158,7 +1240,7 @@ void ABlasterCharacter::AimPressed(const FInputActionValue& Value)
 	}
 	if (CombatComponent && IsWeaponEquipped() && CombatComponent->CombatState == ECombatState::ECS_Unoccupied)
 	{
-		CombatComponent->SetAiming(Value.Get<float>() > 0.0f);
+		CombatComponent->SetAiming(Value.Get<float>() > 0.5f);
 	}
 }
 void ABlasterCharacter::ReloadPressed(const FInputActionValue& Value)
@@ -1222,12 +1304,12 @@ void ABlasterCharacter::CalculateAO_Pitch()
 void ABlasterCharacter::SimProxiesTurn()
 {
 
-	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr)
+	if (CombatComponent == nullptr && CombatComponent->EquippedWeapon == nullptr)
 	{
 		return;
 	}
-	float Speed = CalculateSpeed();
 	bRotateRootBone = false;
+	float Speed = CalculateSpeed();	
 	if (Speed > 0.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;

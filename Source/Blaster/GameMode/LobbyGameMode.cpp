@@ -8,6 +8,9 @@
 #include <Blaster/HUD/StartGame.h>
 #include <Blaster/Character/BlasterCharacter.h>
 #include <Blaster/PlayerController/BlasterLobbyPlayerController.h>
+#include "OnlineSessionSettings.h"
+#include <Kismet/GameplayStatics.h>
+#include "GameFramework/PlayerState.h"
 
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -21,6 +24,10 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		UMultiplayerSessionsSubsystem* Subsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
 		check(Subsystem);
+		Subsystem->SetNumOfPlayersInSession(NumOfPlayers);
+
+
+
 		if (NumOfPlayers == Subsystem->DesiredNumPublicConnections)
 		{
 			bool retFlag;
@@ -31,6 +38,29 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 
 
+}
+
+void ALobbyGameMode::RemovePlayerFromLobby(APlayerController* LeavingPlayer)
+{
+	ABlasterLobbyPlayerController* BlasterLobbyPlayerController = Cast<ABlasterLobbyPlayerController>(LeavingPlayer);
+	GameState.Get()->PlayerArray.Remove(BlasterLobbyPlayerController->PlayerState);
+	int32 NumOfPlayers = GameState.Get()->PlayerArray.Num();
+	UGameInstance* GameInstance = GetGameInstance();
+
+
+	if (GameInstance)
+	{
+		UMultiplayerSessionsSubsystem* Subsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+		check(Subsystem);
+		int32 LocalUserNum = LeavingPlayer->PlayerState->GetPlayerId();
+		Subsystem->RemovePlayerFromSession(LocalUserNum, NAME_GameSession, *LeavingPlayer->PlayerState->GetUniqueId());
+		//Get named session
+		Subsystem->UnregisterPlayerFromSession(NAME_GameSession, *LeavingPlayer->PlayerState->GetUniqueId());
+		Subsystem->SetNumOfPlayersInSession(NumOfPlayers);
+	}
+	//destroy BlasterCharacter
+	BlasterLobbyPlayerController->GetPawn()->Destroy();
+	BlasterLobbyPlayerController->Destroy();
 }
 
 void ALobbyGameMode::TravelToMap(UMultiplayerSessionsSubsystem* Subsystem, bool& retFlag)

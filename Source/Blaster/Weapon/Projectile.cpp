@@ -57,6 +57,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 
 }
 
+
+
 void AProjectile::SpawnTrailSystem()
 {
 	if (TrailSystem)
@@ -82,7 +84,8 @@ void AProjectile::ExplodeDamage()
 	}
 	if (FiringPawn)
 	{
-		CreateFieldsExplosionEffect(GetActorLocation());
+		MulticastCreateFieldsExplosionEffect(GetActorLocation());
+
 
 		if (ImpactFleshParticles)
 		{
@@ -91,7 +94,10 @@ void AProjectile::ExplodeDamage()
 
 	}
 }
-
+void AProjectile::MulticastCreateFieldsExplosionEffect_Implementation(const FVector& Location)
+{
+	CreateFieldsExplosionEffect(Location);
+}
 void AProjectile::MulticastIsHitCharacter_Implementation(AActor* OtherActor)
 {
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);

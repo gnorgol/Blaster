@@ -269,8 +269,14 @@ void UCombatComponent::ServerSetSprinting_Implementation(bool bIsSprinting)
 		if (Character->IsAiming() == false)
 		{
 			Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
-		}		
+		}
+		MulticastSetSprinting(bIsSprinting);
 	}
+}
+
+void UCombatComponent::MulticastSetSprinting_Implementation(bool bIsSprinting)
+{
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintingSpeed : BaseWalkSpeed;
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -768,6 +774,13 @@ void UCombatComponent::Reload()
 
 	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading)
 	{
+		bool bHideSniperScope = Character && Character->IsLocallyControlled() && bAiming && EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+		if (bHideSniperScope)
+		{
+			Character->ShowSniperScopeWidget(false);
+			SetAiming(false);
+		}
+
 		ServerReload();
 		HandleReload();
 		bLocallyReloading = true;
@@ -784,8 +797,8 @@ void UCombatComponent::FinishReloading()
 	bLocallyReloading = false;
 	if (Character->HasAuthority())
 	{
-		UpdateAmmoValues();
 		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
 	}
 	if (bFireButtonPressed)
 	{

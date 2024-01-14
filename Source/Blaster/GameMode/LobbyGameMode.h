@@ -18,6 +18,8 @@ class BLASTER_API ALobbyGameMode : public AGameMode
 public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	void RemovePlayerFromLobby(APlayerController* LeavingPlayer);
+
 	void TravelToMap(UMultiplayerSessionsSubsystem* Subsystem, bool& retFlag);
 
 	void BeginPlay() override;
@@ -28,4 +30,6 @@ public:
 	void ButtonStartGameClicked();
 
 	void SendChatMsg(const FText& Text, const FString& PlayerName);
+
+	
 };

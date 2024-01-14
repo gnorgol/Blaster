@@ -57,6 +57,8 @@ void UOverheadWidget::ShowPlayerName(APawn* InPawn, FLinearColor TextColor)
 		//add text color red 
 
 		FString PlayerName = PlayerState->GetPlayerName();
+		//FString PlayerNetID = FString::Printf(TEXT("Net ID: %d"), PlayerState->GetPlayerId());
+		//FString PlayerUniqueNetID = PlayerState->GetUniqueId().ToString();
 		SetDisplayText(PlayerName);
 		SetColor(TextColor);
 

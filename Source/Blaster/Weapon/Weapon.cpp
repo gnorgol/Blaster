@@ -289,16 +289,17 @@ void AWeapon::SpendRound()
 	{
 		ClientUpdateAmmo(Ammo);
 	}
-	else
+	else if (BlasterOwnerCharacter && BlasterOwnerCharacter->IsLocallyControlled())
 	{
-		++Sequence;
+		Sequence++;
 	}
 }
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	SetHUDAmmo();
-	ClientAddAmmo(AmmoToAdd);
+	//ClientAddAmmo(AmmoToAdd);
+	MulticastAddWeaponAmmo(AmmoToAdd);
 }
 void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
 {
@@ -314,6 +315,20 @@ void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
 	}
 	SetHUDAmmo();
 
+}
+void AWeapon::MulticastAddWeaponAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority()) return;
+
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEndReload();
+	}
+
+	SetHUDAmmo();
 }
 void AWeapon::SetHUDAmmo()
 {

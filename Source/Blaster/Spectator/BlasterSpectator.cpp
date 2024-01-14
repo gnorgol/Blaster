@@ -12,6 +12,11 @@
 #include <Kismet/GameplayStatics.h>
 #include "PlayerMappableKeySettings.h"
 #include "GameFramework/InputSettings.h"
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOMINMAX
+#include <windows.h>
+
 
 
 
@@ -39,10 +44,35 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		BlastCharacterMappingContext->UnmapAll();
 		BlastCharacterMappingContext->Mappings = SaveGameInstance->EnhancedActionMappings;
 	}
+	else
+	{
+		//Detect if the keyborad is an AZERTY keyboard or a QWERTY keyboard
+		switch (PRIMARYLANGID(HIWORD(GetKeyboardLayout(0))))
+		{
+		case LANG_FRENCH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextAZERTY->GetMappings();
+			break;
+		case LANG_ENGLISH:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		default:
+			BlastCharacterMappingContext->UnmapAll();
+			BlastCharacterMappingContext->Mappings = BlastCharacterMappingContextQWERTY->GetMappings();
+			break;
+		}
+	}
 	FInputAxisKeyMapping MoveForwardMapping;
 	FInputAxisKeyMapping MoveBackwardsMapping;
 	FInputAxisKeyMapping MoveLeftMapping;
 	FInputAxisKeyMapping MoveRightMapping;
+
+	FInputAxisKeyMapping MoveForwardMappingGamepad;
+	FInputAxisKeyMapping MoveBackwardsMappingGamepad;
+	FInputAxisKeyMapping MoveLeftMappingGamepad;
+	FInputAxisKeyMapping MoveRightMappingGamepad;
+
 
 	for (const FEnhancedActionKeyMapping Mapping : BlastCharacterMappingContext->GetMappings()) {
 		if (Mapping.GetPlayerMappableKeySettings())
@@ -79,6 +109,16 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 
 	}
+	MoveForwardMappingGamepad.AxisName = "MoveForward";
+	MoveForwardMappingGamepad.Key = EKeys::Gamepad_LeftY;
+	MoveForwardMappingGamepad.Scale = 1;
+
+	MoveRightMappingGamepad.AxisName = "MoveRight";
+	MoveRightMappingGamepad.Key = EKeys::Gamepad_LeftX;
+	MoveRightMappingGamepad.Scale = 1;
+
+
+
 
 	UInputSettings* InputSettings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 
@@ -98,6 +138,9 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	InputSettings->AddAxisMapping(MoveBackwardsMapping);
 	InputSettings->AddAxisMapping(MoveLeftMapping);
 	InputSettings->AddAxisMapping(MoveRightMapping);
+	InputSettings->AddAxisMapping(MoveForwardMappingGamepad);
+	InputSettings->AddAxisMapping(MoveRightMappingGamepad);
+
 	InputSettings->SaveConfig();
 	InputSettings->ForceRebuildKeymaps();
 

@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include <Components/CanvasPanel.h>
+#include <Components/Slider.h>
 #include "MenuInGame.generated.h"
+
 
 /**
  * 
@@ -17,6 +19,8 @@ class UVerticalBox;
 class UButton;
 class UInputMappingContext;
 class ABlasterCharacter;
+class ASlider;
+class UTextBlock;
 UCLASS()
 class BLASTER_API UMenuInGame : public UUserWidget
 {
@@ -39,18 +43,38 @@ private:
 		 UButton* ReturnMainMenuButton;
 	UPROPERTY(meta = (BindWidget))
 		UButton* SettingButton;
+
 	UPROPERTY(meta = (BindWidget))
 		UButton* ContactMeButton;
 	UPROPERTY(meta = (BindWidget))
 	UButton* CreditsButton;
+	UPROPERTY(meta = (BindWidget))
+		UButton* ResetDefaultButton;
+
+	UPROPERTY(meta = (BindWidget))
+		USlider* MouseSensitivitySlider;
+	UPROPERTY(meta = (BindWidget))
+		USlider* AimSensitivitySlider;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* ValueMouseSensitivityText;
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* ValueAimSensitivityText;
+
 	UFUNCTION()
 		void ReturnButtonClicked();
 	UFUNCTION()
 		void SettingButtonClicked();
 	UFUNCTION()
+		void ResetDefaultButtonClicked();
+	UFUNCTION()
 		void ContactMeButtonClicked();
 	UFUNCTION()
 		void CreditsButtonClicked();
+
+	UFUNCTION()
+		void OnMouseSensitivityValueChanged(float Value);
+	UFUNCTION()
+		void OnAimSensitivityValueChanged(float Value);
 
 	UPROPERTY()
 		UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;

@@ -50,6 +50,10 @@ public:
 	FString DesiredGameMode{};
 	FString DesiredMapName{};
 
+	void SetNumOfPlayersInSession(int32 NumOfPlayers);
+	void UnregisterPlayerFromSession(FName SessionName, const FUniqueNetId& PlayerId);
+	void RemovePlayerFromSession(int32 LocalUserNum, FName SessionName, const FUniqueNetId& PlayerId);
+
 protected:
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
