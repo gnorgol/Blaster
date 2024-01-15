@@ -21,6 +21,7 @@ class UInputMappingContext;
 class ABlasterCharacter;
 class ASlider;
 class UTextBlock;
+class UComboBoxString;
 UCLASS()
 class BLASTER_API UMenuInGame : public UUserWidget
 {
@@ -45,6 +46,9 @@ private:
 		UButton* SettingButton;
 
 	UPROPERTY(meta = (BindWidget))
+		UButton* GraphicSettingButton;
+
+	UPROPERTY(meta = (BindWidget))
 		UButton* ContactMeButton;
 	UPROPERTY(meta = (BindWidget))
 	UButton* CreditsButton;
@@ -65,6 +69,9 @@ private:
 	UFUNCTION()
 		void SettingButtonClicked();
 	UFUNCTION()
+		void GraphicSettingButtonClicked();
+		void UpdateDisplayResolutionComboBox();
+	UFUNCTION()
 		void ResetDefaultButtonClicked();
 	UFUNCTION()
 		void ContactMeButtonClicked();
@@ -75,6 +82,12 @@ private:
 		void OnMouseSensitivityValueChanged(float Value);
 	UFUNCTION()
 		void OnAimSensitivityValueChanged(float Value);
+	UFUNCTION()
+		void OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+		void OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 
 	UPROPERTY()
 		UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
@@ -87,11 +100,20 @@ private:
 	UPROPERTY(meta = (BindWidget))
 		UCanvasPanel* SettingPanel;
 	UPROPERTY(meta = (BindWidget))
+		UCanvasPanel* GraphicSettingPanel;
+	UPROPERTY(meta = (BindWidget))
 		UCanvasPanel* ContactMePanel;
 	UPROPERTY(meta = (BindWidget))
 			UCanvasPanel* CreditsPanel;
 	UPROPERTY(meta = (BindWidget))
 		UVerticalBox* SettingBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* QualityComboBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* DisplayModeComboBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* DisplayResolutionComboBox;
+
 
 
 	void ClearSettingBox();
@@ -104,11 +126,14 @@ private:
 	void ShowContactMePanel(ESlateVisibility bShow);
 	UFUNCTION(BlueprintCallable)
 		void ShowCreditsPanel(ESlateVisibility bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowGraphicSettingPanel(ESlateVisibility bShow);
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> KeyMappingButtonClass;
 
 	UPROPERTY()
 		ABlasterCharacter* BlasterCharacter;
+
 
 };

@@ -12,6 +12,7 @@
 #include "Components/InputKeySelector.h"
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
+#include <Components/ComboBoxString.h>
 #include <Components/Slider.h>
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
@@ -22,75 +23,89 @@
 #define NOGDI
 #define NOMINMAX
 #include <windows.h>
+#include "GameFramework/GameUserSettings.h"
+#include <Engine/GameEngine.h>
+#include "Kismet/KismetSystemLibrary.h"
 
 
 
 void UMenuInGame::MenuSetup()
 {
-	AddToViewport();
-	SetVisibility(ESlateVisibility::Visible);
-	bIsFocusable = true;
+    AddToViewport();
+    SetVisibility(ESlateVisibility::Visible);
+    bIsFocusable = true;
 
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
+        if (PlayerController)
+        {
+            FInputModeGameAndUI InputModeData;
+            InputModeData.SetWidgetToFocus(TakeWidget());
+            PlayerController->SetInputMode(InputModeData);
+            PlayerController->bShowMouseCursor = true;
+            BlasterCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+            if (BlasterCharacter)
+            {
+                BlasterCharacter->bDisableGameplayInput = true;
+            }
+        }
+    }
+    if (ReturnMainMenuButton && !ReturnMainMenuButton->OnClicked.IsBound())
+    {
+        ReturnMainMenuButton->OnClicked.AddDynamic(this, &UMenuInGame::ReturnButtonClicked);
+    }
+    if (SettingButton && !SettingButton->OnClicked.IsBound())
+    {
+        SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
+    }
+    if (GraphicSettingButton && !GraphicSettingButton->OnClicked.IsBound())
+    {
+        GraphicSettingButton->OnClicked.AddDynamic(this, &UMenuInGame::GraphicSettingButtonClicked);
+    }
+    if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
+    {
+        ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
+    }
+    if (CreditsButton && !CreditsButton->OnClicked.IsBound())
+    {
+        CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+    }
+    if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
+    {
+        ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
+    }
+    if (MouseSensitivitySlider && !MouseSensitivitySlider->OnValueChanged.IsBound())
+    {
+        MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnMouseSensitivityValueChanged);
+    }
+    if (AimSensitivitySlider && !AimSensitivitySlider->OnValueChanged.IsBound())
+    {
+        AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
+    }
+    if (QualityComboBox && !QualityComboBox->OnSelectionChanged.IsBound())
+    {
+        QualityComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
+    }
+	if (DisplayModeComboBox && !DisplayModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayModeComboBoxValueChanged);
+	}
+	if (DisplayResolutionComboBox && !DisplayResolutionComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayResolutionComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayResolutionComboBoxValueChanged);
+	}
 
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
-		if (PlayerController)
-		{
-			FInputModeGameAndUI InputModeData;
-			InputModeData.SetWidgetToFocus(TakeWidget());
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->bShowMouseCursor = true;
-			//if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			//{
-			//	Subsystem->RemoveMappingContext(BlastCharacterMappingContext);
-			//}
-			BlasterCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
-			if (BlasterCharacter)
-			{
-				BlasterCharacter->bDisableGameplayInput = true;
-			}
-		}
-	}
-	if (ReturnMainMenuButton && !ReturnMainMenuButton->OnClicked.IsBound())
-	{
-		ReturnMainMenuButton->OnClicked.AddDynamic(this, &UMenuInGame::ReturnButtonClicked);
-	}
-	if (SettingButton && !SettingButton->OnClicked.IsBound())
-	{
-		SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
-	}
-	if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
-	{
-		ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
-	}
-	if (CreditsButton && !CreditsButton->OnClicked.IsBound())
-	{
-		CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
-	}
-	if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
-	{
-		ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
-	}
-	if (MouseSensitivitySlider && !MouseSensitivitySlider->OnValueChanged.IsBound())
-	{
-		MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnMouseSensitivityValueChanged);
-	}
-	if (AimSensitivitySlider && !AimSensitivitySlider->OnValueChanged.IsBound())
-	{
-		AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
-	}
-	UGameInstance* GameInstance = GetGameInstance();
-	if (GameInstance)
-	{
-		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-		if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
-		{
-			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
-		}
-	}
-
+    UGameInstance* GameInstance = GetGameInstance();
+    if (GameInstance)
+    {
+        MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+        if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
+        {
+            MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
+        }
+    }
 }
 
 void UMenuInGame::MenuTeardown()
@@ -148,6 +163,7 @@ void UMenuInGame::MenuTeardown()
 	ShowSettingPanel(ESlateVisibility::Hidden);
 	ShowContactMePanel(ESlateVisibility::Hidden);
 	ShowCreditsPanel(ESlateVisibility::Hidden);
+	ShowGraphicSettingPanel(ESlateVisibility::Hidden);
 
 	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
 	{
@@ -280,6 +296,59 @@ void UMenuInGame::SettingButtonClicked()
 	
 }
 
+void UMenuInGame::GraphicSettingButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowGraphicSettingPanel(ESlateVisibility::Visible);
+	//Get current Material Quality
+	if (QualityComboBox)
+	{
+		int32 CurrentQuality = UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.GetSingleQualityLevel();
+		QualityComboBox->SetSelectedIndex(CurrentQuality);
+	}
+	//Set Display Mode ComboBox
+	if (DisplayModeComboBox)
+	{
+		EWindowMode::Type CurrentDisplayMode = UGameUserSettings::GetGameUserSettings()->GetFullscreenMode();
+		switch (CurrentDisplayMode)
+		{
+			case EWindowMode::Fullscreen:
+			DisplayModeComboBox->SetSelectedIndex(0);
+			break;
+			case EWindowMode::WindowedFullscreen:
+				DisplayModeComboBox->SetSelectedIndex(1);
+				break;
+			case EWindowMode::Windowed:
+				DisplayModeComboBox->SetSelectedIndex(2);
+			break;
+
+		}
+	}
+	//Set Display Resolution
+	UpdateDisplayResolutionComboBox();
+
+
+}
+
+void UMenuInGame::UpdateDisplayResolutionComboBox()
+{
+	if (DisplayResolutionComboBox)
+	{
+		FIntPoint CurrentDisplayResolution = UGameUserSettings::GetGameUserSettings()->GetScreenResolution();
+		FString CurrentDisplayResolutionString = FString::Printf(TEXT("%d x %d"), CurrentDisplayResolution.X, CurrentDisplayResolution.Y);
+		TArray<FIntPoint> Resolutions;
+		UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
+		DisplayResolutionComboBox->ClearOptions();
+		for (auto It = Resolutions.rbegin(); It != Resolutions.rend(); ++It)
+		{
+			FIntPoint Resolution = *It;
+			FString ResolutionString = FString::Printf(TEXT("%d x %d"), Resolution.X, Resolution.Y);
+			DisplayResolutionComboBox->AddOption(ResolutionString);
+		}
+		DisplayResolutionComboBox->SetSelectedOption(CurrentDisplayResolutionString);
+	}
+}
+
 void UMenuInGame::ResetDefaultButtonClicked()
 {
 	int32 index = 0;
@@ -391,6 +460,80 @@ void UMenuInGame::OnAimSensitivityValueChanged(float Value)
 	}
 }
 
+void UMenuInGame::OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	int32 Quality = 0;
+	if (Value == "Low")
+	{
+		Quality = 0;
+	}
+	else if (Value == "Medium")
+	{
+		Quality = 1;
+	}
+	else if (Value == "High")
+	{
+		Quality = 2;
+	}
+	else if (Value == "Epic")
+	{
+		Quality = 3;
+	}
+	//Set all quality to the same value
+	UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
+	UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+
+}
+
+void UMenuInGame::OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	//Get game user settings
+	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+	if (GameUserSettings)
+	{
+		EWindowMode::Type DisplayMode;
+		if (Value == "Fullscreen")
+		{
+			DisplayMode = EWindowMode::Fullscreen;
+			GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution());
+			DisplayResolutionComboBox->SetIsEnabled(true);
+
+		}
+		else if (Value == "Windowed Fullscreen")
+		{
+			DisplayMode = EWindowMode::WindowedFullscreen;
+			//Block to change the resolution DisplayResolutionComboBox
+			DisplayResolutionComboBox->SetIsEnabled(false);
+		}
+		else if (Value == "Windowed")
+		{
+			DisplayMode = EWindowMode::Windowed;
+			GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution() / 2);
+			DisplayResolutionComboBox->SetIsEnabled(true);
+		}
+		GameUserSettings->SetFullscreenMode(DisplayMode);
+		GameUserSettings->ApplyResolutionSettings(false);
+		UpdateDisplayResolutionComboBox();
+	}
+}
+
+void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	//Get game user settings
+	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+	if (GameUserSettings)
+	{
+		FString XString;
+		FString YString;
+		Value.Split(" x ", &XString, &YString);
+		int32 X = FCString::Atoi(*XString);
+		int32 Y = FCString::Atoi(*YString);
+		FIntPoint Resolution = FIntPoint(X, Y);
+		GameUserSettings->SetScreenResolution(Resolution);
+		GameUserSettings->ApplyResolutionSettings(false);
+	}
+}
+
 void UMenuInGame::ClearSettingBox()
 {
 	if (SettingBox)
@@ -436,6 +579,14 @@ void UMenuInGame::ShowCreditsPanel(ESlateVisibility bShow)
 		CreditsPanel->SetVisibility(bShow);
 	}
 
+}
+
+void UMenuInGame::ShowGraphicSettingPanel(ESlateVisibility bShow)
+{
+	if (GraphicSettingPanel)
+	{
+		GraphicSettingPanel->SetVisibility(bShow);
+	}
 }
 
 

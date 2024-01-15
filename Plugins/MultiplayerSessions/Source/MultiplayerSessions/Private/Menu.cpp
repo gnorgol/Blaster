@@ -6,6 +6,7 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "GameFramework/GameUserSettings.h"
 
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath, FString Map)
 {
@@ -55,6 +56,39 @@ bool UMenu::Initialize()
 	if (JoinButton)
 	{
 		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
+	}
+	UGameUserSettings* Settings = UGameUserSettings::GetGameUserSettings();
+	if (Settings)
+	{
+		Settings->RunHardwareBenchmark();
+		float CPUBenchmark = Settings->GetLastCPUBenchmarkResult();
+		float GPUBenchmark = Settings->GetLastGPUBenchmarkResult();
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CPUBenchmark : %f"), CPUBenchmark));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("GPUBenchmark : %f"), GPUBenchmark));
+		// Déterminez le niveau de qualité en fonction des résultats du benchmark
+		int32 Quality;
+		if (CPUBenchmark > 250.0f && GPUBenchmark > 800.0f)
+		{
+			Quality = 3; // Epic
+		}
+		else if (CPUBenchmark > 100.0f && GPUBenchmark > 290.0f)
+		{
+			Quality = 2; // High
+		}
+		else if (CPUBenchmark > 50.0f && GPUBenchmark > 150.0f)
+		{
+			Quality = 1; // Medium
+		}
+		else
+		{
+			Quality = 0; // Low
+		}
+
+		// Appliquez le niveau de qualité
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Quality : %d"), Quality));
+		Settings->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
+		Settings->ApplySettings(false);
+		
 	}
 
 	return true;
