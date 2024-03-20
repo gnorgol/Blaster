@@ -13,6 +13,7 @@
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
 #include <Components/ComboBoxString.h>
+#include "Components/ScaleBox.h"
 #include <Components/Slider.h>
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
@@ -26,6 +27,8 @@
 #include "GameFramework/GameUserSettings.h"
 #include <Engine/GameEngine.h>
 #include "Kismet/KismetSystemLibrary.h"
+#include "GenericPlatform/GenericApplication.h"
+#include <SetupAPI.h>
 
 
 
@@ -95,6 +98,10 @@ void UMenuInGame::MenuSetup()
 	if (DisplayResolutionComboBox && !DisplayResolutionComboBox->OnSelectionChanged.IsBound())
 	{
 		DisplayResolutionComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayResolutionComboBoxValueChanged);
+	}
+	if (DisplayMonitorComboBox && !DisplayMonitorComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayMonitorComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayMonitorComboBoxValueChanged);
 	}
 
     UGameInstance* GameInstance = GetGameInstance();
@@ -310,22 +317,143 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	if (DisplayModeComboBox)
 	{
 		EWindowMode::Type CurrentDisplayMode = UGameUserSettings::GetGameUserSettings()->GetFullscreenMode();
+		FString DisplayModeString;
 		switch (CurrentDisplayMode)
 		{
-			case EWindowMode::Fullscreen:
-			DisplayModeComboBox->SetSelectedIndex(0);
+		//case EWindowMode::Fullscreen:
+		//	DisplayModeString = TEXT("Fullscreen");
+		//	break;
+		case EWindowMode::WindowedFullscreen:
+			DisplayModeString = TEXT("Windowed Fullscreen");
+			DisplayResolutionComboBox->SetIsEnabled(false);
 			break;
+		case EWindowMode::Windowed:
+			DisplayModeString = TEXT("Windowed");
+			DisplayResolutionComboBox->SetIsEnabled(true);
+			break;
+		default:
+			DisplayModeString = TEXT("Unknown");
+			break;
+		}
+
+		// Affichage du mode d'affichage actuel
+		switch (CurrentDisplayMode)
+		{
+			//case EWindowMode::Fullscreen:
+			//DisplayModeComboBox->SetSelectedIndex(0);
+			//break;
 			case EWindowMode::WindowedFullscreen:
-				DisplayModeComboBox->SetSelectedIndex(1);
+				DisplayModeComboBox->SetSelectedIndex(0);
 				break;
 			case EWindowMode::Windowed:
-				DisplayModeComboBox->SetSelectedIndex(2);
+				DisplayModeComboBox->SetSelectedIndex(1);
 			break;
 
 		}
 	}
 	//Set Display Resolution
 	UpdateDisplayResolutionComboBox();
+	int32 i = 0;
+	//Set Display Monitor
+	if (DisplayMonitorComboBox)
+	{
+		
+		//Get Display Monitor available
+		TArray<FString> MonitorNames;
+		FDisplayMetrics DisplayMetrics;
+		FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+		DisplayMonitorComboBox->ClearOptions();
+		//FVector2D WindowPosition = FSlateApplication::Get().GetActiveTopLevelWindow()->GetPositionInScreen();
+		FVector2D WindowPosition = GEngine->GameViewport->GetWindow()->GetPositionInScreen();
+		for (const FMonitorInfo& MonitorInfo : DisplayMetrics.MonitorInfo)
+		{
+			i++;
+			DisplayMonitorComboBox->AddOption(MonitorInfo.Name);
+			/*if (MonitorInfo.bIsPrimary)
+			{
+				DisplayMonitorComboBox->SetSelectedOption(MonitorInfo.Name);
+			}*/
+			
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Position: %f x %f"), WindowPosition.X, WindowPosition.Y));
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("I = %d"), i));
+			//FVector2D WindowSize = GEngine->GameViewport->GetWindow()->GetClientSizeInScreen();
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Size: %f x %f"), WindowSize.X, WindowSize.Y));
+			
+			bool isWindowOnMonitor = IsWindowOnMonitor(WindowPosition, MonitorInfo);			
+			if (IsWindowOnMonitor(WindowPosition, MonitorInfo))
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("%d Monitor Name: %s"), i, *MonitorInfo.Name));
+				DisplayMonitorComboBox->SetSelectedOption(MonitorInfo.Name);
+			}
+		}
+		//Get real name of the monitor
+		//GUID MonitorClassGuid = { 0x4d36e96e, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18} };
+		//HDEVINFO hDevInfo = SetupDiGetClassDevs(&MonitorClassGuid, NULL, NULL, DIGCF_PRESENT);
+		////int32 MonitorCount = -1;
+		//if (hDevInfo != INVALID_HANDLE_VALUE)
+		//{
+		//	
+		//	SP_DEVINFO_DATA DeviceInfoData;
+		//	DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+		//	for (DWORD i = 0;SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData); i++)
+		//	{
+		//		//MonitorCount++;
+		//		DWORD DataT;
+		//		LPTSTR buffer = NULL;
+		//		DWORD buffersize = 0;
+
+		//		while (!SetupDiGetDeviceRegistryProperty(
+		//			hDevInfo,
+		//			&DeviceInfoData,
+		//			SPDRP_FRIENDLYNAME,
+		//			&DataT,
+		//			(PBYTE)buffer,
+		//			buffersize,
+		//			&buffersize))
+		//		{
+		//			if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		//			{
+		//				if (buffer) LocalFree(buffer);
+		//				buffer = (LPTSTR)LocalAlloc(LPTR, buffersize * 2);
+		//			}
+		//			else
+		//			{
+		//				break;
+		//			}
+		//		}
+		//		if (buffer)
+		//		{
+		//			FRegexPattern Pattern(TEXT("\\((.*)\\)"));
+		//			FRegexMatcher Matcher(Pattern, buffer);
+		//			if (Matcher.FindNext())
+		//			{
+		//				FString MonitorName = Matcher.GetCaptureGroup(1);
+		//				DisplayMonitorComboBox->AddOption(MonitorName);
+		//				UE_LOG(LogTemp, Warning, TEXT("Monitor Name: %s"), *MonitorName);
+		//			}
+		//			else
+		//			{
+		//				DisplayMonitorComboBox->AddOption(buffer);
+		//			}
+		//			//DisplayList.Add(DisplayMetrics.MonitorInfo[MonitorCount].Name);
+		//			//DisplayMonitorComboBox->AddOption(buffer);
+
+		//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Green, FString::Printf(TEXT("Monitor Name: %s"), *FString(buffer)));
+		//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *DisplayMetrics.MonitorInfo[i].Name));
+		//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("i = %d"), MonitorCount));
+		//			if (DisplayMetrics.MonitorInfo[i].bIsPrimary)
+		//			{
+		//				UE_LOG(LogTemp, Warning, TEXT("Primary Monitor Name: %s"), *DisplayMetrics.MonitorInfo[i].Name);
+		//				DisplayMonitorComboBox->SetSelectedIndex(i);
+		//			}
+		//			LocalFree(buffer);
+		//		}
+		//	}
+		//	SetupDiDestroyDeviceInfoList(hDevInfo);
+
+		//}
+	}
+	
 
 
 }
@@ -462,75 +590,237 @@ void UMenuInGame::OnAimSensitivityValueChanged(float Value)
 
 void UMenuInGame::OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	int32 Quality = 0;
-	if (Value == "Low")
+	if (SelectionType == ESelectInfo::OnMouseClick)
 	{
-		Quality = 0;
+		int32 Quality = 0;
+		if (Value == "Low")
+		{
+			Quality = 0;
+		}
+		else if (Value == "Medium")
+		{
+			Quality = 1;
+		}
+		else if (Value == "High")
+		{
+			Quality = 2;
+		}
+		else if (Value == "Epic")
+		{
+			Quality = 3;
+		}
+		//Set all quality to the same value
+		UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}
-	else if (Value == "Medium")
-	{
-		Quality = 1;
-	}
-	else if (Value == "High")
-	{
-		Quality = 2;
-	}
-	else if (Value == "Epic")
-	{
-		Quality = 3;
-	}
-	//Set all quality to the same value
-	UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
-	UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 
 }
 
 void UMenuInGame::OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	//Get game user settings
-	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
-	if (GameUserSettings)
+	if (SelectionType == ESelectInfo::OnMouseClick)
 	{
-		EWindowMode::Type DisplayMode;
-		if (Value == "Fullscreen")
+		//Get game user settings
+		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+		if (GameUserSettings)
 		{
-			DisplayMode = EWindowMode::Fullscreen;
-			GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution());
-			DisplayResolutionComboBox->SetIsEnabled(true);
+			EWindowMode::Type DisplayMode;
+			//if (Value == "Fullscreen")
+			//{
+			//	DisplayMode = EWindowMode::Fullscreen;
+			//	//GameUserSettings->SetFullscreenMode(DisplayMode);
+			//	//Get resolution of the screen
+			//	FDisplayMetrics DisplayMetrics;
+			//	FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+			//	//set the resolution to the screen resolution
+			//	//FIntPoint Resolution = FIntPoint(DisplayMetrics.PrimaryDisplayWidth, DisplayMetrics.PrimaryDisplayHeight);
+			//	////GameUserSettings->SetScreenResolution(Resolution);
+			//	//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//	//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Resolution: %d x %d"), Resolution.X, Resolution.Y));
 
+			//	//Get screen where the window is
+			//	FVector2D WindowPosition = FSlateApplication::Get().GetActiveTopLevelWindow()->GetPositionInScreen();
+			//	for (const FMonitorInfo& MonitorInfo : DisplayMetrics.MonitorInfo)
+			//	{
+			//		if (IsWindowOnMonitor(WindowPosition, MonitorInfo))
+			//		{
+			//			FString MonitorName = MonitorInfo.Name;
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *MonitorName));
+			//			//set the resolution to the screen resolution
+			//			FIntPoint Resolution = FIntPoint(MonitorInfo.NativeWidth, MonitorInfo.NativeHeight);
+
+			//			//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//			//Monitor name
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *MonitorName));
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Resolution: %d x %d"), Resolution.X, Resolution.Y));
+			//			GameUserSettings->SetScreenResolution(Resolution);
+			//			//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//			
+
+			//			//Change viewport size to the new resolution
+
+
+
+			//			//SetDrawSize(HUDSize);
+			//			
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("New Resolution Size: %d x %d"), Resolution.X, Resolution.Y));
+			//			//FVector2D HUDSize = GEngine->GameViewport->Viewport->GetSizeXY();
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("HUD Size: %f x %f"), HUDSize.X, HUDSize.Y));
+
+			//			//resize the scalebox to the new resolution
+			//			//ScaleBox->SetUserSpecifiedScale(Resolution.X / 1920.f);
+			//			//scale box size
+			//			FVector2D ScaleBoxSize = ScaleBox->GetDesiredSize();
+			//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Scale Box Size: %f x %f"), ScaleBoxSize.X, ScaleBoxSize.Y));
+			//			//GetWorld()->GetGameViewport()->HandleToggleFullscreenCommand();
+			//			GameUserSettings->SetFullscreenMode(DisplayMode);
+			//			GameUserSettings->ApplySettings(false);
+			//			GameUserSettings->ApplyResolutionSettings(false);
+
+
+			//			break;
+			//		}
+			//	}
+
+
+
+			//	DisplayResolutionComboBox->SetIsEnabled(true);
+
+			//}
+			if (Value == "Windowed Fullscreen")
+			{
+				DisplayMode = EWindowMode::WindowedFullscreen;
+
+				//Block to change the resolution DisplayResolutionComboBox
+				DisplayResolutionComboBox->SetIsEnabled(false);
+				GameUserSettings->SetFullscreenMode(DisplayMode);
+				GameUserSettings->ApplyResolutionSettings(false);
+				GameUserSettings->ApplySettings(false);
+			}
+			else if (Value == "Windowed")
+			{
+				DisplayMode = EWindowMode::Windowed;
+				GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution() / 2);
+				DisplayResolutionComboBox->SetIsEnabled(true);
+				GameUserSettings->SetFullscreenMode(DisplayMode);
+				GameUserSettings->ApplyResolutionSettings(false);
+				GameUserSettings->ApplySettings(false);
+			}
+
+			UpdateDisplayResolutionComboBox();
 		}
-		else if (Value == "Windowed Fullscreen")
-		{
-			DisplayMode = EWindowMode::WindowedFullscreen;
-			//Block to change the resolution DisplayResolutionComboBox
-			DisplayResolutionComboBox->SetIsEnabled(false);
-		}
-		else if (Value == "Windowed")
-		{
-			DisplayMode = EWindowMode::Windowed;
-			GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution() / 2);
-			DisplayResolutionComboBox->SetIsEnabled(true);
-		}
-		GameUserSettings->SetFullscreenMode(DisplayMode);
-		GameUserSettings->ApplyResolutionSettings(false);
-		UpdateDisplayResolutionComboBox();
 	}
 }
+bool UMenuInGame::IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo MonitorInfo)
+{
+	// Assurez-vous que le point est à l'intérieur de la zone de travail du moniteur, inclusivement
+	return WindowPosition.X >= MonitorInfo.WorkArea.Left && WindowPosition.X < MonitorInfo.WorkArea.Right &&
+		WindowPosition.Y >= MonitorInfo.WorkArea.Top && WindowPosition.Y < MonitorInfo.WorkArea.Bottom;
+}
+
+
 
 void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	//Get game user settings
-	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
-	if (GameUserSettings)
+	if (SelectionType == ESelectInfo::OnMouseClick)
 	{
-		FString XString;
-		FString YString;
-		Value.Split(" x ", &XString, &YString);
-		int32 X = FCString::Atoi(*XString);
-		int32 Y = FCString::Atoi(*YString);
-		FIntPoint Resolution = FIntPoint(X, Y);
-		GameUserSettings->SetScreenResolution(Resolution);
-		GameUserSettings->ApplyResolutionSettings(false);
+		//Get game user settings
+		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+		if (GameUserSettings)
+		{
+			FString XString;
+			FString YString;
+			Value.Split(" x ", &XString, &YString);
+			int32 X = FCString::Atoi(*XString);
+			int32 Y = FCString::Atoi(*YString);
+			FIntPoint Resolution = FIntPoint(X, Y);
+			GameUserSettings->SetScreenResolution(Resolution);
+			GameUserSettings->ApplyResolutionSettings(false);
+		}
+	}
+}
+
+void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	if (SelectionType == ESelectInfo::OnMouseClick)
+	{
+		FDisplayMetrics DisplayMetrics;
+		FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+
+		// Check if the monitor index is within the valid range
+		if (DisplayMetrics.MonitorInfo.IsValidIndex(0))
+		{
+			// Get the monitor index
+			int32 MonitorIndex = 0;
+			for (int32 Index = 0; Index < DisplayMetrics.MonitorInfo.Num(); Index++)
+			{
+			   if (DisplayMetrics.MonitorInfo[Index].Name == Value)
+			   {
+				   MonitorIndex = Index;
+					break;
+			   }
+			}
+
+			// Get the window position
+			FVector2D WindowPosition = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Left, DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Top);
+
+			// Move the window to the monitor
+			GEngine->GameViewport->GetWindow()->MoveWindowTo(WindowPosition);
+			// Set to the current Display Mode
+			EWindowMode::Type DisplayMode;
+
+			//Switch DisplayModeComboBox
+			switch (DisplayModeComboBox->GetSelectedIndex())
+			{
+			case 0:
+			{
+				DisplayMode = EWindowMode::WindowedFullscreen;
+				UGameUserSettings* UserSettings = GEngine->GetGameUserSettings();
+				if (UserSettings)
+				{
+					// Définir la résolution souhaitée et le mode plein écran fenêtré
+					//UserSettings->SetScreenResolution(FIntPoint(1707, 1067));
+					UserSettings->SetFullscreenMode(EWindowMode::Windowed);
+
+					// Appliquer les changements
+					UserSettings->ApplySettings(false);
+
+					UserSettings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
+
+					// Appliquer les changements
+					UserSettings->ApplySettings(false);
+				}
+				break;
+			}
+			case 1:
+				DisplayMode = EWindowMode::Windowed;
+				break;
+			}
+
+		// Get the window size
+	   // FVector2D WindowSize = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Right - DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Left, DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Bottom - DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Top);
+	
+
+
+		FVector2D WindowSize = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].NativeWidth, DisplayMetrics.MonitorInfo[MonitorIndex].NativeHeight);
+		// Resize the window
+		//GEngine->GameViewport->GetWindow()->Resize(WindowSize);
+
+		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Size: %f x %f"), WindowSize.X, WindowSize.Y));
+
+		//UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(DisplayMode);
+
+
+		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Display Mode: %d"), DisplayMode));
+
+
+		//// Apply the settings
+		//UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
+		//UGameUserSettings::GetGameUserSettings()->ApplyResolutionSettings(false);
+
+		UpdateDisplayResolutionComboBox();
+
+		}
 	}
 }
 
@@ -548,8 +838,7 @@ void UMenuInGame::ShowMenuPanel(ESlateVisibility bShow)
 	if (MenuPanel)
 	{
 		MenuPanel->SetVisibility(bShow);
-	}
-	
+	}	
 }
 
 void UMenuInGame::ShowSettingPanel(ESlateVisibility bShow)

@@ -160,9 +160,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.NumPublicConnections - Result.Session.NumOpenPublicConnections;
 		//int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("NumPlayers: %d"), SettingsValueNumPlayersInt));
-		int32 test = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("TEST : %d"), test));
 		//Get MultiplayerSessionsSubsystem from the Result
 		//UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = Result.Session.SessionSettings.Get(FName("MultiplayerSessionsSubsystem"), MultiplayerSessionsSubsystem);
 

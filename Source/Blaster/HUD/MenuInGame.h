@@ -22,12 +22,14 @@ class ABlasterCharacter;
 class ASlider;
 class UTextBlock;
 class UComboBoxString;
+
 UCLASS()
 class BLASTER_API UMenuInGame : public UUserWidget
 {
 	GENERATED_BODY()
 friend class UKeyMappingButton;
 public:
+
 	void MenuSetup();
 	void MenuTeardown();
 
@@ -38,6 +40,7 @@ protected:
 		void OnDestroySession(bool bWasSuccessful);
 	UFUNCTION()
 		void OnPlayerLeftGame();
+
 
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -64,6 +67,7 @@ private:
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* ValueAimSensitivityText;
 
+
 	UFUNCTION()
 		void ReturnButtonClicked();
 	UFUNCTION()
@@ -88,6 +92,8 @@ private:
 		void OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
 	void OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+		void OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 
 	UPROPERTY()
 		UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
@@ -113,6 +119,8 @@ private:
 		UComboBoxString* DisplayModeComboBox;
 	UPROPERTY(meta = (BindWidget))
 		UComboBoxString* DisplayResolutionComboBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* DisplayMonitorComboBox;
 
 
 
@@ -135,5 +143,9 @@ private:
 	UPROPERTY()
 		ABlasterCharacter* BlasterCharacter;
 
+	UPROPERTY()
+	TArray<FString> DisplayList;
+
+	bool IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo MonitorInfo);
 
 };
