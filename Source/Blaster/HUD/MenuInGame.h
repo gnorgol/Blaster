@@ -6,7 +6,11 @@
 #include "Blueprint/UserWidget.h"
 #include <Components/CanvasPanel.h>
 #include <Components/Slider.h>
+#include "UpscaleMode.h"
+#include "DLSSLibrary.h"
+#include "NISLibrary.h"
 #include "MenuInGame.generated.h"
+
 
 
 /**
@@ -16,12 +20,14 @@ class UMultiplayerSessionsSubsystem;
 class APlayerController;
 class UCanvasPanel;
 class UVerticalBox;
+class UHorizontalBox;
 class UButton;
 class UInputMappingContext;
 class ABlasterCharacter;
 class ASlider;
 class UTextBlock;
 class UComboBoxString;
+
 
 UCLASS()
 class BLASTER_API UMenuInGame : public UUserWidget
@@ -43,6 +49,8 @@ protected:
 
 
 private:
+
+	EUpscaleMode CurrentUpscaleMode;
 	UPROPERTY(meta = (BindWidget))
 		 UButton* ReturnMainMenuButton;
 	UPROPERTY(meta = (BindWidget))
@@ -94,6 +102,11 @@ private:
 	void OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
 		void OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+
 
 	UPROPERTY()
 		UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
@@ -121,6 +134,13 @@ private:
 		UComboBoxString* DisplayResolutionComboBox;
 	UPROPERTY(meta = (BindWidget))
 		UComboBoxString* DisplayMonitorComboBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* UpscalingModeComboBox;
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* DLSSModeComboBox;
+
+	UPROPERTY(meta = (BindWidget))
+		UHorizontalBox* DLSSModeBox;
 
 
 
@@ -147,5 +167,13 @@ private:
 	TArray<FString> DisplayList;
 
 	bool IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo MonitorInfo);
+
+	void SetUpscaleDefault();
+	void SetUpscaleDLSS();
+	void SetUpscaleNIS();
+
+	void SetDLSSMode(UDLSSMode DLSSMode);
+
+	void ShowDLSSModeBox(bool bShow);
 
 };

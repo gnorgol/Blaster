@@ -21,7 +21,6 @@
 #include "Components/Image.h"
 #include "GameFramework/PlayerState.h"
 #include "Blaster/HUD/MenuInGame.h"
-#include "EnhancedInputComponent.h"
 #include "Blaster/BlasterTypes/Annoucement.h"
 #include "Components/Border.h"
 #include <Blaster/HUD/ChatBox.h>
@@ -30,6 +29,9 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include <Blueprint/WidgetLayoutLibrary.h>
+#include "DLSSLibrary.h"
+
+
 
 
 
@@ -74,6 +76,8 @@ void ABlasterPlayerController::BeginPlay()
 			ChatWidget->SetVisibility(ESlateVisibility::Hidden);			
 		}
 	}
+
+	
 }
 
 void ABlasterPlayerController::SetHUDMatchTime()
@@ -346,7 +350,12 @@ void ABlasterPlayerController::Tick(float DeltaTimes)
 	SetHUDMatchTime();
 	CheckTimeSync(DeltaTimes);
 	PollInit();
-	CheckPing(DeltaTimes);	
+	CheckPing(DeltaTimes);
+
+	//Debug GetDLSSMode
+	UDLSSMode DLSSMode = UDLSSLibrary::GetDLSSMode();
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, FString::Printf(TEXT("DLSS Mode: %d"), DLSSMode));
+
 }
 void ABlasterPlayerController::CheckPing(float DeltaTime)
 {

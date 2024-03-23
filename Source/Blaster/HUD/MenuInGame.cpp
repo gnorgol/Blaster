@@ -12,6 +12,7 @@
 #include "Components/InputKeySelector.h"
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
+#include <Components/HorizontalBox.h>
 #include <Components/ComboBoxString.h>
 #include "Components/ScaleBox.h"
 #include <Components/Slider.h>
@@ -29,8 +30,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GenericPlatform/GenericApplication.h"
 #include <SetupAPI.h>
-
-
+#include "UpscaleMode.h"
+#include "DLSSLibrary.h"
+#include "NISLibrary.h"
+#include "SaveGraphicsSetting.h"
 
 void UMenuInGame::MenuSetup()
 {
@@ -102,6 +105,15 @@ void UMenuInGame::MenuSetup()
 	if (DisplayMonitorComboBox && !DisplayMonitorComboBox->OnSelectionChanged.IsBound())
 	{
 		DisplayMonitorComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayMonitorComboBoxValueChanged);
+	}
+	if (UpscalingModeComboBox && !UpscalingModeComboBox->OnSelectionChanged.IsBound())
+	{
+		UpscalingModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnUpscalingModeComboBoxValueChanged);
+
+	}
+	if (DLSSModeComboBox && !DLSSModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DLSSModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDLSSModeComboBoxValueChanged);
 	}
 
     UGameInstance* GameInstance = GetGameInstance();
@@ -453,7 +465,65 @@ void UMenuInGame::GraphicSettingButtonClicked()
 
 		//}
 	}
-	
+	//Set Upscaling Mode
+	if (UpscalingModeComboBox)
+	{
+		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
+		if (!EnumPtr) return;
+		
+		if (UpscalingModeComboBox->GetOptionCount() == 0)
+		{
+			for (int32 y = 0; y < EnumPtr->NumEnums() - 2; ++y) // -2 to skip _MAX
+			{
+				FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
+				UpscalingModeComboBox->AddOption(DisplayName);
+			}
+		}
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+		if (SaveGameInstance)
+		{
+			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
+			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+		}
+		else
+		{
+			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
+			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+		}
+
+
+	}
+	//Set DLSS Mode
+	if (DLSSModeComboBox)
+	{
+
+			TArray<UDLSSMode> DLSSModes = UDLSSLibrary::GetSupportedDLSSModes();
+			UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
+			UDLSSMode CurrentDLSSMode = UDLSSLibrary::GetDLSSMode();
+
+			DLSSModeComboBox->ClearOptions();
+			for (UDLSSMode DLSSMode : DLSSModes)
+			{
+				if (EnumPtr)
+				{
+					FString DLSSModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(DLSSMode)).ToString();
+					DLSSModeComboBox->AddOption(DLSSModeName);
+
+					if (DLSSMode == CurrentDLSSMode)
+					{
+						DLSSModeComboBox->SetSelectedOption(DLSSModeName);
+					}
+				}
+			}
+		if (CurrentUpscaleMode != EUpscaleMode::EUM_DLSS)
+		{
+			//Disable DLSS ComboBox
+			DLSSModeComboBox->SetIsEnabled(false);
+		}
+		
+	}	
 
 
 }
@@ -718,6 +788,108 @@ bool UMenuInGame::IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo Monit
 		WindowPosition.Y >= MonitorInfo.WorkArea.Top && WindowPosition.Y < MonitorInfo.WorkArea.Bottom;
 }
 
+void UMenuInGame::SetUpscaleDefault()
+{
+	//Set dlss mode to off
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(false);
+	}
+	SetDLSSMode(UDLSSMode::Off);
+	UNISLibrary::SetNISMode(UNISMode::Off);
+	UNISLibrary::SetNISSharpness(0.0f);
+	//execute console command r.ScreenPercentage = 100
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
+	}
+	//TO DO: Set UI state
+}
+
+void UMenuInGame::SetUpscaleDLSS()
+{
+	//Set dlss mode to auto
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(true);
+	}
+	//Cuurent DLSS Mode
+	FString CurrentDLSSModeString = DLSSModeComboBox->GetSelectedOption();
+	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
+	if (!EnumPtr) return;
+	UDLSSMode CurrentDLSSMode = static_cast<UDLSSMode>(EnumPtr->GetValueByNameString(CurrentDLSSModeString));
+	SetDLSSMode(CurrentDLSSMode);
+	
+	UNISLibrary::SetNISMode(UNISMode::Off);
+	UNISLibrary::SetNISSharpness(0.0f);
+
+	//Set Anti Aliasing to TSR r.AntiAliasingMethod 4
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.AntiAliasingMethod 4"));
+	}
+	
+	//TO DO: Set UI state
+}
+void UMenuInGame::SetUpscaleNIS()
+{
+	//Set dlss mode to offv
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(false);
+	}
+	SetDLSSMode(UDLSSMode::Off);
+	//TO DO Get current upscale mode NIS
+	
+
+	UNISLibrary::SetNISMode(UNISMode::Balanced);
+	UNISLibrary::SetNISSharpness(0.0f);
+	//execute console command r.ScreenPercentage = 100
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
+	}
+	//TO DO: Set UI state
+}
+
+
+
+void UMenuInGame::SetDLSSMode(UDLSSMode DLSSMode)
+{
+	bool isDLSSModeEnabled = DLSSMode != UDLSSMode::Off;
+	bool isDLSSModeSupported;
+	float OptimalScreenPercentage;
+	bool bIsFixedScreenPercentage;
+	float MinScreenPercentage;
+	float MaxScreenPercentage;
+	float OptimalSharpness;
+	FVector2D WindowSize = GEngine->GameViewport->GetWindow()->GetClientSizeInScreen();
+
+
+	UDLSSLibrary::EnableDLSS(isDLSSModeEnabled);
+	UDLSSLibrary::GetDLSSModeInformation(DLSSMode, WindowSize, isDLSSModeSupported , OptimalScreenPercentage, bIsFixedScreenPercentage, MinScreenPercentage, MaxScreenPercentage, OptimalSharpness);
+	
+	UDLSSLibrary::SetDLSSMode(this, DLSSMode);
+	//build string r.ScreenPercentage = optimalScreenPercentage
+	FString CommandeScreenPercentageString = FString::Printf(TEXT("r.ScreenPercentage = %f"), OptimalScreenPercentage);
+	//Execute console command
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), *CommandeScreenPercentageString);
+	}	
+
+
+}
+
+void UMenuInGame::ShowDLSSModeBox(bool bShow)
+{
+	if (DLSSModeBox)
+	{
+		DLSSModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	}
+}
+
+
 
 
 void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
@@ -785,10 +957,6 @@ void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInf
 					// Appliquer les changements
 					UserSettings->ApplySettings(false);
 
-					UserSettings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
-
-					// Appliquer les changements
-					UserSettings->ApplySettings(false);
 				}
 				break;
 			}
@@ -808,19 +976,84 @@ void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInf
 
 		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Size: %f x %f"), WindowSize.X, WindowSize.Y));
 
-		//UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(DisplayMode);
+		UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(DisplayMode);
 
 
 		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Display Mode: %d"), DisplayMode));
 
 
 		//// Apply the settings
-		//UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
-		//UGameUserSettings::GetGameUserSettings()->ApplyResolutionSettings(false);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
+		UGameUserSettings::GetGameUserSettings()->ApplyResolutionSettings(false);
 
 		UpdateDisplayResolutionComboBox();
 
 		}
+	}
+}
+
+void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	EUpscaleMode UpscaleMode;
+	//Find the enum value
+	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
+	if (!EnumPtr) return;
+
+	for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
+	{
+		FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
+		if (DisplayName == Value)
+		{
+			UpscaleMode = static_cast<EUpscaleMode>(y);
+			break;
+		}
+	}
+	switch (UpscaleMode)
+	{
+	case EUpscaleMode::EUM_Default:
+		SetUpscaleDefault();
+		ShowDLSSModeBox(false);
+		break;
+	case EUpscaleMode::EUM_DLSS:
+		SetUpscaleDLSS();
+		ShowDLSSModeBox(true);
+		break;
+	case EUpscaleMode::EUM_ImageScaling:
+		SetUpscaleNIS();
+		ShowDLSSModeBox(false);
+		break;
+	default:
+		break;
+	}
+	//Save the upscale mode
+
+	USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+	SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	
+}
+
+void UMenuInGame::OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	if (SelectionType == ESelectInfo::OnMouseClick)
+	{
+		//Get the DLSS Mode
+		UDLSSMode DLSSMode;
+		//Find the enum value
+		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
+		if (!EnumPtr) return;
+
+		for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
+		{
+			FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
+			//remove space in the string
+			if (DisplayName == Value)
+			{
+				DLSSMode = static_cast<UDLSSMode>(y);
+				break;
+			}
+		}
+		SetDLSSMode(DLSSMode);
 	}
 }
 
