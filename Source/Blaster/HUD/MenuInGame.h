@@ -75,6 +75,15 @@ private:
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* ValueAimSensitivityText;
 
+	UPROPERTY(meta = (BindWidget))
+	USlider* NISSharpnessSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ValueNISSharpnessText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* UpscalingModeWarningText;
+
 
 	UFUNCTION()
 		void ReturnButtonClicked();
@@ -106,6 +115,13 @@ private:
 	void OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
 	void OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void OnNISSharpnessSliderValueChanged(float Value);
+	//Event end NIS sharpness slider Mouse
+	UFUNCTION()
+	void OnNISSharpnessSliderMouseEnd();
 
 
 	UPROPERTY()
@@ -138,11 +154,14 @@ private:
 		UComboBoxString* UpscalingModeComboBox;
 	UPROPERTY(meta = (BindWidget))
 		UComboBoxString* DLSSModeComboBox;
-
+	UPROPERTY(meta = (BindWidget))
+		UComboBoxString* NISModeComboBox;
 	UPROPERTY(meta = (BindWidget))
 		UHorizontalBox* DLSSModeBox;
-
-
+	UPROPERTY(meta = (BindWidget))
+		UHorizontalBox* NISModeBox;
+	UPROPERTY(meta = (BindWidget))
+		UHorizontalBox* NISSharpnessBox;
 
 	void ClearSettingBox();
 
@@ -153,7 +172,7 @@ private:
 	UFUNCTION(BlueprintCallable)
 	void ShowContactMePanel(ESlateVisibility bShow);
 	UFUNCTION(BlueprintCallable)
-		void ShowCreditsPanel(ESlateVisibility bShow);
+	void ShowCreditsPanel(ESlateVisibility bShow);
 	UFUNCTION(BlueprintCallable)
 	void ShowGraphicSettingPanel(ESlateVisibility bShow);
 
@@ -175,5 +194,9 @@ private:
 	void SetDLSSMode(UDLSSMode DLSSMode);
 
 	void ShowDLSSModeBox(bool bShow);
+	void ShowNISModeBox(bool bShow);
+
+	void SetWarningText(FString WarningText);
+
 
 };

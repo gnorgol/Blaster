@@ -115,6 +115,18 @@ void UMenuInGame::MenuSetup()
 	{
 		DLSSModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDLSSModeComboBoxValueChanged);
 	}
+	if (NISModeComboBox && !NISModeComboBox->OnSelectionChanged.IsBound())
+	{
+		NISModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnNISModeComboBoxValueChanged);
+	}
+	if (NISSharpnessSlider && !NISSharpnessSlider->OnValueChanged.IsBound())
+	{
+		NISSharpnessSlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnNISSharpnessSliderValueChanged);
+	}
+	if (NISSharpnessSlider && !NISSharpnessSlider->OnMouseCaptureEnd.IsBound())
+	{
+		NISSharpnessSlider->OnMouseCaptureEnd.AddDynamic(this, &UMenuInGame::OnNISSharpnessSliderMouseEnd);
+	}
 
     UGameInstance* GameInstance = GetGameInstance();
     if (GameInstance)
@@ -469,6 +481,8 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	if (UpscalingModeComboBox)
 	{
 		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
+
+
 		if (!EnumPtr) return;
 		
 		if (UpscalingModeComboBox->GetOptionCount() == 0)
@@ -482,15 +496,18 @@ void UMenuInGame::GraphicSettingButtonClicked()
 		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
 		if (SaveGameInstance)
 		{
+
 			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
 			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
 			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
 		}
 		else
 		{
 			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
 			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
 			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Not Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
 		}
 
 
@@ -517,13 +534,51 @@ void UMenuInGame::GraphicSettingButtonClicked()
 					}
 				}
 			}
-		if (CurrentUpscaleMode != EUpscaleMode::EUM_DLSS)
-		{
-			//Disable DLSS ComboBox
-			DLSSModeComboBox->SetIsEnabled(false);
-		}
 		
-	}	
+	}
+
+	//Set NIS Mode
+	if (NISModeComboBox)
+	{
+		TArray<UNISMode> NISModes = UNISLibrary::GetSupportedNISModes();
+		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UNISMode"), true);
+		TArray<UNISMode> CurrentNISMode = UNISLibrary::GetSupportedNISModes();
+		NISModeComboBox->ClearOptions();
+		UNISMode DefaultNISMode = UNISLibrary::GetDefaultNISMode();
+
+		for (int32 Index = 0; Index < NISModes.Num() - 1; Index++) // -1 to remove the Custom mode
+		{
+			UNISMode NISMode = NISModes[Index];
+			if (EnumPtr)
+			{
+				FString NISModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(NISMode)).ToString();
+				NISModeComboBox->AddOption(NISModeName);
+				if (NISMode == DefaultNISMode)
+				{
+					NISModeComboBox->SetSelectedOption(NISModeName);
+				}
+			}
+		}
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+		if (SaveGameInstance && SaveGameInstance->CurrentNISMode != UNISMode::Custom)
+		{
+			UNISMode SaveNISMode = SaveGameInstance->CurrentNISMode;
+            FString SaveNISModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(SaveNISMode)).ToString();
+            NISModeComboBox->SetSelectedOption(SaveNISModeString);
+			float NISSharpness = SaveGameInstance->NISSharpness;
+			if (NISSharpnessSlider)
+			{
+				NISSharpnessSlider->SetValue(NISSharpness);
+			}
+			if (ValueNISSharpnessText)
+			{
+				ValueNISSharpnessText->SetText(FText::AsNumber(NISSharpness));
+			}
+
+		}
+
+
+	}
 
 
 }
@@ -803,7 +858,6 @@ void UMenuInGame::SetUpscaleDefault()
 	{
 		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
 	}
-	//TO DO: Set UI state
 }
 
 void UMenuInGame::SetUpscaleDLSS()
@@ -829,7 +883,7 @@ void UMenuInGame::SetUpscaleDLSS()
 		GEngine->Exec(GetWorld(), TEXT("r.AntiAliasingMethod 4"));
 	}
 	
-	//TO DO: Set UI state
+
 }
 void UMenuInGame::SetUpscaleNIS()
 {
@@ -849,7 +903,7 @@ void UMenuInGame::SetUpscaleNIS()
 	{
 		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
 	}
-	//TO DO: Set UI state
+
 }
 
 
@@ -885,9 +939,30 @@ void UMenuInGame::ShowDLSSModeBox(bool bShow)
 {
 	if (DLSSModeBox)
 	{
-		DLSSModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+		DLSSModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 }
+
+void UMenuInGame::ShowNISModeBox(bool bShow)
+{
+	if (NISModeBox)
+	{
+		NISModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+	if (NISSharpnessBox)
+	{
+		NISSharpnessBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+}
+
+void UMenuInGame::SetWarningText(FString WarningText)
+{
+	if (UpscalingModeWarningText)
+	{
+		UpscalingModeWarningText->SetText(FText::FromString(WarningText));
+	}
+}
+
 
 
 
@@ -1008,28 +1083,64 @@ void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo
 			break;
 		}
 	}
+	SetWarningText("");
 	switch (UpscaleMode)
 	{
 	case EUpscaleMode::EUM_Default:
 		SetUpscaleDefault();
 		ShowDLSSModeBox(false);
+		ShowNISModeBox(false);
 		break;
 	case EUpscaleMode::EUM_DLSS:
 		SetUpscaleDLSS();
-		ShowDLSSModeBox(true);
+		if (UDLSSLibrary::IsDLSSSupported())
+		{
+			ShowDLSSModeBox(true);
+		}
+		else
+		{
+			SetWarningText("DLSS is not supported on this hardware");
+		}
+		ShowNISModeBox(false);
 		break;
 	case EUpscaleMode::EUM_ImageScaling:
 		SetUpscaleNIS();
 		ShowDLSSModeBox(false);
+		if (UNISLibrary::IsNISSupported())
+		{
+			ShowNISModeBox(true);
+		}
+		else
+		{
+			SetWarningText("NIS is not supported on this hardware");
+		}
+		
 		break;
 	default:
 		break;
 	}
 	//Save the upscale mode
+	USaveGraphicsSetting* LoadGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+	
+	if (LoadGameInstance && LoadGameInstance->CurrentNISMode != UNISMode::Custom)
+	{
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
+		SaveGameInstance->CurrentNISMode = LoadGameInstance->CurrentNISMode;
+		SaveGameInstance->NISSharpness = LoadGameInstance->NISSharpness;
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	}
+	else
+	{
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	
+	}
 
-	USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
-	SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Upscale Mode save : %d"), static_cast<int32>(UpscaleMode)));
 	
 }
 
@@ -1056,6 +1167,79 @@ void UMenuInGame::OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Typ
 		SetDLSSMode(DLSSMode);
 	}
 }
+
+void UMenuInGame::OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	if(SelectionType == ESelectInfo::OnMouseClick)
+	{
+
+	
+	UNISMode NISMode;
+	//Find the enum value
+	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UNISMode"), true);
+
+	if (!EnumPtr) return;
+
+	for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
+	{
+		FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
+		if (DisplayName == Value)
+		{
+			NISMode = static_cast<UNISMode>(y);
+			break;
+		}
+	}
+	UNISLibrary::SetNISMode(NISMode);
+	float NISharpness = 0;
+	//Set NIS Sharpness
+	if (ValueNISSharpnessText)
+	{
+		NISharpness = ValueNISSharpnessText->GetText().ToString().IsNumeric() ? FCString::Atof(*ValueNISSharpnessText->GetText().ToString()) : 0.0f;
+	}
+	UNISLibrary::SetNISSharpness(NISharpness / 100);
+
+
+
+	//Save the NIS mode and sharpness
+
+	USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+	SaveGameInstance->CurrentUpscaleMode = EUpscaleMode::EUM_ImageScaling;
+	SaveGameInstance->CurrentNISMode = NISMode;
+	SaveGameInstance->NISSharpness = NISharpness;
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	}
+
+
+
+}
+
+void UMenuInGame::OnNISSharpnessSliderValueChanged(float Value)
+{
+		UNISLibrary::SetNISSharpness(Value/100);
+		//Change the sharpness value
+		if (ValueNISSharpnessText)
+		{
+			ValueNISSharpnessText->SetText(FText::AsNumber(Value));
+		}
+
+}
+
+void UMenuInGame::OnNISSharpnessSliderMouseEnd()
+{
+	if (NISSharpnessSlider)
+	{
+		float Value = NISSharpnessSlider->GetValue();
+
+		//Save the sharpness
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = EUpscaleMode::EUM_ImageScaling;
+		SaveGameInstance->CurrentNISMode = SaveGameInstance->CurrentNISMode;
+		SaveGameInstance->NISSharpness = Value;
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("NISSharpness Saved: %f"), Value));
+	}
+}
+
 
 void UMenuInGame::ClearSettingBox()
 {
