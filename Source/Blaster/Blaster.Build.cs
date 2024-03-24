@@ -8,7 +8,7 @@ public class Blaster : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput","Niagara", "MultiplayerSessions", "OnlineSubsystem", "OnlineSubsystemSteam", "Slate", "SlateCore", "ApplicationCore","DLSS", "DLSSBlueprint", "NISBlueprint" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput","Niagara", "MultiplayerSessions", "OnlineSubsystem", "OnlineSubsystemSteam", "Slate", "SlateCore", "ApplicationCore","DLSS", "DLSSBlueprint", "NISBlueprint", "StreamlineBlueprint" });
 
 
 

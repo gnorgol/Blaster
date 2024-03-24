@@ -33,6 +33,7 @@
 #include "UpscaleMode.h"
 #include "DLSSLibrary.h"
 #include "NISLibrary.h"
+#include "StreamlineLibraryDLSSG.h"
 #include "SaveGraphicsSetting.h"
 
 void UMenuInGame::MenuSetup()
@@ -126,6 +127,10 @@ void UMenuInGame::MenuSetup()
 	if (NISSharpnessSlider && !NISSharpnessSlider->OnMouseCaptureEnd.IsBound())
 	{
 		NISSharpnessSlider->OnMouseCaptureEnd.AddDynamic(this, &UMenuInGame::OnNISSharpnessSliderMouseEnd);
+	}
+	if (DLSSFGCheckBox && !DLSSFGCheckBox->OnCheckStateChanged.IsBound())
+	{
+		DLSSFGCheckBox->OnCheckStateChanged.AddDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
 	}
 
     UGameInstance* GameInstance = GetGameInstance();
@@ -577,7 +582,18 @@ void UMenuInGame::GraphicSettingButtonClicked()
 
 		}
 
+	}
+	//Set DLSS Frame Generation
+	if (NvidiaFrameGenerationBox && UStreamlineLibraryDLSSG::IsDLSSGSupported())
+	{
+		bool bDLSSGEnabled = UStreamlineLibraryDLSSG::GetDLSSGMode() == UStreamlineDLSSGMode::On;
+		DLSSFGCheckBox->SetIsChecked(bDLSSGEnabled);
+		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Visible);
 
+	}
+	else
+	{
+		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 
@@ -1240,6 +1256,12 @@ void UMenuInGame::OnNISSharpnessSliderMouseEnd()
 	}
 }
 
+
+void UMenuInGame::OnDLSSFGCheckBoxChanged(bool bIsChecked)
+{
+	UStreamlineDLSSGMode DLSSGMode = bIsChecked ? UStreamlineDLSSGMode::On : UStreamlineDLSSGMode::Off;
+	UStreamlineLibraryDLSSG::SetDLSSGMode(DLSSGMode);
+}
 
 void UMenuInGame::ClearSettingBox()
 {

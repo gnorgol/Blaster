@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include <Components/CanvasPanel.h>
 #include <Components/Slider.h>
+#include "Components/CheckBox.h"
 #include "UpscaleMode.h"
 #include "DLSSLibrary.h"
 #include "NISLibrary.h"
@@ -27,6 +28,7 @@ class ABlasterCharacter;
 class ASlider;
 class UTextBlock;
 class UComboBoxString;
+class UCheckBox;
 
 
 UCLASS()
@@ -74,6 +76,10 @@ private:
 		UTextBlock* ValueMouseSensitivityText;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* ValueAimSensitivityText;
+	UPROPERTY(meta = (BindWidget))
+		UCheckBox* DLSSFGCheckBox;
+		
+
 
 	UPROPERTY(meta = (BindWidget))
 	USlider* NISSharpnessSlider;
@@ -122,6 +128,8 @@ private:
 	//Event end NIS sharpness slider Mouse
 	UFUNCTION()
 	void OnNISSharpnessSliderMouseEnd();
+	UFUNCTION()
+	void OnDLSSFGCheckBoxChanged(bool bIsChecked);
 
 
 	UPROPERTY()
@@ -162,6 +170,8 @@ private:
 		UHorizontalBox* NISModeBox;
 	UPROPERTY(meta = (BindWidget))
 		UHorizontalBox* NISSharpnessBox;
+	UPROPERTY(meta = (BindWidget))
+	UHorizontalBox* NvidiaFrameGenerationBox;
 
 	void ClearSettingBox();
 
