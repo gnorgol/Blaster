@@ -2,16 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CommonActivatableWidget.h"
 #include "KeyMappingButton.generated.h"
 
 class UInputMappingContext;
 class USaveGame;
 UCLASS()
-class BLASTER_API UKeyMappingButton : public UUserWidget
+class BLASTER_API UKeyMappingButton : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		class UTextBlock* KeyLabelText;
 

@@ -17,8 +17,14 @@
 #include <GameFramework/InputSettings.h>
 
 
+void UKeyMappingButton::NativeConstruct()
+{
+	UCommonActivatableWidget::ActivateWidget();
+}
+
 void UKeyMappingButton::SetKey(FInputChord SelectedKey)
 {
+	
 	ABlasterCharacter *BlastCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
 
 	if (BlastCharacter)

@@ -142,6 +142,16 @@ void UMenuInGame::MenuSetup()
             MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
         }
     }
+	//Activate widget
+	UCommonActivatableWidget::ActivateWidget();
+
+    UCommonButtonBase* ExitButton = CreateWidget<UCommonButtonBase>(this, ExitButtonClass);
+    if (ExitButton)
+    {
+        ExitButton->AddToViewport();
+        ExitButton->SetIsEnabled(true);
+    }
+	
 }
 
 void UMenuInGame::MenuTeardown()
@@ -254,6 +264,7 @@ void UMenuInGame::OnPlayerLeftGame()
 	}
 }
 
+
 void UMenuInGame::ReturnButtonClicked()
 {
 	ReturnMainMenuButton->SetIsEnabled(false);
@@ -282,6 +293,7 @@ void UMenuInGame::ReturnButtonClicked()
 
 void UMenuInGame::SettingButtonClicked()
 {
+	
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowSettingPanel(ESlateVisibility::Visible);
 	int32 index = 0;
@@ -595,6 +607,10 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	{
 		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Graphic Setting Button Clicked")));
+
+	//Set focus on the quality combobox
+	QualityComboBox->SetUserFocus(GetOwningPlayer());
 
 
 }
@@ -687,12 +703,18 @@ void UMenuInGame::ContactMeButtonClicked()
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowContactMePanel(ESlateVisibility::Visible);
 
+	//Set focus on the contact me panel
+	LinkedinLogoButton->SetUserFocus(GetOwningPlayer());
+
 }
 
 void UMenuInGame::CreditsButtonClicked()
 {
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowCreditsPanel(ESlateVisibility::Visible);
+
+	//Set focus on the credits panel
+	DeadghostInteractiveEpicGamesLogoButton->SetUserFocus(GetOwningPlayer());
 }
 
 void UMenuInGame::OnMouseSensitivityValueChanged(float Value)

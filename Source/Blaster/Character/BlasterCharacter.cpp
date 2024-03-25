@@ -1350,7 +1350,7 @@ void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 	}
 	if (CombatComponent && IsWeaponEquipped())
 	{
-		if (Value.Get<float>() > 0.0f)
+		if (Value.Get<float>() > 0.5f)
 		{
 			CombatComponent->FireButtonPressed(true);
 		}

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CommonActivatableWidget.h"
+#include <CommonButtonBase.h>
 #include <Components/CanvasPanel.h>
 #include <Components/Slider.h>
 #include "Components/CheckBox.h"
@@ -11,6 +13,7 @@
 #include "DLSSLibrary.h"
 #include "NISLibrary.h"
 #include "MenuInGame.generated.h"
+
 
 
 
@@ -32,14 +35,33 @@ class UCheckBox;
 
 
 UCLASS()
-class BLASTER_API UMenuInGame : public UUserWidget
+class BLASTER_API UMenuInGame : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 friend class UKeyMappingButton;
 public:
-
 	void MenuSetup();
+	UFUNCTION(BlueprintCallable)
 	void MenuTeardown();
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (BindWidget))
+	UButton* SettingButton;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (BindWidget))
+	UButton* GraphicSettingButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UCanvasPanel* MenuPanel;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UCanvasPanel* SettingPanel;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UCanvasPanel* GraphicSettingPanel;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UCanvasPanel* ContactMePanel;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UCanvasPanel* CreditsPanel;
+
+
 
 protected:
 	virtual bool Initialize() override;
@@ -55,11 +77,9 @@ private:
 	EUpscaleMode CurrentUpscaleMode;
 	UPROPERTY(meta = (BindWidget))
 		 UButton* ReturnMainMenuButton;
-	UPROPERTY(meta = (BindWidget))
-		UButton* SettingButton;
 
-	UPROPERTY(meta = (BindWidget))
-		UButton* GraphicSettingButton;
+
+
 
 	UPROPERTY(meta = (BindWidget))
 		UButton* ContactMeButton;
@@ -138,16 +158,7 @@ private:
 	UPROPERTY()
 		APlayerController* PlayerController;
 
-	UPROPERTY(meta = (BindWidget))
-		UCanvasPanel* MenuPanel;
-	UPROPERTY(meta = (BindWidget))
-		UCanvasPanel* SettingPanel;
-	UPROPERTY(meta = (BindWidget))
-		UCanvasPanel* GraphicSettingPanel;
-	UPROPERTY(meta = (BindWidget))
-		UCanvasPanel* ContactMePanel;
-	UPROPERTY(meta = (BindWidget))
-			UCanvasPanel* CreditsPanel;
+
 	UPROPERTY(meta = (BindWidget))
 		UVerticalBox* SettingBox;
 	UPROPERTY(meta = (BindWidget))
@@ -172,6 +183,10 @@ private:
 		UHorizontalBox* NISSharpnessBox;
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* NvidiaFrameGenerationBox;
+	UPROPERTY(meta = (BindWidget))
+	UButton* LinkedinLogoButton;
+	UPROPERTY(meta = (BindWidget))
+	UButton* DeadghostInteractiveEpicGamesLogoButton;
 
 	void ClearSettingBox();
 
@@ -188,6 +203,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> KeyMappingButtonClass;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	TSubclassOf<class UCommonButtonBase> ExitButtonClass;
 
 	UPROPERTY()
 		ABlasterCharacter* BlasterCharacter;
