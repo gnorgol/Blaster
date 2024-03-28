@@ -7,3 +7,5 @@ enum class EUpscaleMode : uint8
 	EUM_ImageScaling UMETA(DisplayName = "NVIDIA Image Scaling"),
 	EUM_Max UMETA(DisplayName = "DefaultMax")
 };
+
+

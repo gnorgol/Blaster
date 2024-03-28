@@ -91,10 +91,35 @@ void UMenuInGame::MenuSetup()
     {
         AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
     }
-    if (QualityComboBox && !QualityComboBox->OnSelectionChanged.IsBound())
+	
+
+    UGameInstance* GameInstance = GetGameInstance();
+    if (GameInstance)
     {
-        QualityComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
+        MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+        if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
+        {
+            MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
+        }
     }
+	//Activate widget
+	UCommonActivatableWidget::ActivateWidget();
+
+    UCommonButtonBase* ExitButton = CreateWidget<UCommonButtonBase>(this, ExitButtonClass);
+    if (ExitButton)
+    {
+        ExitButton->AddToViewport();
+        ExitButton->SetIsEnabled(true);
+    }
+	
+}
+
+void UMenuInGame::BindGraphicUIEvents()
+{
+	if (QualityComboBox && !QualityComboBox->OnSelectionChanged.IsBound())
+	{
+		QualityComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
+	}
 	if (DisplayModeComboBox && !DisplayModeComboBox->OnSelectionChanged.IsBound())
 	{
 		DisplayModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayModeComboBoxValueChanged);
@@ -110,7 +135,6 @@ void UMenuInGame::MenuSetup()
 	if (UpscalingModeComboBox && !UpscalingModeComboBox->OnSelectionChanged.IsBound())
 	{
 		UpscalingModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnUpscalingModeComboBoxValueChanged);
-
 	}
 	if (DLSSModeComboBox && !DLSSModeComboBox->OnSelectionChanged.IsBound())
 	{
@@ -132,26 +156,50 @@ void UMenuInGame::MenuSetup()
 	{
 		DLSSFGCheckBox->OnCheckStateChanged.AddDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
 	}
+}
 
-    UGameInstance* GameInstance = GetGameInstance();
-    if (GameInstance)
-    {
-        MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-        if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
-        {
-            MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
-        }
-    }
-	//Activate widget
-	UCommonActivatableWidget::ActivateWidget();
-
-    UCommonButtonBase* ExitButton = CreateWidget<UCommonButtonBase>(this, ExitButtonClass);
-    if (ExitButton)
-    {
-        ExitButton->AddToViewport();
-        ExitButton->SetIsEnabled(true);
-    }
-	
+void UMenuInGame::UnbindGraphicUIEvents()
+{
+	if (QualityComboBox && QualityComboBox->OnSelectionChanged.IsBound())
+	{
+		QualityComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
+	}
+	if (DisplayModeComboBox && DisplayModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayModeComboBoxValueChanged);
+	}
+	if (DisplayResolutionComboBox && DisplayResolutionComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayResolutionComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayResolutionComboBoxValueChanged);
+	}
+	if (DisplayMonitorComboBox && DisplayMonitorComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayMonitorComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayMonitorComboBoxValueChanged);
+	}
+	if (UpscalingModeComboBox && UpscalingModeComboBox->OnSelectionChanged.IsBound())
+	{
+		UpscalingModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnUpscalingModeComboBoxValueChanged);
+	}
+	if (DLSSModeComboBox && DLSSModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DLSSModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDLSSModeComboBoxValueChanged);
+	}
+	if (NISModeComboBox && NISModeComboBox->OnSelectionChanged.IsBound())
+	{
+		NISModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnNISModeComboBoxValueChanged);
+	}
+	if (NISSharpnessSlider && NISSharpnessSlider->OnValueChanged.IsBound())
+	{
+		NISSharpnessSlider->OnValueChanged.RemoveDynamic(this, &UMenuInGame::OnNISSharpnessSliderValueChanged);
+	}
+	if (NISSharpnessSlider && NISSharpnessSlider->OnMouseCaptureEnd.IsBound())
+	{
+		NISSharpnessSlider->OnMouseCaptureEnd.RemoveDynamic(this, &UMenuInGame::OnNISSharpnessSliderMouseEnd);
+	}
+	if (DLSSFGCheckBox && DLSSFGCheckBox->OnCheckStateChanged.IsBound())
+	{
+		DLSSFGCheckBox->OnCheckStateChanged.RemoveDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
+	}
 }
 
 void UMenuInGame::MenuTeardown()
@@ -497,32 +545,31 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	//Set Upscaling Mode
 	if (UpscalingModeComboBox)
 	{
-		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
-
-
-		if (!EnumPtr) return;
+		TArray<EUpscaleMode> UpscaleModes = GetUpscaleModes();
 		
 		if (UpscalingModeComboBox->GetOptionCount() == 0)
 		{
-			for (int32 y = 0; y < EnumPtr->NumEnums() - 2; ++y) // -2 to skip _MAX
+			for (EUpscaleMode UpscaleMode: UpscaleModes)
 			{
-				FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
-				UpscalingModeComboBox->AddOption(DisplayName);
+				FString UpscaleModeName = GetDisplayNameForUpscaleMode(UpscaleMode);
+				UpscalingModeComboBox->AddOption(UpscaleModeName);
+
 			}
+
 		}
 		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
 		if (SaveGameInstance)
 		{
 
 			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
-			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
 			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
 			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
 		}
 		else
 		{
 			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
-			FString CurrentUpscaleModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(CurrentUpscaleMode)).ToString();
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
 			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
 			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Not Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
 		}
@@ -534,22 +581,21 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	{
 
 			TArray<UDLSSMode> DLSSModes = UDLSSLibrary::GetSupportedDLSSModes();
-			UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
+
 			UDLSSMode CurrentDLSSMode = UDLSSLibrary::GetDLSSMode();
 
 			DLSSModeComboBox->ClearOptions();
 			for (UDLSSMode DLSSMode : DLSSModes)
 			{
-				if (EnumPtr)
-				{
-					FString DLSSModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(DLSSMode)).ToString();
-					DLSSModeComboBox->AddOption(DLSSModeName);
+					
+				FString DLSSModeName = GetDisplayNameForDLSSMode(DLSSMode);
+				DLSSModeComboBox->AddOption(DLSSModeName);
 
-					if (DLSSMode == CurrentDLSSMode)
-					{
-						DLSSModeComboBox->SetSelectedOption(DLSSModeName);
-					}
+				if (DLSSMode == CurrentDLSSMode)
+				{
+					DLSSModeComboBox->SetSelectedOption(DLSSModeName);
 				}
+				
 			}
 		
 	}
@@ -558,29 +604,50 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	if (NISModeComboBox)
 	{
 		TArray<UNISMode> NISModes = UNISLibrary::GetSupportedNISModes();
-		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UNISMode"), true);
+
 		TArray<UNISMode> CurrentNISMode = UNISLibrary::GetSupportedNISModes();
 		NISModeComboBox->ClearOptions();
 		UNISMode DefaultNISMode = UNISLibrary::GetDefaultNISMode();
 
-		for (int32 Index = 0; Index < NISModes.Num() - 1; Index++) // -1 to remove the Custom mode
+		//for (int32 Index = 0; Index < NISModes.Num() - 1; Index++) // -1 to remove the Custom mode
+		//{
+		//	UNISMode NISMode = NISModes[Index];
+
+		//	//FString NISModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(NISMode)).ToString();
+		//	//FString NISModeName = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(NISMode)).ToString();
+		//	FText NISModeNameText;
+		//	TEnumAsByte<UNISMode> EnumVar = NISMode;
+		//	UEnum::GetDisplayValueAsText(EnumVar, NISModeNameText);
+		//	FString NISModeName = NISModeNameText.ToString();
+		//		
+		//	NISModeComboBox->AddOption(NISModeName);
+		//	if (NISMode == DefaultNISMode)
+		//	{
+		//		NISModeComboBox->SetSelectedOption(NISModeName);
+		//	}
+		//	
+		//}
+		for (UNISMode NISMode : NISModes)
 		{
-			UNISMode NISMode = NISModes[Index];
-			if (EnumPtr)
+			if (NISMode == UNISMode::Custom)
 			{
-				FString NISModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(NISMode)).ToString();
-				NISModeComboBox->AddOption(NISModeName);
-				if (NISMode == DefaultNISMode)
-				{
-					NISModeComboBox->SetSelectedOption(NISModeName);
-				}
+				break;
+
+			}
+			FString NISModeName = GetDisplayNameForNISMode(NISMode);
+			NISModeComboBox->AddOption(NISModeName);
+			if (NISMode == DefaultNISMode)
+			{
+				NISModeComboBox->SetSelectedOption(NISModeName);
 			}
 		}
+
 		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
 		if (SaveGameInstance && SaveGameInstance->CurrentNISMode != UNISMode::Custom)
 		{
 			UNISMode SaveNISMode = SaveGameInstance->CurrentNISMode;
-            FString SaveNISModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(SaveNISMode)).ToString();
+            //FString SaveNISModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(SaveNISMode)).ToString();
+			FString SaveNISModeString = GetDisplayNameForNISMode(SaveNISMode);
             NISModeComboBox->SetSelectedOption(SaveNISModeString);
 			float NISSharpness = SaveGameInstance->NISSharpness;
 			if (NISSharpnessSlider)
@@ -612,6 +679,8 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	//Set focus on the quality combobox
 	QualityComboBox->SetUserFocus(GetOwningPlayer());
 
+
+	BindGraphicUIEvents();
 
 }
 
@@ -753,8 +822,6 @@ void UMenuInGame::OnAimSensitivityValueChanged(float Value)
 
 void UMenuInGame::OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if (SelectionType == ESelectInfo::OnMouseClick)
-	{
 		int32 Quality = 0;
 		if (Value == "Low")
 		{
@@ -775,14 +842,14 @@ void UMenuInGame::OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type
 		//Set all quality to the same value
 		UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
-	}
+	
 
 }
 
 void UMenuInGame::OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if (SelectionType == ESelectInfo::OnMouseClick)
-	{
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Selected Type: %d"), SelectionType));
+
 		//Get game user settings
 		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
 		if (GameUserSettings)
@@ -872,7 +939,7 @@ void UMenuInGame::OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::
 
 			UpdateDisplayResolutionComboBox();
 		}
-	}
+	
 }
 bool UMenuInGame::IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo MonitorInfo)
 {
@@ -907,9 +974,7 @@ void UMenuInGame::SetUpscaleDLSS()
 	}
 	//Cuurent DLSS Mode
 	FString CurrentDLSSModeString = DLSSModeComboBox->GetSelectedOption();
-	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
-	if (!EnumPtr) return;
-	UDLSSMode CurrentDLSSMode = static_cast<UDLSSMode>(EnumPtr->GetValueByNameString(CurrentDLSSModeString));
+	UDLSSMode CurrentDLSSMode = GetDLSSModeFromDisplayName(CurrentDLSSModeString);
 	SetDLSSMode(CurrentDLSSMode);
 	
 	UNISLibrary::SetNISMode(UNISMode::Off);
@@ -1001,14 +1066,207 @@ void UMenuInGame::SetWarningText(FString WarningText)
 	}
 }
 
+FString UMenuInGame::GetDisplayNameForDLSSMode(UDLSSMode DLSSMode)
+{
+	switch (DLSSMode)
+	{
+	case UDLSSMode::Off:
+		return TEXT("Off");
+		break;
+	case UDLSSMode::Auto:
+		return TEXT("Auto");
+		break;
+	case UDLSSMode::DLAA:
+		return TEXT("DLAA");
+		break;
+	case UDLSSMode::UltraQuality:
+		return TEXT("Ultra Quality");
+		break;
+	case UDLSSMode::Quality:
+		return TEXT("Quality");
+		break;
+	case UDLSSMode::Balanced:
+		return TEXT("Balanced");
+		break;
+	case UDLSSMode::Performance:
+		return TEXT("Performance");
+		break;
+	case UDLSSMode::UltraPerformance:
+		return TEXT("Ultra Performance");
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+UDLSSMode UMenuInGame::GetDLSSModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == TEXT("Off"))
+	{
+		return UDLSSMode::Off;
+	}
+	else if (DisplayName == TEXT("Auto"))
+	{
+		return UDLSSMode::Auto;
+	}
+	else if (DisplayName == TEXT("DLAA"))
+	{
+		return UDLSSMode::DLAA;
+	}
+	else if (DisplayName == TEXT("Ultra Quality"))
+	{
+		return UDLSSMode::UltraQuality;
+	}
+	else if (DisplayName == TEXT("Quality"))
+	{
+		return UDLSSMode::Quality;
+	}
+	else if (DisplayName == TEXT("Balanced"))
+	{
+		return UDLSSMode::Balanced;
+	}
+	else if (DisplayName == TEXT("Performance"))
+	{
+		return UDLSSMode::Performance;
+	}
+	else if (DisplayName == TEXT("Ultra Performance"))
+	{
+		return UDLSSMode::UltraPerformance;
+	}
+	else
+	{
+		return UDLSSMode::Off;
+	}
+}
+
+FString UMenuInGame::GetDisplayNameForNISMode(UNISMode NISMode)
+{
+	switch (NISMode)
+	{
+	case UNISMode::Off:
+		return TEXT("Off");
+		break;
+	case UNISMode::UltraQuality:
+		return TEXT("Ultra Quality");
+		break;
+	case UNISMode::Quality:
+		return TEXT("Quality");
+		break;
+	case UNISMode::Balanced:
+		return TEXT("Balanced");
+		break;
+	case UNISMode::Performance:
+		return TEXT("Performance");
+		break;
+	case UNISMode::Custom:
+		return TEXT("Custom");
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+UNISMode UMenuInGame::GetNISModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == TEXT("Off"))
+	{
+		return UNISMode::Off;
+	}
+	else if (DisplayName == TEXT("Ultra Quality"))
+	{
+		return UNISMode::UltraQuality;
+	}
+	else if (DisplayName == TEXT("Quality"))
+	{
+		return UNISMode::Quality;
+	}
+	else if (DisplayName == TEXT("Balanced"))
+	{
+		return UNISMode::Balanced;
+	}
+	else if (DisplayName == TEXT("Performance"))
+	{
+		return UNISMode::Performance;
+	}
+	else if (DisplayName == TEXT("Custom"))
+	{
+		return UNISMode::Custom;
+	}
+	else
+	{
+		return UNISMode::Off;
+	}
+}
+
+FString UMenuInGame::GetDisplayNameForUpscaleMode(EUpscaleMode UpscaleMode)
+{
+	switch (UpscaleMode)
+	{
+	case EUpscaleMode::EUM_Default:
+		return TEXT("Default");
+		break;
+	case EUpscaleMode::EUM_DLSS:
+		return TEXT("DLSS");
+		break;
+	case EUpscaleMode::EUM_ImageScaling:
+		return TEXT("Image Scaling");
+		break;
+	case EUpscaleMode::EUM_Max:
+		return TEXT("Max");
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+EUpscaleMode UMenuInGame::GetUpscaleModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == TEXT("Default"))
+	{
+		return EUpscaleMode::EUM_Default;
+	}
+	else if (DisplayName == TEXT("DLSS"))
+	{
+		return EUpscaleMode::EUM_DLSS;
+	}
+	else if (DisplayName == TEXT("Image Scaling"))
+	{
+		return EUpscaleMode::EUM_ImageScaling;
+	}
+	else if (DisplayName == TEXT("Max"))
+	{
+		return EUpscaleMode::EUM_Max;
+	}
+	else
+	{
+		return EUpscaleMode::EUM_Default;
+	}
+}
+
+TArray<EUpscaleMode> UMenuInGame::GetUpscaleModes()
+{
+	TArray<EUpscaleMode> UpscaleModes;
+	const UEnum* Enum = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
+
+	for (int i = 0; i < Enum->NumEnums() -1 ; i++) // -1 to remove the Max value
+	{
+		EUpscaleMode UpscaleMode = (EUpscaleMode)Enum->GetValueByIndex(i);
+		UpscaleModes.Add(UpscaleMode);
+	}
+
+	return UpscaleModes;
+}
+
 
 
 
 
 void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if (SelectionType == ESelectInfo::OnMouseClick)
-	{
+
 		//Get game user settings
 		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
 		if (GameUserSettings)
@@ -1022,13 +1280,12 @@ void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelect
 			GameUserSettings->SetScreenResolution(Resolution);
 			GameUserSettings->ApplyResolutionSettings(false);
 		}
-	}
+	
 }
 
 void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if (SelectionType == ESelectInfo::OnMouseClick)
-	{
+
 		FDisplayMetrics DisplayMetrics;
 		FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
 
@@ -1102,25 +1359,13 @@ void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInf
 		UpdateDisplayResolutionComboBox();
 
 		}
-	}
+	
 }
 
 void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	EUpscaleMode UpscaleMode;
+	EUpscaleMode UpscaleMode = GetUpscaleModeFromDisplayName(Value);
 	//Find the enum value
-	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
-	if (!EnumPtr) return;
-
-	for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
-	{
-		FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
-		if (DisplayName == Value)
-		{
-			UpscaleMode = static_cast<EUpscaleMode>(y);
-			break;
-		}
-	}
 	SetWarningText("");
 	switch (UpscaleMode)
 	{
@@ -1184,50 +1429,18 @@ void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo
 
 void UMenuInGame::OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if (SelectionType == ESelectInfo::OnMouseClick)
-	{
-		//Get the DLSS Mode
-		UDLSSMode DLSSMode;
-		//Find the enum value
-		UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UDLSSMode"), true);
-		if (!EnumPtr) return;
 
-		for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
-		{
-			FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
-			//remove space in the string
-			if (DisplayName == Value)
-			{
-				DLSSMode = static_cast<UDLSSMode>(y);
-				break;
-			}
-		}
+		//Get the DLSS Mode
+		UDLSSMode DLSSMode = GetDLSSModeFromDisplayName(Value);
 		SetDLSSMode(DLSSMode);
-	}
+	
 }
 
 void UMenuInGame::OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
 {
-	if(SelectionType == ESelectInfo::OnMouseClick)
-	{
-
-	
-	UNISMode NISMode;
-	//Find the enum value
-	UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("UNISMode"), true);
-
-	if (!EnumPtr) return;
-
-	for (int32 y = 0; y < EnumPtr->NumEnums() - 1; ++y) // -2 to skip _MAX
-	{
-		FString DisplayName = EnumPtr->GetDisplayNameTextByIndex(y).ToString();
-		if (DisplayName == Value)
-		{
-			NISMode = static_cast<UNISMode>(y);
-			break;
-		}
-	}
+	UNISMode NISMode = GetNISModeFromDisplayName(Value);
 	UNISLibrary::SetNISMode(NISMode);
+
 	float NISharpness = 0;
 	//Set NIS Sharpness
 	if (ValueNISSharpnessText)
@@ -1245,10 +1458,6 @@ void UMenuInGame::OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type
 	SaveGameInstance->CurrentNISMode = NISMode;
 	SaveGameInstance->NISSharpness = NISharpness;
 	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
-	}
-
-
-
 }
 
 void UMenuInGame::OnNISSharpnessSliderValueChanged(float Value)

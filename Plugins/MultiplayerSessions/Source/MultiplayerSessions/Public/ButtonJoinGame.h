@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CommonActivatableWidget.h"
 #include "OnlineSessionSettings.h"
 #include "ButtonJoinGame.generated.h"
 
@@ -14,11 +15,14 @@ class UButton;
 class UTextBlock;
 class FOnlineSessionSearchResult;
 UCLASS()
-class MULTIPLAYERSESSIONS_API UButtonJoinGame : public UUserWidget
+class MULTIPLAYERSESSIONS_API UButtonJoinGame : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 	
 public:
+	
+	virtual void NativeConstruct() override;
+
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* JoinButton;
 

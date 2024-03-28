@@ -8,6 +8,7 @@
 #include <CommonButtonBase.h>
 #include <Components/CanvasPanel.h>
 #include <Components/Slider.h>
+#include "AnalogSlider.h"
 #include "Components/CheckBox.h"
 #include "UpscaleMode.h"
 #include "DLSSLibrary.h"
@@ -41,8 +42,12 @@ class BLASTER_API UMenuInGame : public UCommonActivatableWidget
 friend class UKeyMappingButton;
 public:
 	void MenuSetup();
+	void BindGraphicUIEvents();
+	UFUNCTION(BlueprintCallable)
+	void UnbindGraphicUIEvents();
 	UFUNCTION(BlueprintCallable)
 	void MenuTeardown();
+
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (BindWidget))
 	UButton* SettingButton;
@@ -89,9 +94,9 @@ private:
 		UButton* ResetDefaultButton;
 
 	UPROPERTY(meta = (BindWidget))
-		USlider* MouseSensitivitySlider;
+		UAnalogSlider* MouseSensitivitySlider;
 	UPROPERTY(meta = (BindWidget))
-		USlider* AimSensitivitySlider;
+		UAnalogSlider* AimSensitivitySlider;
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* ValueMouseSensitivityText;
 	UPROPERTY(meta = (BindWidget))
@@ -225,6 +230,22 @@ private:
 	void ShowNISModeBox(bool bShow);
 
 	void SetWarningText(FString WarningText);
+
+	FString GetDisplayNameForDLSSMode(UDLSSMode DLSSMode);
+
+	UDLSSMode GetDLSSModeFromDisplayName(FString DisplayName);
+
+	FString GetDisplayNameForNISMode(UNISMode NISMode);
+
+	UNISMode GetNISModeFromDisplayName(FString DisplayName);
+
+	FString GetDisplayNameForUpscaleMode(EUpscaleMode UpscaleMode);
+
+	EUpscaleMode GetUpscaleModeFromDisplayName(FString DisplayName);
+
+	TArray<EUpscaleMode> GetUpscaleModes();
+
+	
 
 
 };

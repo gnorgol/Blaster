@@ -41,6 +41,7 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FStri
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
 
 	}
+	
 }
 
 bool UMenu::Initialize()
@@ -90,7 +91,9 @@ bool UMenu::Initialize()
 		Settings->ApplySettings(false);
 		
 	}
-
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Menu Initialized"));
+	UCommonActivatableWidget::ActivateWidget();
+	UCommonActivatableWidget::GetDesiredFocusTarget();
 	return true;
 }
 
@@ -394,3 +397,5 @@ void UMenu::MenuTeardown()
 	PlayerController->SetInputMode(InputModeData);
 	PlayerController->bShowMouseCursor = false;
 }
+
+
