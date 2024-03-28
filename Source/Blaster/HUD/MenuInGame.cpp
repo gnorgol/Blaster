@@ -551,6 +551,10 @@ void UMenuInGame::GraphicSettingButtonClicked()
 		{
 			for (EUpscaleMode UpscaleMode: UpscaleModes)
 			{
+				if (UpscaleMode == EUpscaleMode::EUM_Max)
+				{
+					break;
+				}
 				FString UpscaleModeName = GetDisplayNameForUpscaleMode(UpscaleMode);
 				UpscalingModeComboBox->AddOption(UpscaleModeName);
 
