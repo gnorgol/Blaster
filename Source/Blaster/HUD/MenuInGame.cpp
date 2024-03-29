@@ -91,6 +91,7 @@ void UMenuInGame::MenuSetup()
     {
         AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
     }
+
 	
 
     UGameInstance* GameInstance = GetGameInstance();
@@ -156,6 +157,7 @@ void UMenuInGame::BindGraphicUIEvents()
 	{
 		DLSSFGCheckBox->OnCheckStateChanged.AddDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
 	}
+
 }
 
 void UMenuInGame::UnbindGraphicUIEvents()
@@ -543,43 +545,7 @@ void UMenuInGame::GraphicSettingButtonClicked()
 		//}
 	}
 	//Set Upscaling Mode
-	if (UpscalingModeComboBox)
-	{
-		TArray<EUpscaleMode> UpscaleModes = GetUpscaleModes();
-		
-		if (UpscalingModeComboBox->GetOptionCount() == 0)
-		{
-			for (EUpscaleMode UpscaleMode: UpscaleModes)
-			{
-				if (UpscaleMode == EUpscaleMode::EUM_Max)
-				{
-					break;
-				}
-				FString UpscaleModeName = GetDisplayNameForUpscaleMode(UpscaleMode);
-				UpscalingModeComboBox->AddOption(UpscaleModeName);
-
-			}
-
-		}
-		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
-		if (SaveGameInstance)
-		{
-
-			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
-			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
-			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
-			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
-		}
-		else
-		{
-			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
-			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
-			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
-			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Not Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
-		}
-
-
-	}
+	
 	//Set DLSS Mode
 	if (DLSSModeComboBox)
 	{
@@ -587,6 +553,8 @@ void UMenuInGame::GraphicSettingButtonClicked()
 			TArray<UDLSSMode> DLSSModes = UDLSSLibrary::GetSupportedDLSSModes();
 
 			UDLSSMode CurrentDLSSMode = UDLSSLibrary::GetDLSSMode();
+
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Green, FString::Printf(TEXT("Current DLSS Mode: %s"), *GetDisplayNameForDLSSMode(CurrentDLSSMode)));
 
 			DLSSModeComboBox->ClearOptions();
 			for (UDLSSMode DLSSMode : DLSSModes)
@@ -678,7 +646,77 @@ void UMenuInGame::GraphicSettingButtonClicked()
 	{
 		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Graphic Setting Button Clicked")));
+	if (UpscalingModeComboBox)
+	{
+		TArray<EUpscaleMode> UpscaleModes = GetUpscaleModes();
+
+		if (UpscalingModeComboBox->GetOptionCount() == 0)
+		{
+			for (EUpscaleMode UpscaleMode : UpscaleModes)
+			{
+				if (UpscaleMode == EUpscaleMode::EUM_Max)
+				{
+					break;
+				}
+				FString UpscaleModeName = GetDisplayNameForUpscaleMode(UpscaleMode);
+				UpscalingModeComboBox->AddOption(UpscaleModeName);
+
+			}
+
+		}
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+		if (SaveGameInstance)
+		{
+
+			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
+		}
+		else
+		{
+			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Not Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
+		}
+		switch (CurrentUpscaleMode)
+		{
+		case EUpscaleMode::EUM_Default:
+			SetUpscaleDefault();
+			ShowDLSSModeBox(false);
+			ShowNISModeBox(false);
+			break;
+		case EUpscaleMode::EUM_DLSS:
+			SetUpscaleDLSS();
+			if (UDLSSLibrary::IsDLSSSupported())
+			{
+				ShowDLSSModeBox(true);
+			}
+			else
+			{
+				SetWarningText("DLSS is not supported on this hardware");
+			}
+			ShowNISModeBox(false);
+			break;
+		case EUpscaleMode::EUM_ImageScaling:
+			SetUpscaleNIS();
+			ShowDLSSModeBox(false);
+			if (UNISLibrary::IsNISSupported())
+			{
+				ShowNISModeBox(true);
+			}
+			else
+			{
+				SetWarningText("NIS is not supported on this hardware");
+			}
+			break;
+		default:
+			break;
+		}
+
+
+	}
 
 	//Set focus on the quality combobox
 	QualityComboBox->SetUserFocus(GetOwningPlayer());
@@ -979,7 +1017,9 @@ void UMenuInGame::SetUpscaleDLSS()
 	//Cuurent DLSS Mode
 	FString CurrentDLSSModeString = DLSSModeComboBox->GetSelectedOption();
 	UDLSSMode CurrentDLSSMode = GetDLSSModeFromDisplayName(CurrentDLSSModeString);
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Current DLSS Mode: %s"), *CurrentDLSSModeString));
 	SetDLSSMode(CurrentDLSSMode);
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Set upsacale Current DLSS Mode: %s"), *CurrentDLSSModeString));
 	
 	UNISLibrary::SetNISMode(UNISMode::Off);
 	UNISLibrary::SetNISSharpness(0.0f);
@@ -1075,28 +1115,28 @@ FString UMenuInGame::GetDisplayNameForDLSSMode(UDLSSMode DLSSMode)
 	switch (DLSSMode)
 	{
 	case UDLSSMode::Off:
-		return TEXT("Off");
+		return DLSSOffText;
 		break;
 	case UDLSSMode::Auto:
-		return TEXT("Auto");
+		return DLSSAutoText;
 		break;
 	case UDLSSMode::DLAA:
-		return TEXT("DLAA");
+		return DLSSDLAAText;
 		break;
 	case UDLSSMode::UltraQuality:
-		return TEXT("Ultra Quality");
+		return DLSSUltraQualityText;
 		break;
 	case UDLSSMode::Quality:
-		return TEXT("Quality");
+		return DLSSQualityText;
 		break;
 	case UDLSSMode::Balanced:
-		return TEXT("Balanced");
+		return DLSSBalancedText;
 		break;
 	case UDLSSMode::Performance:
-		return TEXT("Performance");
+		return DLSSPerformanceText;
 		break;
 	case UDLSSMode::UltraPerformance:
-		return TEXT("Ultra Performance");
+		return DLSSUltraPerformanceText;
 		break;
 	default:
 		return TEXT("Unknown");
@@ -1106,35 +1146,35 @@ FString UMenuInGame::GetDisplayNameForDLSSMode(UDLSSMode DLSSMode)
 
 UDLSSMode UMenuInGame::GetDLSSModeFromDisplayName(FString DisplayName)
 {
-	if (DisplayName == TEXT("Off"))
+	if (DisplayName == DLSSOffText)
 	{
 		return UDLSSMode::Off;
 	}
-	else if (DisplayName == TEXT("Auto"))
+	else if (DisplayName == DLSSAutoText)
 	{
 		return UDLSSMode::Auto;
 	}
-	else if (DisplayName == TEXT("DLAA"))
+	else if (DisplayName == DLSSDLAAText)
 	{
 		return UDLSSMode::DLAA;
 	}
-	else if (DisplayName == TEXT("Ultra Quality"))
+	else if (DisplayName == DLSSUltraQualityText)
 	{
 		return UDLSSMode::UltraQuality;
 	}
-	else if (DisplayName == TEXT("Quality"))
+	else if (DisplayName == DLSSQualityText)
 	{
 		return UDLSSMode::Quality;
 	}
-	else if (DisplayName == TEXT("Balanced"))
+	else if (DisplayName == DLSSBalancedText)
 	{
 		return UDLSSMode::Balanced;
 	}
-	else if (DisplayName == TEXT("Performance"))
+	else if (DisplayName == DLSSPerformanceText)
 	{
 		return UDLSSMode::Performance;
 	}
-	else if (DisplayName == TEXT("Ultra Performance"))
+	else if (DisplayName == DLSSUltraPerformanceText)
 	{
 		return UDLSSMode::UltraPerformance;
 	}
@@ -1149,22 +1189,22 @@ FString UMenuInGame::GetDisplayNameForNISMode(UNISMode NISMode)
 	switch (NISMode)
 	{
 	case UNISMode::Off:
-		return TEXT("Off");
+		return NISOffText;
 		break;
 	case UNISMode::UltraQuality:
-		return TEXT("Ultra Quality");
+		return NISUltraQualityText;
 		break;
 	case UNISMode::Quality:
-		return TEXT("Quality");
+		return NISQualityText;
 		break;
 	case UNISMode::Balanced:
-		return TEXT("Balanced");
+		return NISBalancedText;
 		break;
 	case UNISMode::Performance:
-		return TEXT("Performance");
+		return NISPerformanceText;
 		break;
 	case UNISMode::Custom:
-		return TEXT("Custom");
+		return NISCustomText;
 		break;
 	default:
 		return TEXT("Unknown");
@@ -1174,27 +1214,27 @@ FString UMenuInGame::GetDisplayNameForNISMode(UNISMode NISMode)
 
 UNISMode UMenuInGame::GetNISModeFromDisplayName(FString DisplayName)
 {
-	if (DisplayName == TEXT("Off"))
+	if (DisplayName == NISOffText)
 	{
 		return UNISMode::Off;
 	}
-	else if (DisplayName == TEXT("Ultra Quality"))
+	else if (DisplayName == NISUltraQualityText)
 	{
 		return UNISMode::UltraQuality;
 	}
-	else if (DisplayName == TEXT("Quality"))
+	else if (DisplayName == NISQualityText)
 	{
 		return UNISMode::Quality;
 	}
-	else if (DisplayName == TEXT("Balanced"))
+	else if (DisplayName == NISBalancedText)
 	{
 		return UNISMode::Balanced;
 	}
-	else if (DisplayName == TEXT("Performance"))
+	else if (DisplayName == NISPerformanceText)
 	{
 		return UNISMode::Performance;
 	}
-	else if (DisplayName == TEXT("Custom"))
+	else if (DisplayName == NISCustomText)
 	{
 		return UNISMode::Custom;
 	}
@@ -1209,13 +1249,13 @@ FString UMenuInGame::GetDisplayNameForUpscaleMode(EUpscaleMode UpscaleMode)
 	switch (UpscaleMode)
 	{
 	case EUpscaleMode::EUM_Default:
-		return TEXT("Default");
+		return UpscaleDefaultText;
 		break;
 	case EUpscaleMode::EUM_DLSS:
-		return TEXT("DLSS");
+		return UpscaleDLSSText;
 		break;
 	case EUpscaleMode::EUM_ImageScaling:
-		return TEXT("Image Scaling");
+		return UpscaleNISText;
 		break;
 	case EUpscaleMode::EUM_Max:
 		return TEXT("Max");
@@ -1228,15 +1268,15 @@ FString UMenuInGame::GetDisplayNameForUpscaleMode(EUpscaleMode UpscaleMode)
 
 EUpscaleMode UMenuInGame::GetUpscaleModeFromDisplayName(FString DisplayName)
 {
-	if (DisplayName == TEXT("Default"))
+	if (DisplayName == UpscaleDefaultText)
 	{
 		return EUpscaleMode::EUM_Default;
 	}
-	else if (DisplayName == TEXT("DLSS"))
+	else if (DisplayName == UpscaleDLSSText)
 	{
 		return EUpscaleMode::EUM_DLSS;
 	}
-	else if (DisplayName == TEXT("Image Scaling"))
+	else if (DisplayName == UpscaleNISText)
 	{
 		return EUpscaleMode::EUM_ImageScaling;
 	}
@@ -1415,6 +1455,7 @@ void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo
 		SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
 		SaveGameInstance->CurrentNISMode = LoadGameInstance->CurrentNISMode;
 		SaveGameInstance->NISSharpness = LoadGameInstance->NISSharpness;
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Upscale Mode save : %d"), static_cast<int32>(UpscaleMode)));
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
 	}
 	else
@@ -1437,6 +1478,7 @@ void UMenuInGame::OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Typ
 		//Get the DLSS Mode
 		UDLSSMode DLSSMode = GetDLSSModeFromDisplayName(Value);
 		SetDLSSMode(DLSSMode);
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Caca DLSS Mode: %s"), *Value));
 	
 }
 

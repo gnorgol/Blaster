@@ -129,7 +129,6 @@ private:
 		void ContactMeButtonClicked();
 	UFUNCTION()
 		void CreditsButtonClicked();
-
 	UFUNCTION()
 		void OnMouseSensitivityValueChanged(float Value);
 	UFUNCTION()
@@ -139,22 +138,22 @@ private:
 	UFUNCTION()
 		void OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
-	void OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+		void OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
 		void OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
-	void OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+		void OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
-	void OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+		void OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
-	void OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
+		void OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType);
 	UFUNCTION()
-	void OnNISSharpnessSliderValueChanged(float Value);
+		void OnNISSharpnessSliderValueChanged(float Value);
 	//Event end NIS sharpness slider Mouse
 	UFUNCTION()
-	void OnNISSharpnessSliderMouseEnd();
+		void OnNISSharpnessSliderMouseEnd();
 	UFUNCTION()
-	void OnDLSSFGCheckBoxChanged(bool bIsChecked);
+		void OnDLSSFGCheckBoxChanged(bool bIsChecked);
 
 
 	UPROPERTY()
@@ -244,6 +243,30 @@ private:
 	EUpscaleMode GetUpscaleModeFromDisplayName(FString DisplayName);
 
 	TArray<EUpscaleMode> GetUpscaleModes();
+
+
+	//Text DlssMode
+	const FString DLSSOffText = NSLOCTEXT("DLSS", "DLSSOff", "Off").ToString();
+	const FString DLSSAutoText = NSLOCTEXT("DLSS", "DLSSAuto", "Auto").ToString();
+	const FString DLSSQualityText = NSLOCTEXT("DLSS", "DLSSQuality", "Quality").ToString();
+	const FString DLSSUltraQualityText = NSLOCTEXT("DLSS", "DLSSUltraQuality", "Ultra Quality").ToString();
+	const FString DLSSPerformanceText = NSLOCTEXT("DLSS", "DLSSPerformance", "Performance").ToString();
+	const FString DLSSUltraPerformanceText = NSLOCTEXT("DLSS", "DLSSUltraPerformance", "Ultra Performance").ToString();
+	const FString DLSSBalancedText = NSLOCTEXT("DLSS", "DLSSBalanced", "Balanced").ToString();
+	const FString DLSSDLAAText = NSLOCTEXT("DLSS", "DLSSDLAA", "DLAA").ToString();
+
+	//Text NISMode
+	const FString NISOffText = NSLOCTEXT("NIS", "NISOff", "Off").ToString();
+	const FString NISUltraQualityText = NSLOCTEXT("NIS", "NISUltraQuality", "Ultra Quality").ToString();
+	const FString NISQualityText = NSLOCTEXT("NIS", "NISQuality", "Quality").ToString();
+	const FString NISPerformanceText = NSLOCTEXT("NIS", "NISPerformance", "Performance").ToString();
+	const FString NISBalancedText = NSLOCTEXT("NIS", "NISBalanced", "Balanced").ToString();
+	const FString NISCustomText = NSLOCTEXT("NIS", "NISCustome", "Custom").ToString();
+
+	//Text UpscaleMode
+	const FString UpscaleDefaultText = NSLOCTEXT("Upscale", "UpscaleDefault", "Default").ToString();
+	const FString UpscaleDLSSText = NSLOCTEXT("Upscale", "UpscaleDLSS", "DLSS").ToString();
+	const FString UpscaleNISText = NSLOCTEXT("Upscale", "UpscaleNIS", "Image Scaling").ToString();
 
 	
 
