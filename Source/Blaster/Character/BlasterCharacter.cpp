@@ -1161,7 +1161,7 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	//AddControllerPitchInput(ScaledLookVector.Y);
 
     FRotator CurrentRotator = GetControlRotation();
-    float Pitch = UKismetMathLibrary::ClampAngle(CurrentRotator.Pitch - ScaledLookVector.Y, -50, 50.f);
+    float Pitch = UKismetMathLibrary::ClampAngle(CurrentRotator.Pitch - ScaledLookVector.Y, -90, 90.f);
     FRotator NewRotator = FRotator(Pitch, CurrentRotator.Yaw + ScaledLookVector.X, CurrentRotator.Roll);
     GetController()->SetControlRotation(NewRotator);
 	AddControllerYawInput(ScaledLookVector.X);
