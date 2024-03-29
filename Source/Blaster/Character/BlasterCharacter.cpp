@@ -1158,7 +1158,12 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	float Sensitivity = IsAiming() ? aimSensitivity : sensitivity;
 	FVector2D ScaledLookVector = LookVector * Sensitivity;
 
-	AddControllerPitchInput(ScaledLookVector.Y);
+	//AddControllerPitchInput(ScaledLookVector.Y);
+
+    FRotator CurrentRotator = GetControlRotation();
+    float Pitch = UKismetMathLibrary::ClampAngle(CurrentRotator.Pitch - ScaledLookVector.Y, -50, 50.f);
+    FRotator NewRotator = FRotator(Pitch, CurrentRotator.Yaw + ScaledLookVector.X, CurrentRotator.Roll);
+    GetController()->SetControlRotation(NewRotator);
 	AddControllerYawInput(ScaledLookVector.X);
 
 }
