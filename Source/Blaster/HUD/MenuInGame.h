@@ -268,6 +268,10 @@ private:
 	const FString UpscaleDLSSText = NSLOCTEXT("Upscale", "UpscaleDLSS", "DLSS").ToString();
 	const FString UpscaleNISText = NSLOCTEXT("Upscale", "UpscaleNIS", "Image Scaling").ToString();
 
+	//Text warning
+	const FString DLSSWarningText = NSLOCTEXT("Warning", "DLSSWarning", "DLSS is not supported on this hardware").ToString();
+	const FString NISWarningText = NSLOCTEXT("Warning", "NISWarning", "NIS is not supported on this hardware").ToString();
+
 	
 
 

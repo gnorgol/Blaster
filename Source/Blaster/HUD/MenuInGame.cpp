@@ -695,7 +695,7 @@ void UMenuInGame::GraphicSettingButtonClicked()
 			}
 			else
 			{
-				SetWarningText("DLSS is not supported on this hardware");
+				SetWarningText(DLSSWarningText);
 			}
 			ShowNISModeBox(false);
 			break;
@@ -708,7 +708,7 @@ void UMenuInGame::GraphicSettingButtonClicked()
 			}
 			else
 			{
-				SetWarningText("NIS is not supported on this hardware");
+				SetWarningText(NISWarningText);
 			}
 			break;
 		default:
@@ -1426,7 +1426,7 @@ void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo
 		}
 		else
 		{
-			SetWarningText("DLSS is not supported on this hardware");
+			SetWarningText(DLSSWarningText);
 		}
 		ShowNISModeBox(false);
 		break;
@@ -1439,7 +1439,7 @@ void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo
 		}
 		else
 		{
-			SetWarningText("NIS is not supported on this hardware");
+			SetWarningText(NISWarningText);
 		}
 		
 		break;
