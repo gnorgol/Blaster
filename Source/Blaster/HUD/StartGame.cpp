@@ -19,12 +19,6 @@ void UStartGame::NativeConstruct()
 
 void UStartGame::StartGameClicked()
 {
-		UE_LOG(LogTemp, Warning, TEXT("Start Game Clicked"));
-
-
-
-
-
 		if (APlayerController* PC = GetOwningPlayer())
 		{
 			if (ALobbyGameMode* GM = Cast<ALobbyGameMode>(PC->GetWorld()->GetAuthGameMode()))

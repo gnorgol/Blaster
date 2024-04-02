@@ -370,10 +370,6 @@ void ABlasterPlayerController::Tick(float DeltaTimes)
 	PollInit();
 	CheckPing(DeltaTimes);
 
-	//Debug GetDLSSMode
-	UDLSSMode DLSSMode = UDLSSLibrary::GetDLSSMode();
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, FString::Printf(TEXT("DLSS Mode: %d"), DLSSMode));
-
 }
 void ABlasterPlayerController::CheckPing(float DeltaTime)
 {
