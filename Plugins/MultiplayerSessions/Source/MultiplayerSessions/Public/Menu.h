@@ -49,6 +49,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UButton* JoinButton;
 
+		static constexpr const char* APP_ID = RAW_APP_ID;
 
 protected:
 	virtual bool Initialize() override;
