@@ -8,6 +8,7 @@
 #include "OnlineSubsystem.h"
 #include "GameFramework/GameUserSettings.h"
 
+
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath, FString Map)
 {
 	MaxNumPlayers = NumberOfPublicConnections;
@@ -41,6 +42,24 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FStri
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
 
 	}
+	SteamAPI_RestartAppIfNecessary(atoi(APP_ID));
+
+	FString CurrentGameLanguage = FString(SteamApps()->GetCurrentGameLanguage());
+
+	//List of languages de el en es fr it ja pt ru uk vi zh-Hant
+	if (CurrentGameLanguage == "japanese") FInternationalization::Get().SetCurrentCulture(TEXT("ja"));
+	if (CurrentGameLanguage == "french") FInternationalization::Get().SetCurrentCulture(TEXT("fr"));
+	if (CurrentGameLanguage == "german") FInternationalization::Get().SetCurrentCulture(TEXT("de"));
+	if (CurrentGameLanguage == "spanish") FInternationalization::Get().SetCurrentCulture(TEXT("es"));
+	if (CurrentGameLanguage == "italian") FInternationalization::Get().SetCurrentCulture(TEXT("it"));
+	if (CurrentGameLanguage == "greek") FInternationalization::Get().SetCurrentCulture(TEXT("el"));
+	if (CurrentGameLanguage == "portuguese") FInternationalization::Get().SetCurrentCulture(TEXT("pt"));
+	if (CurrentGameLanguage == "russian") FInternationalization::Get().SetCurrentCulture(TEXT("ru"));
+	if (CurrentGameLanguage == "ukrainian") FInternationalization::Get().SetCurrentCulture(TEXT("uk"));
+	if (CurrentGameLanguage == "vietnamese") FInternationalization::Get().SetCurrentCulture(TEXT("vi"));
+	if (CurrentGameLanguage == "tchinese") FInternationalization::Get().SetCurrentCulture(TEXT("zh-Hant"));
+	if (CurrentGameLanguage == "english") FInternationalization::Get().SetCurrentCulture(TEXT("en"));
+	
 	
 }
 

@@ -11,7 +11,17 @@
 #include <ButtonJoinGame.h>
 #include <Components/VerticalBox.h>
 #include "OnlineSessionSettings.h"
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include "../Steam/steam_api.h"
+#pragma warning(pop)
+
+
 #include "Menu.generated.h"
+
+#define RAW_APP_ID "2731180"
+
+
 
 
 
@@ -39,6 +49,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UButton* JoinButton;
 
+
 protected:
 	virtual bool Initialize() override;
 	virtual void NativeDestruct() override;
@@ -54,8 +65,6 @@ protected:
 	UFUNCTION()
 		void OnDestroySession(bool bWasSuccessful);
 private:
-
-
 
 	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel* MainMenuPanel;
@@ -77,9 +86,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> ButtonJoinGameClass;
-
-
-
 
 	void ClearGamesBox();
 
