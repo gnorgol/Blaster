@@ -49,4 +49,12 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 
+private:
+	const FString MoveForwardActionName = NSLOCTEXT("Blaster", "MoveForward", "Move Forward").ToString();
+	const FString MoveRightActionName = NSLOCTEXT("Blaster", "MoveRight", "Move Right").ToString();
+	const FString MoveLeftActionName = NSLOCTEXT("Blaster", "MoveLeft", "Move Left").ToString();
+	const FString MoveBackwardActionName = NSLOCTEXT("Blaster", "MoveBackward", "Move Backwards").ToString();
+
+
+
 };

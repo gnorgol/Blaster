@@ -4,13 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include <CommonActivatableWidget.h>
 #include "Interfaces/OnlineSessionInterface.h"
 #include <Components/CanvasPanel.h>
 #include <Components/TextBlock.h>
 #include <ButtonJoinGame.h>
 #include <Components/VerticalBox.h>
 #include "OnlineSessionSettings.h"
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include "../Steam/steam_api.h"
+#pragma warning(pop)
+
+
 #include "Menu.generated.h"
+
+#define RAW_APP_ID "2731180"
+
+
 
 
 
@@ -25,12 +36,20 @@ class UButtonJoinGame;
 class UVerticalBox;
 class FOnlineSessionSearchResult;
 UCLASS()
-class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
+class MULTIPLAYERSESSIONS_API UMenu : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
 		void MenuSetup(int32 NumberOfPublicConnections = 4 , FString TypeOfMatch = TEXT("FreeForAll"), FString LobbyPath = TEXT("/Game/ThirdPerson/Maps/Lobby"), FString MapName = TEXT("Hangar"));
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UButton* HostButton;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UButton* CreateButton;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UButton* JoinButton;
+
+		static constexpr const char* APP_ID = RAW_APP_ID;
 
 protected:
 	virtual bool Initialize() override;
@@ -48,12 +67,6 @@ protected:
 		void OnDestroySession(bool bWasSuccessful);
 private:
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* HostButton;
-	UPROPERTY(meta = (BindWidget))
-	UButton* CreateButton;
-	UPROPERTY(meta = (BindWidget))
-	UButton* JoinButton;
 	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel* MainMenuPanel;
 	UPROPERTY(meta = (BindWidget))
@@ -75,9 +88,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UUserWidget> ButtonJoinGameClass;
 
-
-
-
 	void ClearGamesBox();
 
 
@@ -98,4 +108,7 @@ private:
 	FString MapName{ TEXT("Hangar") };
 
 	FString PathToLobbyMap{ TEXT("") };
+
+
+
 };

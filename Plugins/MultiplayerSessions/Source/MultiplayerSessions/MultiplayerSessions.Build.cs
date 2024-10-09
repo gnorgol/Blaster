@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class MultiplayerSessions : ModuleRules
@@ -30,10 +31,12 @@ public class MultiplayerSessions : ModuleRules
 				"OnlineSubsystemSteam",
 				"UMG",
 				"Slate",
-				"SlateCore"
+				"SlateCore",
+                "CommonUI"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
+		PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "Steam","lib", "steam_api64.lib"));
 			
 		
 		PrivateDependencyModuleNames.AddRange(

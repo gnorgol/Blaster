@@ -1158,7 +1158,12 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	float Sensitivity = IsAiming() ? aimSensitivity : sensitivity;
 	FVector2D ScaledLookVector = LookVector * Sensitivity;
 
-	AddControllerPitchInput(ScaledLookVector.Y);
+	//AddControllerPitchInput(ScaledLookVector.Y);
+
+    FRotator CurrentRotator = GetControlRotation();
+    float Pitch = UKismetMathLibrary::ClampAngle(CurrentRotator.Pitch - ScaledLookVector.Y, -90, 90.f);
+    FRotator NewRotator = FRotator(Pitch, CurrentRotator.Yaw + ScaledLookVector.X, CurrentRotator.Roll);
+    GetController()->SetControlRotation(NewRotator);
 	AddControllerYawInput(ScaledLookVector.X);
 
 }
@@ -1350,7 +1355,7 @@ void ABlasterCharacter::FirePressed(const FInputActionValue& Value)
 	}
 	if (CombatComponent && IsWeaponEquipped())
 	{
-		if (Value.Get<float>() > 0.0f)
+		if (Value.Get<float>() > 0.5f)
 		{
 			CombatComponent->FireButtonPressed(true);
 		}

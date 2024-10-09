@@ -78,25 +78,25 @@ void ABlasterSpectator::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		if (Mapping.GetPlayerMappableKeySettings())
 		{
 			FString ActionName = Mapping.GetPlayerMappableKeySettings()->DisplayName.ToString();
-			if (ActionName == "Move Forward")
+			if (ActionName == MoveForwardActionName)
 			{
 				MoveForwardMapping.AxisName = "MoveForward";
 				MoveForwardMapping.Key = Mapping.Key;
 				MoveForwardMapping.Scale = 1;
 			}
-			else if (ActionName == "Move Backwards")
+			else if (ActionName == MoveBackwardActionName)
 			{
 				MoveBackwardsMapping.AxisName = "MoveForward";
 				MoveBackwardsMapping.Key = Mapping.Key;
 				MoveBackwardsMapping.Scale = -1;
 			}
-			else if (ActionName == "Move Left")
+			else if (ActionName == MoveLeftActionName)
 			{
 				MoveLeftMapping.AxisName = "MoveRight";
 				MoveLeftMapping.Key = Mapping.Key;
 				MoveLeftMapping.Scale = -1;
 			}
-			else if (ActionName == "Move Right")
+			else if (ActionName == MoveRightActionName)
 			{
 				MoveRightMapping.AxisName = "MoveRight";
 				MoveRightMapping.Key = Mapping.Key;

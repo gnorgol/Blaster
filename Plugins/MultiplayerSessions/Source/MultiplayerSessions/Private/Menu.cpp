@@ -6,6 +6,8 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "GameFramework/GameUserSettings.h"
+
 
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FString LobbyPath, FString Map)
 {
@@ -40,6 +42,25 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch,FStri
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
 
 	}
+	SteamAPI_RestartAppIfNecessary(atoi(APP_ID));
+
+	FString CurrentGameLanguage = FString(SteamApps()->GetCurrentGameLanguage());
+
+	//List of languages de el en es fr it ja pt ru uk vi zh-Hant
+	if (CurrentGameLanguage == "japanese") FInternationalization::Get().SetCurrentCulture(TEXT("ja"));
+	if (CurrentGameLanguage == "french") FInternationalization::Get().SetCurrentCulture(TEXT("fr"));
+	if (CurrentGameLanguage == "german") FInternationalization::Get().SetCurrentCulture(TEXT("de"));
+	if (CurrentGameLanguage == "spanish") FInternationalization::Get().SetCurrentCulture(TEXT("es"));
+	if (CurrentGameLanguage == "italian") FInternationalization::Get().SetCurrentCulture(TEXT("it"));
+	if (CurrentGameLanguage == "greek") FInternationalization::Get().SetCurrentCulture(TEXT("el"));
+	if (CurrentGameLanguage == "portuguese") FInternationalization::Get().SetCurrentCulture(TEXT("pt"));
+	if (CurrentGameLanguage == "russian") FInternationalization::Get().SetCurrentCulture(TEXT("ru"));
+	if (CurrentGameLanguage == "ukrainian") FInternationalization::Get().SetCurrentCulture(TEXT("uk"));
+	if (CurrentGameLanguage == "vietnamese") FInternationalization::Get().SetCurrentCulture(TEXT("vi"));
+	if (CurrentGameLanguage == "tchinese") FInternationalization::Get().SetCurrentCulture(TEXT("zh-Hant"));
+	if (CurrentGameLanguage == "english") FInternationalization::Get().SetCurrentCulture(TEXT("en"));
+	
+	
 }
 
 bool UMenu::Initialize()
@@ -56,7 +77,42 @@ bool UMenu::Initialize()
 	{
 		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
 	}
+	UGameUserSettings* Settings = UGameUserSettings::GetGameUserSettings();
+	if (Settings)
+	{
+		Settings->RunHardwareBenchmark();
+		float CPUBenchmark = Settings->GetLastCPUBenchmarkResult();
+		float GPUBenchmark = Settings->GetLastGPUBenchmarkResult();
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CPUBenchmark : %f"), CPUBenchmark));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("GPUBenchmark : %f"), GPUBenchmark));
+		// Déterminez le niveau de qualité en fonction des résultats du benchmark
+		int32 Quality;
+		if (CPUBenchmark > 250.0f && GPUBenchmark > 800.0f)
+		{
+			Quality = 3; // Epic
+		}
+		else if (CPUBenchmark > 100.0f && GPUBenchmark > 290.0f)
+		{
+			Quality = 2; // High
+		}
+		else if (CPUBenchmark > 50.0f && GPUBenchmark > 150.0f)
+		{
+			Quality = 1; // Medium
+		}
+		else
+		{
+			Quality = 0; // Low
+		}
 
+		// Appliquez le niveau de qualité
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Quality : %d"), Quality));
+		Settings->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
+		Settings->ApplySettings(false);
+		
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Menu Initialized"));
+	UCommonActivatableWidget::ActivateWidget();
+	UCommonActivatableWidget::GetDesiredFocusTarget();
 	return true;
 }
 
@@ -126,9 +182,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.NumPublicConnections - Result.Session.NumOpenPublicConnections;
 		//int32 SettingsValueNumPlayersInt = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("NumPlayers: %d"), SettingsValueNumPlayersInt));
-		int32 test = Result.Session.SessionSettings.Get(FName("NumPlayers"), SettingsValueNumPlayersInt);
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("TEST : %d"), test));
 		//Get MultiplayerSessionsSubsystem from the Result
 		//UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = Result.Session.SessionSettings.Get(FName("MultiplayerSessionsSubsystem"), MultiplayerSessionsSubsystem);
 
@@ -362,3 +416,5 @@ void UMenu::MenuTeardown()
 	PlayerController->SetInputMode(InputModeData);
 	PlayerController->bShowMouseCursor = false;
 }
+
+

@@ -12,6 +12,9 @@
 #include "Components/InputKeySelector.h"
 #include <Components/TextBlock.h>
 #include <Components/VerticalBox.h>
+#include <Components/HorizontalBox.h>
+#include <Components/ComboBoxString.h>
+#include "Components/ScaleBox.h"
 #include <Components/Slider.h>
 #include "PlayerMappableKeySettings.h"
 #include <EnhancedInputSubsystems.h>
@@ -22,75 +25,183 @@
 #define NOGDI
 #define NOMINMAX
 #include <windows.h>
-
-
+#include "GameFramework/GameUserSettings.h"
+#include <Engine/GameEngine.h>
+#include "Kismet/KismetSystemLibrary.h"
+#include "GenericPlatform/GenericApplication.h"
+#include <SetupAPI.h>
+#include "UpscaleMode.h"
+#include "DLSSLibrary.h"
+#include "NISLibrary.h"
+#include "StreamlineLibraryDLSSG.h"
+#include "SaveGraphicsSetting.h"
 
 void UMenuInGame::MenuSetup()
 {
-	AddToViewport();
-	SetVisibility(ESlateVisibility::Visible);
-	bIsFocusable = true;
+    AddToViewport();
+    SetVisibility(ESlateVisibility::Visible);
+    bIsFocusable = true;
 
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
+        if (PlayerController)
+        {
+            FInputModeGameAndUI InputModeData;
+            InputModeData.SetWidgetToFocus(TakeWidget());
+            PlayerController->SetInputMode(InputModeData);
+            PlayerController->bShowMouseCursor = true;
+            BlasterCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
+            if (BlasterCharacter)
+            {
+                BlasterCharacter->bDisableGameplayInput = true;
+            }
+        }
+    }
+    if (ReturnMainMenuButton && !ReturnMainMenuButton->OnClicked.IsBound())
+    {
+        ReturnMainMenuButton->OnClicked.AddDynamic(this, &UMenuInGame::ReturnButtonClicked);
+    }
+    if (SettingButton && !SettingButton->OnClicked.IsBound())
+    {
+        SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
+    }
+    if (GraphicSettingButton && !GraphicSettingButton->OnClicked.IsBound())
+    {
+        GraphicSettingButton->OnClicked.AddDynamic(this, &UMenuInGame::GraphicSettingButtonClicked);
+    }
+    if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
+    {
+        ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
+    }
+    if (CreditsButton && !CreditsButton->OnClicked.IsBound())
+    {
+        CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+    }
+    if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
+    {
+        ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
+    }
+    if (MouseSensitivitySlider && !MouseSensitivitySlider->OnValueChanged.IsBound())
+    {
+        MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnMouseSensitivityValueChanged);
+    }
+    if (AimSensitivitySlider && !AimSensitivitySlider->OnValueChanged.IsBound())
+    {
+        AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
+    }
 
-	UWorld* World = GetWorld();
-	if (World)
+	
+
+    UGameInstance* GameInstance = GetGameInstance();
+    if (GameInstance)
+    {
+        MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+        if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
+        {
+            MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
+        }
+    }
+	//Activate widget
+	UCommonActivatableWidget::ActivateWidget();
+
+    UCommonButtonBase* ExitButton = CreateWidget<UCommonButtonBase>(this, ExitButtonClass);
+    if (ExitButton)
+    {
+        ExitButton->AddToViewport();
+        ExitButton->SetIsEnabled(true);
+    }
+	
+}
+
+void UMenuInGame::BindGraphicUIEvents()
+{
+	if (QualityComboBox && !QualityComboBox->OnSelectionChanged.IsBound())
 	{
-		PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
-		if (PlayerController)
-		{
-			FInputModeGameAndUI InputModeData;
-			InputModeData.SetWidgetToFocus(TakeWidget());
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->bShowMouseCursor = true;
-			//if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			//{
-			//	Subsystem->RemoveMappingContext(BlastCharacterMappingContext);
-			//}
-			BlasterCharacter = Cast<ABlasterCharacter>(GetOwningPlayerPawn());
-			if (BlasterCharacter)
-			{
-				BlasterCharacter->bDisableGameplayInput = true;
-			}
-		}
+		QualityComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
 	}
-	if (ReturnMainMenuButton && !ReturnMainMenuButton->OnClicked.IsBound())
+	if (DisplayModeComboBox && !DisplayModeComboBox->OnSelectionChanged.IsBound())
 	{
-		ReturnMainMenuButton->OnClicked.AddDynamic(this, &UMenuInGame::ReturnButtonClicked);
+		DisplayModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayModeComboBoxValueChanged);
 	}
-	if (SettingButton && !SettingButton->OnClicked.IsBound())
+	if (DisplayResolutionComboBox && !DisplayResolutionComboBox->OnSelectionChanged.IsBound())
 	{
-		SettingButton->OnClicked.AddDynamic(this, &UMenuInGame::SettingButtonClicked);
+		DisplayResolutionComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayResolutionComboBoxValueChanged);
 	}
-	if (ContactMeButton && !ContactMeButton->OnClicked.IsBound())
+	if (DisplayMonitorComboBox && !DisplayMonitorComboBox->OnSelectionChanged.IsBound())
 	{
-		ContactMeButton->OnClicked.AddDynamic(this, &UMenuInGame::ContactMeButtonClicked);
+		DisplayMonitorComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDisplayMonitorComboBoxValueChanged);
 	}
-	if (CreditsButton && !CreditsButton->OnClicked.IsBound())
+	if (UpscalingModeComboBox && !UpscalingModeComboBox->OnSelectionChanged.IsBound())
 	{
-		CreditsButton->OnClicked.AddDynamic(this, &UMenuInGame::CreditsButtonClicked);
+		UpscalingModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnUpscalingModeComboBoxValueChanged);
 	}
-	if (ResetDefaultButton && !ResetDefaultButton->OnClicked.IsBound())
+	if (DLSSModeComboBox && !DLSSModeComboBox->OnSelectionChanged.IsBound())
 	{
-		ResetDefaultButton->OnClicked.AddDynamic(this, &UMenuInGame::ResetDefaultButtonClicked);
+		DLSSModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnDLSSModeComboBoxValueChanged);
 	}
-	if (MouseSensitivitySlider && !MouseSensitivitySlider->OnValueChanged.IsBound())
+	if (NISModeComboBox && !NISModeComboBox->OnSelectionChanged.IsBound())
 	{
-		MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnMouseSensitivityValueChanged);
+		NISModeComboBox->OnSelectionChanged.AddDynamic(this, &UMenuInGame::OnNISModeComboBoxValueChanged);
 	}
-	if (AimSensitivitySlider && !AimSensitivitySlider->OnValueChanged.IsBound())
+	if (NISSharpnessSlider && !NISSharpnessSlider->OnValueChanged.IsBound())
 	{
-		AimSensitivitySlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnAimSensitivityValueChanged);
+		NISSharpnessSlider->OnValueChanged.AddDynamic(this, &UMenuInGame::OnNISSharpnessSliderValueChanged);
 	}
-	UGameInstance* GameInstance = GetGameInstance();
-	if (GameInstance)
+	if (NISSharpnessSlider && !NISSharpnessSlider->OnMouseCaptureEnd.IsBound())
 	{
-		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-		if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
-		{
-			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UMenuInGame::OnDestroySession);
-		}
+		NISSharpnessSlider->OnMouseCaptureEnd.AddDynamic(this, &UMenuInGame::OnNISSharpnessSliderMouseEnd);
+	}
+	if (DLSSFGCheckBox && !DLSSFGCheckBox->OnCheckStateChanged.IsBound())
+	{
+		DLSSFGCheckBox->OnCheckStateChanged.AddDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
 	}
 
+}
+
+void UMenuInGame::UnbindGraphicUIEvents()
+{
+	if (QualityComboBox && QualityComboBox->OnSelectionChanged.IsBound())
+	{
+		QualityComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnQualityComboBoxValueChanged);
+	}
+	if (DisplayModeComboBox && DisplayModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayModeComboBoxValueChanged);
+	}
+	if (DisplayResolutionComboBox && DisplayResolutionComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayResolutionComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayResolutionComboBoxValueChanged);
+	}
+	if (DisplayMonitorComboBox && DisplayMonitorComboBox->OnSelectionChanged.IsBound())
+	{
+		DisplayMonitorComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDisplayMonitorComboBoxValueChanged);
+	}
+	if (UpscalingModeComboBox && UpscalingModeComboBox->OnSelectionChanged.IsBound())
+	{
+		UpscalingModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnUpscalingModeComboBoxValueChanged);
+	}
+	if (DLSSModeComboBox && DLSSModeComboBox->OnSelectionChanged.IsBound())
+	{
+		DLSSModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnDLSSModeComboBoxValueChanged);
+	}
+	if (NISModeComboBox && NISModeComboBox->OnSelectionChanged.IsBound())
+	{
+		NISModeComboBox->OnSelectionChanged.RemoveDynamic(this, &UMenuInGame::OnNISModeComboBoxValueChanged);
+	}
+	if (NISSharpnessSlider && NISSharpnessSlider->OnValueChanged.IsBound())
+	{
+		NISSharpnessSlider->OnValueChanged.RemoveDynamic(this, &UMenuInGame::OnNISSharpnessSliderValueChanged);
+	}
+	if (NISSharpnessSlider && NISSharpnessSlider->OnMouseCaptureEnd.IsBound())
+	{
+		NISSharpnessSlider->OnMouseCaptureEnd.RemoveDynamic(this, &UMenuInGame::OnNISSharpnessSliderMouseEnd);
+	}
+	if (DLSSFGCheckBox && DLSSFGCheckBox->OnCheckStateChanged.IsBound())
+	{
+		DLSSFGCheckBox->OnCheckStateChanged.RemoveDynamic(this, &UMenuInGame::OnDLSSFGCheckBoxChanged);
+	}
 }
 
 void UMenuInGame::MenuTeardown()
@@ -148,6 +259,7 @@ void UMenuInGame::MenuTeardown()
 	ShowSettingPanel(ESlateVisibility::Hidden);
 	ShowContactMePanel(ESlateVisibility::Hidden);
 	ShowCreditsPanel(ESlateVisibility::Hidden);
+	ShowGraphicSettingPanel(ESlateVisibility::Hidden);
 
 	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UMenuInGame::OnDestroySession))
 	{
@@ -202,6 +314,7 @@ void UMenuInGame::OnPlayerLeftGame()
 	}
 }
 
+
 void UMenuInGame::ReturnButtonClicked()
 {
 	ReturnMainMenuButton->SetIsEnabled(false);
@@ -230,6 +343,7 @@ void UMenuInGame::ReturnButtonClicked()
 
 void UMenuInGame::SettingButtonClicked()
 {
+	
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowSettingPanel(ESlateVisibility::Visible);
 	int32 index = 0;
@@ -278,6 +392,357 @@ void UMenuInGame::SettingButtonClicked()
 		
 	}
 	
+}
+
+void UMenuInGame::GraphicSettingButtonClicked()
+{
+	ShowMenuPanel(ESlateVisibility::Hidden);
+	ShowGraphicSettingPanel(ESlateVisibility::Visible);
+	//Get current Material Quality
+	if (QualityComboBox)
+	{
+		int32 CurrentQuality = UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.GetSingleQualityLevel();
+		QualityComboBox->SetSelectedIndex(CurrentQuality);
+	}
+	//Set Display Mode ComboBox
+	if (DisplayModeComboBox)
+	{
+		EWindowMode::Type CurrentDisplayMode = UGameUserSettings::GetGameUserSettings()->GetFullscreenMode();
+		FString DisplayModeString;
+		switch (CurrentDisplayMode)
+		{
+		//case EWindowMode::Fullscreen:
+		//	DisplayModeString = TEXT("Fullscreen");
+		//	break;
+		case EWindowMode::WindowedFullscreen:
+			DisplayModeString = TEXT("Windowed Fullscreen");
+			DisplayResolutionComboBox->SetIsEnabled(false);
+			break;
+		case EWindowMode::Windowed:
+			DisplayModeString = TEXT("Windowed");
+			DisplayResolutionComboBox->SetIsEnabled(true);
+			break;
+		default:
+			DisplayModeString = TEXT("Unknown");
+			break;
+		}
+
+		// Affichage du mode d'affichage actuel
+		switch (CurrentDisplayMode)
+		{
+			//case EWindowMode::Fullscreen:
+			//DisplayModeComboBox->SetSelectedIndex(0);
+			//break;
+			case EWindowMode::WindowedFullscreen:
+				DisplayModeComboBox->SetSelectedIndex(0);
+				break;
+			case EWindowMode::Windowed:
+				DisplayModeComboBox->SetSelectedIndex(1);
+			break;
+
+		}
+	}
+	//Set Display Resolution
+	UpdateDisplayResolutionComboBox();
+	int32 i = 0;
+	//Set Display Monitor
+	if (DisplayMonitorComboBox)
+	{
+		
+		//Get Display Monitor available
+		TArray<FString> MonitorNames;
+		FDisplayMetrics DisplayMetrics;
+		FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+		DisplayMonitorComboBox->ClearOptions();
+		//FVector2D WindowPosition = FSlateApplication::Get().GetActiveTopLevelWindow()->GetPositionInScreen();
+		FVector2D WindowPosition = GEngine->GameViewport->GetWindow()->GetPositionInScreen();
+		for (const FMonitorInfo& MonitorInfo : DisplayMetrics.MonitorInfo)
+		{
+			i++;
+			DisplayMonitorComboBox->AddOption(MonitorInfo.Name);
+			/*if (MonitorInfo.bIsPrimary)
+			{
+				DisplayMonitorComboBox->SetSelectedOption(MonitorInfo.Name);
+			}*/
+			
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Position: %f x %f"), WindowPosition.X, WindowPosition.Y));
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("I = %d"), i));
+			//FVector2D WindowSize = GEngine->GameViewport->GetWindow()->GetClientSizeInScreen();
+			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Size: %f x %f"), WindowSize.X, WindowSize.Y));
+			
+			bool isWindowOnMonitor = IsWindowOnMonitor(WindowPosition, MonitorInfo);			
+			if (IsWindowOnMonitor(WindowPosition, MonitorInfo))
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("%d Monitor Name: %s"), i, *MonitorInfo.Name));
+				DisplayMonitorComboBox->SetSelectedOption(MonitorInfo.Name);
+			}
+		}
+		//Get real name of the monitor
+		//GUID MonitorClassGuid = { 0x4d36e96e, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18} };
+		//HDEVINFO hDevInfo = SetupDiGetClassDevs(&MonitorClassGuid, NULL, NULL, DIGCF_PRESENT);
+		////int32 MonitorCount = -1;
+		//if (hDevInfo != INVALID_HANDLE_VALUE)
+		//{
+		//	
+		//	SP_DEVINFO_DATA DeviceInfoData;
+		//	DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+		//	for (DWORD i = 0;SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData); i++)
+		//	{
+		//		//MonitorCount++;
+		//		DWORD DataT;
+		//		LPTSTR buffer = NULL;
+		//		DWORD buffersize = 0;
+
+		//		while (!SetupDiGetDeviceRegistryProperty(
+		//			hDevInfo,
+		//			&DeviceInfoData,
+		//			SPDRP_FRIENDLYNAME,
+		//			&DataT,
+		//			(PBYTE)buffer,
+		//			buffersize,
+		//			&buffersize))
+		//		{
+		//			if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		//			{
+		//				if (buffer) LocalFree(buffer);
+		//				buffer = (LPTSTR)LocalAlloc(LPTR, buffersize * 2);
+		//			}
+		//			else
+		//			{
+		//				break;
+		//			}
+		//		}
+		//		if (buffer)
+		//		{
+		//			FRegexPattern Pattern(TEXT("\\((.*)\\)"));
+		//			FRegexMatcher Matcher(Pattern, buffer);
+		//			if (Matcher.FindNext())
+		//			{
+		//				FString MonitorName = Matcher.GetCaptureGroup(1);
+		//				DisplayMonitorComboBox->AddOption(MonitorName);
+		//				UE_LOG(LogTemp, Warning, TEXT("Monitor Name: %s"), *MonitorName);
+		//			}
+		//			else
+		//			{
+		//				DisplayMonitorComboBox->AddOption(buffer);
+		//			}
+		//			//DisplayList.Add(DisplayMetrics.MonitorInfo[MonitorCount].Name);
+		//			//DisplayMonitorComboBox->AddOption(buffer);
+
+		//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Green, FString::Printf(TEXT("Monitor Name: %s"), *FString(buffer)));
+		//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *DisplayMetrics.MonitorInfo[i].Name));
+		//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("i = %d"), MonitorCount));
+		//			if (DisplayMetrics.MonitorInfo[i].bIsPrimary)
+		//			{
+		//				UE_LOG(LogTemp, Warning, TEXT("Primary Monitor Name: %s"), *DisplayMetrics.MonitorInfo[i].Name);
+		//				DisplayMonitorComboBox->SetSelectedIndex(i);
+		//			}
+		//			LocalFree(buffer);
+		//		}
+		//	}
+		//	SetupDiDestroyDeviceInfoList(hDevInfo);
+
+		//}
+	}
+	//Set Upscaling Mode
+	
+	//Set DLSS Mode
+	if (DLSSModeComboBox)
+	{
+
+			TArray<UDLSSMode> DLSSModes = UDLSSLibrary::GetSupportedDLSSModes();
+
+			UDLSSMode CurrentDLSSMode = UDLSSLibrary::GetDLSSMode();
+
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Green, FString::Printf(TEXT("Current DLSS Mode: %s"), *GetDisplayNameForDLSSMode(CurrentDLSSMode)));
+
+			DLSSModeComboBox->ClearOptions();
+			for (UDLSSMode DLSSMode : DLSSModes)
+			{
+					
+				FString DLSSModeName = GetDisplayNameForDLSSMode(DLSSMode);
+				DLSSModeComboBox->AddOption(DLSSModeName);
+
+				if (DLSSMode == CurrentDLSSMode)
+				{
+					DLSSModeComboBox->SetSelectedOption(DLSSModeName);
+				}
+				
+			}
+		
+	}
+
+	//Set NIS Mode
+	if (NISModeComboBox)
+	{
+		TArray<UNISMode> NISModes = UNISLibrary::GetSupportedNISModes();
+
+		TArray<UNISMode> CurrentNISMode = UNISLibrary::GetSupportedNISModes();
+		NISModeComboBox->ClearOptions();
+		UNISMode DefaultNISMode = UNISLibrary::GetDefaultNISMode();
+
+		//for (int32 Index = 0; Index < NISModes.Num() - 1; Index++) // -1 to remove the Custom mode
+		//{
+		//	UNISMode NISMode = NISModes[Index];
+
+		//	//FString NISModeName = EnumPtr->GetDisplayNameTextByIndex(static_cast<int32>(NISMode)).ToString();
+		//	//FString NISModeName = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(NISMode)).ToString();
+		//	FText NISModeNameText;
+		//	TEnumAsByte<UNISMode> EnumVar = NISMode;
+		//	UEnum::GetDisplayValueAsText(EnumVar, NISModeNameText);
+		//	FString NISModeName = NISModeNameText.ToString();
+		//		
+		//	NISModeComboBox->AddOption(NISModeName);
+		//	if (NISMode == DefaultNISMode)
+		//	{
+		//		NISModeComboBox->SetSelectedOption(NISModeName);
+		//	}
+		//	
+		//}
+		for (UNISMode NISMode : NISModes)
+		{
+			if (NISMode == UNISMode::Custom)
+			{
+				break;
+
+			}
+			FString NISModeName = GetDisplayNameForNISMode(NISMode);
+			NISModeComboBox->AddOption(NISModeName);
+			if (NISMode == DefaultNISMode)
+			{
+				NISModeComboBox->SetSelectedOption(NISModeName);
+			}
+		}
+
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+		if (SaveGameInstance && SaveGameInstance->CurrentNISMode != UNISMode::Custom)
+		{
+			UNISMode SaveNISMode = SaveGameInstance->CurrentNISMode;
+            //FString SaveNISModeString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(SaveNISMode)).ToString();
+			FString SaveNISModeString = GetDisplayNameForNISMode(SaveNISMode);
+            NISModeComboBox->SetSelectedOption(SaveNISModeString);
+			float NISSharpness = SaveGameInstance->NISSharpness;
+			if (NISSharpnessSlider)
+			{
+				NISSharpnessSlider->SetValue(NISSharpness);
+			}
+			if (ValueNISSharpnessText)
+			{
+				ValueNISSharpnessText->SetText(FText::AsNumber(NISSharpness));
+			}
+
+		}
+
+	}
+	//Set DLSS Frame Generation
+	if (NvidiaFrameGenerationBox && UStreamlineLibraryDLSSG::IsDLSSGSupported())
+	{
+		bool bDLSSGEnabled = UStreamlineLibraryDLSSG::GetDLSSGMode() == UStreamlineDLSSGMode::On;
+		DLSSFGCheckBox->SetIsChecked(bDLSSGEnabled);
+		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Visible);
+
+	}
+	else
+	{
+		NvidiaFrameGenerationBox->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (UpscalingModeComboBox)
+	{
+		TArray<EUpscaleMode> UpscaleModes = GetUpscaleModes();
+
+		if (UpscalingModeComboBox->GetOptionCount() == 0)
+		{
+			for (EUpscaleMode UpscaleMode : UpscaleModes)
+			{
+				if (UpscaleMode == EUpscaleMode::EUM_Max)
+				{
+					break;
+				}
+				FString UpscaleModeName = GetDisplayNameForUpscaleMode(UpscaleMode);
+				UpscalingModeComboBox->AddOption(UpscaleModeName);
+
+			}
+
+		}
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+		if (SaveGameInstance)
+		{
+
+			CurrentUpscaleMode = SaveGameInstance->CurrentUpscaleMode;
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
+		}
+		else
+		{
+			CurrentUpscaleMode = EUpscaleMode::EUM_Default;
+			FString CurrentUpscaleModeString = GetDisplayNameForUpscaleMode(CurrentUpscaleMode);
+			UpscalingModeComboBox->SetSelectedOption(CurrentUpscaleModeString);
+			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Not Save Current Upscale Mode: %s"), *CurrentUpscaleModeString));
+		}
+		switch (CurrentUpscaleMode)
+		{
+		case EUpscaleMode::EUM_Default:
+			SetUpscaleDefault();
+			ShowDLSSModeBox(false);
+			ShowNISModeBox(false);
+			break;
+		case EUpscaleMode::EUM_DLSS:
+			SetUpscaleDLSS();
+			if (UDLSSLibrary::IsDLSSSupported())
+			{
+				ShowDLSSModeBox(true);
+			}
+			else
+			{
+				SetWarningText(DLSSWarningText);
+			}
+			ShowNISModeBox(false);
+			break;
+		case EUpscaleMode::EUM_ImageScaling:
+			SetUpscaleNIS();
+			ShowDLSSModeBox(false);
+			if (UNISLibrary::IsNISSupported())
+			{
+				ShowNISModeBox(true);
+			}
+			else
+			{
+				SetWarningText(NISWarningText);
+			}
+			break;
+		default:
+			break;
+		}
+
+
+	}
+
+	//Set focus on the quality combobox
+	QualityComboBox->SetUserFocus(GetOwningPlayer());
+
+
+	BindGraphicUIEvents();
+
+}
+
+void UMenuInGame::UpdateDisplayResolutionComboBox()
+{
+	if (DisplayResolutionComboBox)
+	{
+		FIntPoint CurrentDisplayResolution = UGameUserSettings::GetGameUserSettings()->GetScreenResolution();
+		FString CurrentDisplayResolutionString = FString::Printf(TEXT("%d x %d"), CurrentDisplayResolution.X, CurrentDisplayResolution.Y);
+		TArray<FIntPoint> Resolutions;
+		UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
+		DisplayResolutionComboBox->ClearOptions();
+		for (auto It = Resolutions.rbegin(); It != Resolutions.rend(); ++It)
+		{
+			FIntPoint Resolution = *It;
+			FString ResolutionString = FString::Printf(TEXT("%d x %d"), Resolution.X, Resolution.Y);
+			DisplayResolutionComboBox->AddOption(ResolutionString);
+		}
+		DisplayResolutionComboBox->SetSelectedOption(CurrentDisplayResolutionString);
+	}
 }
 
 void UMenuInGame::ResetDefaultButtonClicked()
@@ -349,12 +814,18 @@ void UMenuInGame::ContactMeButtonClicked()
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowContactMePanel(ESlateVisibility::Visible);
 
+	//Set focus on the contact me panel
+	LinkedinLogoButton->SetUserFocus(GetOwningPlayer());
+
 }
 
 void UMenuInGame::CreditsButtonClicked()
 {
 	ShowMenuPanel(ESlateVisibility::Hidden);
 	ShowCreditsPanel(ESlateVisibility::Visible);
+
+	//Set focus on the credits panel
+	DeadghostInteractiveEpicGamesLogoButton->SetUserFocus(GetOwningPlayer());
 }
 
 void UMenuInGame::OnMouseSensitivityValueChanged(float Value)
@@ -391,6 +862,684 @@ void UMenuInGame::OnAimSensitivityValueChanged(float Value)
 	}
 }
 
+void UMenuInGame::OnQualityComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+		int32 Quality = 0;
+		if (Value == "Low")
+		{
+			Quality = 0;
+		}
+		else if (Value == "Medium")
+		{
+			Quality = 1;
+		}
+		else if (Value == "High")
+		{
+			Quality = 2;
+		}
+		else if (Value == "Epic")
+		{
+			Quality = 3;
+		}
+		//Set all quality to the same value
+		UGameUserSettings::GetGameUserSettings()->ScalabilityQuality.SetFromSingleQualityLevel(Quality);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+	
+
+}
+
+void UMenuInGame::OnDisplayModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Selected Type: %d"), SelectionType));
+
+		//Get game user settings
+		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+		if (GameUserSettings)
+		{
+			EWindowMode::Type DisplayMode;
+			//if (Value == "Fullscreen")
+			//{
+			//	DisplayMode = EWindowMode::Fullscreen;
+			//	//GameUserSettings->SetFullscreenMode(DisplayMode);
+			//	//Get resolution of the screen
+			//	FDisplayMetrics DisplayMetrics;
+			//	FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+			//	//set the resolution to the screen resolution
+			//	//FIntPoint Resolution = FIntPoint(DisplayMetrics.PrimaryDisplayWidth, DisplayMetrics.PrimaryDisplayHeight);
+			//	////GameUserSettings->SetScreenResolution(Resolution);
+			//	//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//	//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Resolution: %d x %d"), Resolution.X, Resolution.Y));
+
+			//	//Get screen where the window is
+			//	FVector2D WindowPosition = FSlateApplication::Get().GetActiveTopLevelWindow()->GetPositionInScreen();
+			//	for (const FMonitorInfo& MonitorInfo : DisplayMetrics.MonitorInfo)
+			//	{
+			//		if (IsWindowOnMonitor(WindowPosition, MonitorInfo))
+			//		{
+			//			FString MonitorName = MonitorInfo.Name;
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *MonitorName));
+			//			//set the resolution to the screen resolution
+			//			FIntPoint Resolution = FIntPoint(MonitorInfo.NativeWidth, MonitorInfo.NativeHeight);
+
+			//			//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//			//Monitor name
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Monitor Name: %s"), *MonitorName));
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Resolution: %d x %d"), Resolution.X, Resolution.Y));
+			//			GameUserSettings->SetScreenResolution(Resolution);
+			//			//GEngine->GameViewport->GetWindow()->Resize(Resolution);
+			//			
+
+			//			//Change viewport size to the new resolution
+
+
+
+			//			//SetDrawSize(HUDSize);
+			//			
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("New Resolution Size: %d x %d"), Resolution.X, Resolution.Y));
+			//			//FVector2D HUDSize = GEngine->GameViewport->Viewport->GetSizeXY();
+			//			//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("HUD Size: %f x %f"), HUDSize.X, HUDSize.Y));
+
+			//			//resize the scalebox to the new resolution
+			//			//ScaleBox->SetUserSpecifiedScale(Resolution.X / 1920.f);
+			//			//scale box size
+			//			FVector2D ScaleBoxSize = ScaleBox->GetDesiredSize();
+			//			GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Scale Box Size: %f x %f"), ScaleBoxSize.X, ScaleBoxSize.Y));
+			//			//GetWorld()->GetGameViewport()->HandleToggleFullscreenCommand();
+			//			GameUserSettings->SetFullscreenMode(DisplayMode);
+			//			GameUserSettings->ApplySettings(false);
+			//			GameUserSettings->ApplyResolutionSettings(false);
+
+
+			//			break;
+			//		}
+			//	}
+
+
+
+			//	DisplayResolutionComboBox->SetIsEnabled(true);
+
+			//}
+			if (Value == "Windowed Fullscreen")
+			{
+				DisplayMode = EWindowMode::WindowedFullscreen;
+
+				//Block to change the resolution DisplayResolutionComboBox
+				DisplayResolutionComboBox->SetIsEnabled(false);
+				GameUserSettings->SetFullscreenMode(DisplayMode);
+				GameUserSettings->ApplyResolutionSettings(false);
+				GameUserSettings->ApplySettings(false);
+			}
+			else if (Value == "Windowed")
+			{
+				DisplayMode = EWindowMode::Windowed;
+				GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution() / 2);
+				DisplayResolutionComboBox->SetIsEnabled(true);
+				GameUserSettings->SetFullscreenMode(DisplayMode);
+				GameUserSettings->ApplyResolutionSettings(false);
+				GameUserSettings->ApplySettings(false);
+			}
+
+			UpdateDisplayResolutionComboBox();
+		}
+	
+}
+bool UMenuInGame::IsWindowOnMonitor(FVector2D WindowPosition, FMonitorInfo MonitorInfo)
+{
+	// Assurez-vous que le point est à l'intérieur de la zone de travail du moniteur, inclusivement
+	return WindowPosition.X >= MonitorInfo.WorkArea.Left && WindowPosition.X < MonitorInfo.WorkArea.Right &&
+		WindowPosition.Y >= MonitorInfo.WorkArea.Top && WindowPosition.Y < MonitorInfo.WorkArea.Bottom;
+}
+
+void UMenuInGame::SetUpscaleDefault()
+{
+	//Set dlss mode to off
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(false);
+	}
+	SetDLSSMode(UDLSSMode::Off);
+	UNISLibrary::SetNISMode(UNISMode::Off);
+	UNISLibrary::SetNISSharpness(0.0f);
+	//execute console command r.ScreenPercentage = 100
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
+	}
+}
+
+void UMenuInGame::SetUpscaleDLSS()
+{
+	//Set dlss mode to auto
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(true);
+	}
+	//Cuurent DLSS Mode
+	FString CurrentDLSSModeString = DLSSModeComboBox->GetSelectedOption();
+	UDLSSMode CurrentDLSSMode = GetDLSSModeFromDisplayName(CurrentDLSSModeString);
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Current DLSS Mode: %s"), *CurrentDLSSModeString));
+	SetDLSSMode(CurrentDLSSMode);
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Set upsacale Current DLSS Mode: %s"), *CurrentDLSSModeString));
+	
+	UNISLibrary::SetNISMode(UNISMode::Off);
+	UNISLibrary::SetNISSharpness(0.0f);
+
+	//Set Anti Aliasing to TSR r.AntiAliasingMethod 4
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.AntiAliasingMethod 4"));
+	}
+	
+
+}
+void UMenuInGame::SetUpscaleNIS()
+{
+	//Set dlss mode to offv
+	if (DLSSModeComboBox)
+	{
+		DLSSModeComboBox->SetIsEnabled(false);
+	}
+	SetDLSSMode(UDLSSMode::Off);
+	//TO DO Get current upscale mode NIS
+	
+
+	UNISLibrary::SetNISMode(UNISMode::Balanced);
+	UNISLibrary::SetNISSharpness(0.0f);
+	//execute console command r.ScreenPercentage = 100
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
+	}
+
+}
+
+
+
+void UMenuInGame::SetDLSSMode(UDLSSMode DLSSMode)
+{
+	bool isDLSSModeEnabled = DLSSMode != UDLSSMode::Off;
+	bool isDLSSModeSupported;
+	float OptimalScreenPercentage;
+	bool bIsFixedScreenPercentage;
+	float MinScreenPercentage;
+	float MaxScreenPercentage;
+	float OptimalSharpness;
+	FVector2D WindowSize = GEngine->GameViewport->GetWindow()->GetClientSizeInScreen();
+
+
+	UDLSSLibrary::EnableDLSS(isDLSSModeEnabled);
+	UDLSSLibrary::GetDLSSModeInformation(DLSSMode, WindowSize, isDLSSModeSupported , OptimalScreenPercentage, bIsFixedScreenPercentage, MinScreenPercentage, MaxScreenPercentage, OptimalSharpness);
+	
+	UDLSSLibrary::SetDLSSMode(this, DLSSMode);
+	//build string r.ScreenPercentage = optimalScreenPercentage
+	FString CommandeScreenPercentageString = FString::Printf(TEXT("r.ScreenPercentage = %f"), OptimalScreenPercentage);
+	//Execute console command
+	if (GEngine)
+	{
+		GEngine->Exec(GetWorld(), *CommandeScreenPercentageString);
+	}	
+
+
+}
+
+void UMenuInGame::ShowDLSSModeBox(bool bShow)
+{
+	if (DLSSModeBox)
+	{
+		DLSSModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+}
+
+void UMenuInGame::ShowNISModeBox(bool bShow)
+{
+	if (NISModeBox)
+	{
+		NISModeBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+	if (NISSharpnessBox)
+	{
+		NISSharpnessBox->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+}
+
+void UMenuInGame::SetWarningText(FString WarningText)
+{
+	if (UpscalingModeWarningText)
+	{
+		UpscalingModeWarningText->SetText(FText::FromString(WarningText));
+	}
+}
+
+FString UMenuInGame::GetDisplayNameForDLSSMode(UDLSSMode DLSSMode)
+{
+	switch (DLSSMode)
+	{
+	case UDLSSMode::Off:
+		return DLSSOffText;
+		break;
+	case UDLSSMode::Auto:
+		return DLSSAutoText;
+		break;
+	case UDLSSMode::DLAA:
+		return DLSSDLAAText;
+		break;
+	case UDLSSMode::UltraQuality:
+		return DLSSUltraQualityText;
+		break;
+	case UDLSSMode::Quality:
+		return DLSSQualityText;
+		break;
+	case UDLSSMode::Balanced:
+		return DLSSBalancedText;
+		break;
+	case UDLSSMode::Performance:
+		return DLSSPerformanceText;
+		break;
+	case UDLSSMode::UltraPerformance:
+		return DLSSUltraPerformanceText;
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+UDLSSMode UMenuInGame::GetDLSSModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == DLSSOffText)
+	{
+		return UDLSSMode::Off;
+	}
+	else if (DisplayName == DLSSAutoText)
+	{
+		return UDLSSMode::Auto;
+	}
+	else if (DisplayName == DLSSDLAAText)
+	{
+		return UDLSSMode::DLAA;
+	}
+	else if (DisplayName == DLSSUltraQualityText)
+	{
+		return UDLSSMode::UltraQuality;
+	}
+	else if (DisplayName == DLSSQualityText)
+	{
+		return UDLSSMode::Quality;
+	}
+	else if (DisplayName == DLSSBalancedText)
+	{
+		return UDLSSMode::Balanced;
+	}
+	else if (DisplayName == DLSSPerformanceText)
+	{
+		return UDLSSMode::Performance;
+	}
+	else if (DisplayName == DLSSUltraPerformanceText)
+	{
+		return UDLSSMode::UltraPerformance;
+	}
+	else
+	{
+		return UDLSSMode::Off;
+	}
+}
+
+FString UMenuInGame::GetDisplayNameForNISMode(UNISMode NISMode)
+{
+	switch (NISMode)
+	{
+	case UNISMode::Off:
+		return NISOffText;
+		break;
+	case UNISMode::UltraQuality:
+		return NISUltraQualityText;
+		break;
+	case UNISMode::Quality:
+		return NISQualityText;
+		break;
+	case UNISMode::Balanced:
+		return NISBalancedText;
+		break;
+	case UNISMode::Performance:
+		return NISPerformanceText;
+		break;
+	case UNISMode::Custom:
+		return NISCustomText;
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+UNISMode UMenuInGame::GetNISModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == NISOffText)
+	{
+		return UNISMode::Off;
+	}
+	else if (DisplayName == NISUltraQualityText)
+	{
+		return UNISMode::UltraQuality;
+	}
+	else if (DisplayName == NISQualityText)
+	{
+		return UNISMode::Quality;
+	}
+	else if (DisplayName == NISBalancedText)
+	{
+		return UNISMode::Balanced;
+	}
+	else if (DisplayName == NISPerformanceText)
+	{
+		return UNISMode::Performance;
+	}
+	else if (DisplayName == NISCustomText)
+	{
+		return UNISMode::Custom;
+	}
+	else
+	{
+		return UNISMode::Off;
+	}
+}
+
+FString UMenuInGame::GetDisplayNameForUpscaleMode(EUpscaleMode UpscaleMode)
+{
+	switch (UpscaleMode)
+	{
+	case EUpscaleMode::EUM_Default:
+		return UpscaleDefaultText;
+		break;
+	case EUpscaleMode::EUM_DLSS:
+		return UpscaleDLSSText;
+		break;
+	case EUpscaleMode::EUM_ImageScaling:
+		return UpscaleNISText;
+		break;
+	case EUpscaleMode::EUM_Max:
+		return TEXT("Max");
+		break;
+	default:
+		return TEXT("Unknown");
+		break;
+	}
+}
+
+EUpscaleMode UMenuInGame::GetUpscaleModeFromDisplayName(FString DisplayName)
+{
+	if (DisplayName == UpscaleDefaultText)
+	{
+		return EUpscaleMode::EUM_Default;
+	}
+	else if (DisplayName == UpscaleDLSSText)
+	{
+		return EUpscaleMode::EUM_DLSS;
+	}
+	else if (DisplayName == UpscaleNISText)
+	{
+		return EUpscaleMode::EUM_ImageScaling;
+	}
+	else if (DisplayName == TEXT("Max"))
+	{
+		return EUpscaleMode::EUM_Max;
+	}
+	else
+	{
+		return EUpscaleMode::EUM_Default;
+	}
+}
+
+TArray<EUpscaleMode> UMenuInGame::GetUpscaleModes()
+{
+	TArray<EUpscaleMode> UpscaleModes;
+	const UEnum* Enum = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUpscaleMode"), true);
+
+	for (int i = 0; i < Enum->NumEnums() -1 ; i++) // -1 to remove the Max value
+	{
+		EUpscaleMode UpscaleMode = (EUpscaleMode)Enum->GetValueByIndex(i);
+		UpscaleModes.Add(UpscaleMode);
+	}
+
+	return UpscaleModes;
+}
+
+
+
+
+
+void UMenuInGame::OnDisplayResolutionComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+
+		//Get game user settings
+		UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+		if (GameUserSettings)
+		{
+			FString XString;
+			FString YString;
+			Value.Split(" x ", &XString, &YString);
+			int32 X = FCString::Atoi(*XString);
+			int32 Y = FCString::Atoi(*YString);
+			FIntPoint Resolution = FIntPoint(X, Y);
+			GameUserSettings->SetScreenResolution(Resolution);
+			GameUserSettings->ApplyResolutionSettings(false);
+		}
+	
+}
+
+void UMenuInGame::OnDisplayMonitorComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+
+		FDisplayMetrics DisplayMetrics;
+		FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+
+		// Check if the monitor index is within the valid range
+		if (DisplayMetrics.MonitorInfo.IsValidIndex(0))
+		{
+			// Get the monitor index
+			int32 MonitorIndex = 0;
+			for (int32 Index = 0; Index < DisplayMetrics.MonitorInfo.Num(); Index++)
+			{
+			   if (DisplayMetrics.MonitorInfo[Index].Name == Value)
+			   {
+				   MonitorIndex = Index;
+					break;
+			   }
+			}
+
+			// Get the window position
+			FVector2D WindowPosition = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Left, DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Top);
+
+			// Move the window to the monitor
+			GEngine->GameViewport->GetWindow()->MoveWindowTo(WindowPosition);
+			// Set to the current Display Mode
+			EWindowMode::Type DisplayMode;
+
+			//Switch DisplayModeComboBox
+			switch (DisplayModeComboBox->GetSelectedIndex())
+			{
+			case 0:
+			{
+				DisplayMode = EWindowMode::WindowedFullscreen;
+				UGameUserSettings* UserSettings = GEngine->GetGameUserSettings();
+				if (UserSettings)
+				{
+					// Définir la résolution souhaitée et le mode plein écran fenêtré
+					//UserSettings->SetScreenResolution(FIntPoint(1707, 1067));
+					UserSettings->SetFullscreenMode(EWindowMode::Windowed);
+
+					// Appliquer les changements
+					UserSettings->ApplySettings(false);
+
+				}
+				break;
+			}
+			case 1:
+				DisplayMode = EWindowMode::Windowed;
+				break;
+			}
+
+		// Get the window size
+	   // FVector2D WindowSize = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Right - DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Left, DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Bottom - DisplayMetrics.MonitorInfo[MonitorIndex].WorkArea.Top);
+	
+
+
+		FVector2D WindowSize = FVector2D(DisplayMetrics.MonitorInfo[MonitorIndex].NativeWidth, DisplayMetrics.MonitorInfo[MonitorIndex].NativeHeight);
+		// Resize the window
+		//GEngine->GameViewport->GetWindow()->Resize(WindowSize);
+
+		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Window Size: %f x %f"), WindowSize.X, WindowSize.Y));
+
+		UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(DisplayMode);
+
+
+		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Display Mode: %d"), DisplayMode));
+
+
+		//// Apply the settings
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
+		UGameUserSettings::GetGameUserSettings()->ApplyResolutionSettings(false);
+
+		UpdateDisplayResolutionComboBox();
+
+		}
+	
+}
+
+void UMenuInGame::OnUpscalingModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	EUpscaleMode UpscaleMode = GetUpscaleModeFromDisplayName(Value);
+	//Find the enum value
+	SetWarningText("");
+	switch (UpscaleMode)
+	{
+	case EUpscaleMode::EUM_Default:
+		SetUpscaleDefault();
+		ShowDLSSModeBox(false);
+		ShowNISModeBox(false);
+		break;
+	case EUpscaleMode::EUM_DLSS:
+		SetUpscaleDLSS();
+		if (UDLSSLibrary::IsDLSSSupported())
+		{
+			ShowDLSSModeBox(true);
+		}
+		else
+		{
+			SetWarningText(DLSSWarningText);
+		}
+		ShowNISModeBox(false);
+		break;
+	case EUpscaleMode::EUM_ImageScaling:
+		SetUpscaleNIS();
+		ShowDLSSModeBox(false);
+		if (UNISLibrary::IsNISSupported())
+		{
+			ShowNISModeBox(true);
+		}
+		else
+		{
+			SetWarningText(NISWarningText);
+		}
+		
+		break;
+	default:
+		break;
+	}
+	//Save the upscale mode
+	USaveGraphicsSetting* LoadGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::LoadGameFromSlot(TEXT("BlasterGraphicsSetting"), 0));
+	
+	if (LoadGameInstance && LoadGameInstance->CurrentNISMode != UNISMode::Custom)
+	{
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
+		SaveGameInstance->CurrentNISMode = LoadGameInstance->CurrentNISMode;
+		SaveGameInstance->NISSharpness = LoadGameInstance->NISSharpness;
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Upscale Mode save : %d"), static_cast<int32>(UpscaleMode)));
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	}
+	else
+	{
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = UpscaleMode;
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+	
+	}
+
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Upscale Mode save : %d"), static_cast<int32>(UpscaleMode)));
+	
+}
+
+void UMenuInGame::OnDLSSModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+
+		//Get the DLSS Mode
+		UDLSSMode DLSSMode = GetDLSSModeFromDisplayName(Value);
+		SetDLSSMode(DLSSMode);
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("Caca DLSS Mode: %s"), *Value));
+	
+}
+
+void UMenuInGame::OnNISModeComboBoxValueChanged(FString Value, ESelectInfo::Type SelectionType)
+{
+	UNISMode NISMode = GetNISModeFromDisplayName(Value);
+	UNISLibrary::SetNISMode(NISMode);
+
+	float NISharpness = 0;
+	//Set NIS Sharpness
+	if (ValueNISSharpnessText)
+	{
+		NISharpness = ValueNISSharpnessText->GetText().ToString().IsNumeric() ? FCString::Atof(*ValueNISSharpnessText->GetText().ToString()) : 0.0f;
+	}
+	UNISLibrary::SetNISSharpness(NISharpness / 100);
+
+
+
+	//Save the NIS mode and sharpness
+
+	USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+	SaveGameInstance->CurrentUpscaleMode = EUpscaleMode::EUM_ImageScaling;
+	SaveGameInstance->CurrentNISMode = NISMode;
+	SaveGameInstance->NISSharpness = NISharpness;
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+}
+
+void UMenuInGame::OnNISSharpnessSliderValueChanged(float Value)
+{
+		UNISLibrary::SetNISSharpness(Value/100);
+		//Change the sharpness value
+		if (ValueNISSharpnessText)
+		{
+			ValueNISSharpnessText->SetText(FText::AsNumber(Value));
+		}
+
+}
+
+void UMenuInGame::OnNISSharpnessSliderMouseEnd()
+{
+	if (NISSharpnessSlider)
+	{
+		float Value = NISSharpnessSlider->GetValue();
+
+		//Save the sharpness
+		USaveGraphicsSetting* SaveGameInstance = Cast<USaveGraphicsSetting>(UGameplayStatics::CreateSaveGameObject(USaveGraphicsSetting::StaticClass()));
+		SaveGameInstance->CurrentUpscaleMode = EUpscaleMode::EUM_ImageScaling;
+		SaveGameInstance->CurrentNISMode = SaveGameInstance->CurrentNISMode;
+		SaveGameInstance->NISSharpness = Value;
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("BlasterGraphicsSetting"), 0);
+		GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::Red, FString::Printf(TEXT("NISSharpness Saved: %f"), Value));
+	}
+}
+
+
+void UMenuInGame::OnDLSSFGCheckBoxChanged(bool bIsChecked)
+{
+	UStreamlineDLSSGMode DLSSGMode = bIsChecked ? UStreamlineDLSSGMode::On : UStreamlineDLSSGMode::Off;
+	UStreamlineLibraryDLSSG::SetDLSSGMode(DLSSGMode);
+}
+
 void UMenuInGame::ClearSettingBox()
 {
 	if (SettingBox)
@@ -405,8 +1554,7 @@ void UMenuInGame::ShowMenuPanel(ESlateVisibility bShow)
 	if (MenuPanel)
 	{
 		MenuPanel->SetVisibility(bShow);
-	}
-	
+	}	
 }
 
 void UMenuInGame::ShowSettingPanel(ESlateVisibility bShow)
@@ -436,6 +1584,14 @@ void UMenuInGame::ShowCreditsPanel(ESlateVisibility bShow)
 		CreditsPanel->SetVisibility(bShow);
 	}
 
+}
+
+void UMenuInGame::ShowGraphicSettingPanel(ESlateVisibility bShow)
+{
+	if (GraphicSettingPanel)
+	{
+		GraphicSettingPanel->SetVisibility(bShow);
+	}
 }
 
 

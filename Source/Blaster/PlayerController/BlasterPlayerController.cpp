@@ -21,7 +21,6 @@
 #include "Components/Image.h"
 #include "GameFramework/PlayerState.h"
 #include "Blaster/HUD/MenuInGame.h"
-#include "EnhancedInputComponent.h"
 #include "Blaster/BlasterTypes/Annoucement.h"
 #include "Components/Border.h"
 #include <Blaster/HUD/ChatBox.h>
@@ -30,6 +29,9 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include <Blueprint/WidgetLayoutLibrary.h>
+#include "DLSSLibrary.h"
+
+
 
 
 
@@ -74,6 +76,8 @@ void ABlasterPlayerController::BeginPlay()
 			ChatWidget->SetVisibility(ESlateVisibility::Hidden);			
 		}
 	}
+
+	
 }
 
 void ABlasterPlayerController::SetHUDMatchTime()
@@ -237,11 +241,18 @@ void ABlasterPlayerController::SetHUDKillFieldInfo(const FString& KillerName, co
 	{
 		if (KillerName == VictimName)
 		{
-			KillFieldText = FString::Printf(TEXT("%s killed himself"), *KillerName);
+			//KillFieldText = FString::Printf(TEXT("%s killed himself"), *KillerName);
+			//KillFieldText = FString::Printf(SuicideText, *KillerName);
+			//KillFieldText = FText::Format(SuicideText, *KillerName).ToString();
+			KillFieldText = FText::Format(SuicideText, FText::FromString(KillerName)).ToString();
+
 		}
 		else
 		{
-			KillFieldText = FString::Printf(TEXT("%s killed %s"), *KillerName, *VictimName);
+			//KillFieldText = FString::Printf(TEXT("%s killed %s"), *KillerName, *VictimName);
+			//KillFieldText = FString::Printf(KillWithText, *KillerName, *VictimName);
+			//KillFieldText = FText::Format(KillWithText, *KillerName, *VictimName).ToString();
+			KillFieldText = FText::Format(KillWithText, FText::FromString(KillerName), FText::FromString(VictimName)).ToString();
 		}
 	}
 }
@@ -261,11 +272,22 @@ void ABlasterPlayerController::SetHUDKillFieldPlayerInfo(const FString& PlayerNa
 		{
 			if (bIsDead)
 			{
-				KillFieldText = FString::Printf(TEXT("Killed by %s"), *PlayerName);
+				//KillFieldText = FString::Printf(TEXT("Killed by %s"), *PlayerName);
+				//const FText KillByText = NSLOCTEXT("BlasterPlayerController", "KillByText", "Killed by"); 
+				//KillFieldText = KillByText + $s, *PlayerName
+				//KillFieldText = FString::Printf(*KillByText.ToString(), *PlayerName);
+				//KillFieldText = FText::Format(KillByText, *PlayerName).ToString();
+				KillFieldText = FText::Format(KillByText, FText::FromString(PlayerName)).ToString();
+
+
 			}
 			else
 			{
-				KillFieldText = FString::Printf(TEXT("Killed %s"), *PlayerName);
+				//KillFieldText = FString::Printf(TEXT("Killed %s"), *PlayerName);
+				//KillFieldText = FString::Printf(KillText, *PlayerName);
+				//KillFieldText = FString::Printf(*KillText.ToString(), *PlayerName);
+				//KillFieldText = FText::Format(KillText, *PlayerName).ToString();
+				KillFieldText = FText::Format(KillText, FText::FromString(PlayerName)).ToString();
 			}
 		}
 			BlasterHUD->CharacterOverlay->KillFieldPlayerText->SetText(FText::FromString(KillFieldText));
@@ -346,7 +368,8 @@ void ABlasterPlayerController::Tick(float DeltaTimes)
 	SetHUDMatchTime();
 	CheckTimeSync(DeltaTimes);
 	PollInit();
-	CheckPing(DeltaTimes);	
+	CheckPing(DeltaTimes);
+
 }
 void ABlasterPlayerController::CheckPing(float DeltaTime)
 {

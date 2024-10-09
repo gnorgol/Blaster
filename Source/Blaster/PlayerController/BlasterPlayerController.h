@@ -203,4 +203,10 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRestartMap();
+
+	const FText KillByText = NSLOCTEXT("BlasterPlayerController", "KillByText", "Killed by {0}");
+	const FText KillText = NSLOCTEXT("BlasterPlayerController", "KillText", "Killed {0}");
+	const FText KillWithText = NSLOCTEXT("BlasterPlayerController", "KillWithText", "Killed {0} with {1}");
+	const FText SuicideText = NSLOCTEXT("BlasterPlayerController", "SuicideText", "{0} killed himself");
+
 };
